@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma';
 import AgeGate from '@/components/AgeGate';
-import ProductSlider from '@/components/ProductSlider'; // 直接导入即可
+import ProductSlider from '@/components/ProductSlider'; 
+import ContactWidget from '@/components/ContactWidget';
+// 直接导入即可
 
 // 强制动态渲染 (确保每次刷新都能获取最新库存和价格)
 export const dynamic = 'force-dynamic';
@@ -13,16 +15,18 @@ export default async function Home() {
     orderBy: { createdAt: 'desc' },
     take: 8, // 限制数量
   });
-
   // 序列化数据 (防止 Date/Decimal 对象报错)
   const serializedProducts = JSON.parse(JSON.stringify(products));
 
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-100 selection:bg-red-500/30 selection:text-white">
       <AgeGate />
-
+      {/*  在这里添加联系组件 (放在 AgeGate 下面即可，因为它有 fixed 定位) */}
+      <ContactWidget />
       {/* Hero 区域 */}
       <section className="relative h-[60vh] flex flex-col items-center justify-center border-b border-white/5 bg-[url('https://images.unsplash.com/photo-1559132039-b9d297ff0d05?auto=format&fit=crop&q=80')] bg-cover bg-center">
+      
+       
         {/* 黑色遮罩层，加深一点以突出文字 */}
         <div className="absolute inset-0 bg-zinc-950/80 backdrop-blur-[1px]" /> 
         
