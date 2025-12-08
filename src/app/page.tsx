@@ -40,10 +40,10 @@ export default async function Home() {
           {/* 双语标语 */}
           <div className="mt-8 flex flex-col items-center gap-2 border-t border-white/10 pt-6">
             <p className="text-sm text-zinc-400 font-mono tracking-wider uppercase">
-              Direct from Factory • Fast Shipping • 100% Authentic
+              Global Authentic Shopping • Fast Shipping • 100% Authentic
             </p>
             <p className="text-xs text-zinc-500 font-sans tracking-widest">
-              源头工厂直供 · 国际极速发货 · 100% 正品保证
+              全球正品购货 · 国际极速发货 · 100% 正品保证
             </p>
           </div>
         </div>
