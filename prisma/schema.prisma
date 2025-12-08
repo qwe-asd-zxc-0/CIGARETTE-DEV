@@ -1,0 +1,203 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  
+}
+
+// --- 1. 用户与画像 ---
+
+model Profile {
+  id               String   @id @db.Uuid // 对应 auth.users 的 ID
+  email            String?
+  fullName         String?  @map("full_name")
+  avatarUrl        String?  @map("avatar_url")
+  isAgeVerified    Boolean? @default(false) @map("is_age_verified")
+  trafficSource    String?  @map("traffic_source")
+  assignedAgentId  String?  @db.Uuid @map("assigned_agent_id")
+  createdAt        DateTime? @default(now()) @db.Timestamptz(6) @map("created_at")
+  isAdmin          Boolean? @default(false) @map("is_admin")
+
+  // 关系定义 (Prisma 自动生成)
+  orders        Order[]
+  reviews       Review[]
+  addresses     UserAddress[]
+
+  @@map("profiles")
+}
+
+model UserAddress {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String?  @db.Uuid @map("user_id")
+  country      String
+  state        String?
+  city         String?
+  addressLine1 String   @map("address_line1")
+  addressLine2 String?  @map("address_line2")
+  zipCode      String   @map("zip_code")
+  phoneNumber  String?  @map("phone_number")
+  isDefault    Boolean? @default(false) @map("is_default")
+  createdAt    DateTime? @default(now()) @db.Timestamptz(6) @map("created_at")
+
+  // 关系
+  user         Profile? @relation(fields: [userId], references: [id])
+
+  @@map("user_addresses")
+}
+
+// --- 2. 商品与库存 ---
+
+model Brand {
+  id          Int      @id @default(autoincrement())
+  name        String
+  logoUrl     String?  @map("logo_url")
+  description String?
+  slug        String   @unique
+
+  // 关系
+  products    Product[]
+
+  @@map("brands")
+}
+
+model Product {
+  id                 String   @id @default(uuid()) @db.Uuid
+  brandId            Int?     @map("brand_id")
+  title              String
+  description        String?
+  basePrice          Decimal  @map("base_price") @db.Decimal
+  tieredPricingRules Json?    @default("[]") @map("tiered_pricing_rules")
+  specifications     Json?    @default("{}")
+  coverImageUrl      String?  @map("cover_image_url")
+  slug               String   @unique
+  status             String?  @default("active") // active, draft, archived
+  createdAt          DateTime? @default(now()) @db.Timestamptz(6) @map("created_at")
+
+  // 关系
+  brand           Brand?           @relation(fields: [brandId], references: [id])
+  variants        ProductVariant[]
+  reviews         Review[]
+
+  @@map("products")
+}
+
+model ProductVariant {
+  id              String   @id @default(uuid()) @db.Uuid
+  productId       String?  @db.Uuid @map("product_id")
+  skuCode         String?  @unique @map("sku_code")
+  flavor          String
+  nicotineStrength String  @map("nicotine_strength")
+  colorHex        String?  @map("color_hex")
+  price           Decimal? @db.Decimal
+  stockQuantity   Int?     @default(0) @map("stock_quantity")
+  variantImageUrl String?  @map("variant_image_url")
+  isActive        Boolean? @default(true) @map("is_active")
+
+  // 关系
+  product         Product?              @relation(fields: [productId], references: [id])
+  orderItems      OrderItem[]
+  restockSubs     RestockSubscription[]
+
+  @@map("product_variants")
+}
+
+// --- 3. 订单与交易 ---
+
+model Order {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String?  @db.Uuid @map("user_id")
+  guestEmail      String?  @map("guest_email")
+  status          String?  @default("pending_payment")
+  paymentMethod   String?  @map("payment_method")
+  subtotalAmount  Decimal  @map("subtotal_amount") @db.Decimal
+  shippingCost    Decimal? @default(0) @map("shipping_cost") @db.Decimal
+  totalAmount     Decimal  @map("total_amount") @db.Decimal
+  currency        String?  @default("USD")
+  shippingAddress Json     @map("shipping_address") // 存储下单时的地址快照
+  trackingNumber  String?  @map("tracking_number")
+  carrierName     String?  @map("carrier_name")
+  trackingUrl     String?  @map("tracking_url")
+  createdAt       DateTime? @default(now()) @db.Timestamptz(6) @map("created_at")
+
+  // 关系
+  user            Profile?    @relation(fields: [userId], references: [id])
+  items           OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id                   String   @id @default(uuid()) @db.Uuid
+  orderId              String?  @db.Uuid @map("order_id")
+  productVariantId     String?  @db.Uuid @map("product_variant_id")
+  productTitleSnapshot String?  @map("product_title_snapshot")
+  flavorSnapshot       String?  @map("flavor_snapshot")
+  quantity             Int
+  unitPrice            Decimal  @map("unit_price") @db.Decimal
+
+  // 关系
+  order            Order?          @relation(fields: [orderId], references: [id])
+  productVariant   ProductVariant? @relation(fields: [productVariantId], references: [id])
+
+  @@map("order_items")
+}
+
+model CustomQuote {
+  id               String   @id @default(uuid()) @db.Uuid
+  createdByAgentId String?  @db.Uuid @map("created_by_agent_id")
+  customerEmail    String?  @map("customer_email")
+  items            Json
+  totalAmount      Decimal  @map("total_amount") @db.Decimal
+  status           String?  @default("pending")
+  note             String?
+  expiresAt        DateTime? @db.Timestamptz(6) @map("expires_at")
+  createdAt        DateTime? @default(now()) @db.Timestamptz(6) @map("created_at")
+
+  @@map("custom_quotes")
+}
+
+// --- 4. 营销与内容 ---
+
+model Review {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String?  @db.Uuid @map("user_id")
+  productId  String?  @db.Uuid @map("product_id")
+  rating     Int // 1-5
+  title      String?
+  content    String?
+  images     String[] // PostgreSQL 数组
+  tags       String[]
+  isApproved Boolean? @default(false) @map("is_approved")
+  createdAt  DateTime? @default(now()) @db.Timestamptz(6) @map("created_at")
+
+  // 关系
+  user       Profile? @relation(fields: [userId], references: [id])
+  product    Product? @relation(fields: [productId], references: [id])
+
+  @@map("reviews")
+}
+
+model Faq {
+  id           Int     @id @default(autoincrement())
+  question     String
+  answer       String
+  category     String?
+  displayOrder Int?    @default(0) @map("display_order")
+
+  @@map("faqs")
+}
+
+model RestockSubscription {
+  id               String   @id @default(uuid()) @db.Uuid
+  email            String
+  productVariantId String?  @db.Uuid @map("product_variant_id")
+  isNotified       Boolean? @default(false) @map("is_notified")
+  createdAt        DateTime? @default(now()) @db.Timestamptz(6) @map("created_at")
+
+  // 关系
+  productVariant   ProductVariant? @relation(fields: [productVariantId], references: [id])
+
+  @@map("restock_subscriptions")
+}
