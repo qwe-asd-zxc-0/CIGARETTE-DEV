@@ -27,7 +27,7 @@ export default async function Home() {
         <div className="absolute inset-0 bg-zinc-950/80 backdrop-blur-[1px]" /> 
         
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-          <h1 className="text-6xl md:text-8xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-600 tracking-tight">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-600 tracking-tight">
             GLOBAL TOBACCO
           </h1>
           

@@ -42,7 +42,7 @@ export default async function ProductDetail({ params }: ProductDetailProps) {
         <div className="max-w-7xl mx-auto flex items-center gap-2 text-xs font-mono text-zinc-500">
           <Link href="/" className="hover:text-white transition">HOME</Link>
           <span>/</span>
-          <Link href="/products" className="hover:text-white transition">PRODUCTS</Link>
+          <Link href="/product" className="hover:text-white transition">PRODUCT</Link>
           <span>/</span>
           <span className="text-zinc-300 truncate max-w-[150px]">{product.title}</span>
         </div>
