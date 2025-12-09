@@ -13,8 +13,8 @@ datasource db {
 
 model Profile {
   id               String   @id @db.Uuid // 对应 auth.users 的 ID
-  email            String?
-  fullName         String?  @map("full_name")
+  email            String?  @unique
+  fullName         String?  @unique @map("full_name")
   avatarUrl        String?  @map("avatar_url")
   isAgeVerified    Boolean? @default(false) @map("is_age_verified")
   trafficSource    String?  @map("traffic_source")
