@@ -1,7 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import AgeGate from '@/components/AgeGate';
 import ProductSlider from '@/components/ProductSlider'; 
-import ContactWidget from '@/components/ContactWidget';
 import BrandStory from '@/components/BrandStory';
 import Link from 'next/link';
 import { ArrowRight, Sparkles } from 'lucide-react';
@@ -11,7 +10,9 @@ export const dynamic = 'force-dynamic';
 export default async function Home() {
   const products = await prisma.product.findMany({
     where: { status: 'active' },
-    include: { brand: true },
+    include: { brand: true 
+      
+    },
     orderBy: { createdAt: 'desc' },
     take: 8, 
   });
@@ -21,7 +22,6 @@ export default async function Home() {
   return (
     <main className="min-h-screen bg-black text-zinc-100 selection:bg-red-500/30 selection:text-white overflow-x-hidden">
       <AgeGate />
-      <ContactWidget />
       
       {/* ⭐⭐⭐ 统一视觉容器 ⭐⭐⭐
         包裹 Hero 和 ProductSlider，共享同一个动态背景

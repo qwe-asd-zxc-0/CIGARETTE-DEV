@@ -14,19 +14,20 @@ const storyData = {
       title: "百分百原装正品",
       description:
         "拒绝假冒伪劣，直连品牌源头，确保您品尝到的每一口都是纯正风味。",
-      icon: <ShieldCheck className="w-6 h-6" />,
+      // store component reference, not JSX
+      icon: ShieldCheck,
     },
     {
       title: "合规跨境直邮",
       description:
         "依托专业的国际物流网络与清关能力，解决烟草跨境运输难、通关慢的痛点。",
-      icon: <Plane className="w-6 h-6" />,
+      icon: Plane,
     },
     {
       title: "尊享无忧服务",
       description:
         "无论是个人海淘收藏还是批量商业采购，我们提供专业的税务指引与风险管理。",
-      icon: <HeartHandshake className="w-6 h-6" />,
+      icon: HeartHandshake,
     },
   ],
   closing:
@@ -118,7 +119,11 @@ export default function BrandStory() {
               <div className="relative z-10 flex flex-col items-center text-center">
                 <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-zinc-800 to-zinc-900 border border-white/10 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:border-red-500/30 group-hover:shadow-[0_0_20px_-5px_rgba(239,68,68,0.3)] transition-all duration-300">
                   <div className="text-red-500">
-                    {promise.icon}
+                    {/** Render icon component reference */}
+                    {(() => {
+                      const Icon = promise.icon as any;
+                      return Icon ? <Icon className="w-6 h-6" /> : null;
+                    })()}
                   </div>
                 </div>
 

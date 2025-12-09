@@ -9,35 +9,40 @@ export default function ContactWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<SocialType>('wechat');
 
-  // 配置各个平台的信息 (请替换 qrCode 为你真实的图片路径)
+  // 配置各个平台的信息
   const socialData = {
     wechat: {
       name: 'WeChat',
       label: '微信',
       bgColor: 'bg-[#07c160]/10',
-      // 这里使用 API 生成演示用二维码，请替换为你 public 目录下的真实图片，如 '/qr-wechat.jpg'
-      qrCode: '/20251208233100_91_173.jpg' // 这里使用 API 生成演示用二维码，请替换为你 public 目录下的真实图片，如 '/qr-wechat.jpg'
+      qrCode: '/20251208233100_91_173.jpg'
     },
     whatsapp: {
       name: 'WhatsApp',
       label: 'WhatsApp',
       bgColor: 'bg-[#25d366]/10',
-      qrCode: '20251208233100_91_173' // 这里使用 API 生成演示用二维码，请替换为你 public 目录下的真实图片，如 '/qr-wechat.jpg'
+      qrCode: '/20251208233100_91_173.jpg' // 帮您补全了路径
     },
     telegram: {
       name: 'Telegram',
       label: 'Telegram',
       bgColor: 'bg-[#0088cc]/10',
-      qrCode: '20251208233100_91_173' // 这里使用 API 生成演示用二维码，请替换为你 public 目录下的真实图片，如 '/qr-wechat.jpg'
+      qrCode: '/20251208233100_91_173.jpg' // 帮您补全了路径
     }
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end font-sans">
+    // 🚩 修复 1: 外层容器添加 pointer-events-none，让点击能穿透空白区域
+    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end font-sans pointer-events-none">
+      
       {/* 弹出的面板 */}
       <div 
+        // 🚩 修复 2: 面板打开时需要 pointer-events-auto，否则无法操作面板内的选项
+        // 关闭时保持 pointer-events-none，避免误触
         className={`mb-4 bg-white rounded-2xl shadow-2xl border border-zinc-100 overflow-hidden transition-all duration-300 origin-bottom-right ${
-          isOpen ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4 pointer-events-none'
+          isOpen 
+            ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto' 
+            : 'opacity-0 scale-95 translate-y-4 pointer-events-none'
         }`}
         style={{ width: '280px' }}
       >
@@ -84,7 +89,8 @@ export default function ContactWidget() {
       {/* 悬浮按钮 (FAB) */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`group w-14 h-14 rounded-full shadow-lg shadow-red-900/20 flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 ${
+        // 🚩 修复 3: 按钮必须添加 pointer-events-auto，否则也无法点击
+        className={`group w-14 h-14 rounded-full shadow-lg shadow-red-900/20 flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 pointer-events-auto ${
           isOpen ? 'bg-zinc-900' : 'bg-gradient-to-br from-red-600 to-red-700'
         }`}
         aria-label="Contact Us"
