@@ -2,53 +2,57 @@ import { prisma } from '@/lib/prisma';
 import AgeGate from '@/components/AgeGate';
 import ProductSlider from '@/components/ProductSlider'; 
 import ContactWidget from '@/components/ContactWidget';
-// 直接导入即可
+import Link from 'next/link';
 
-// 强制动态渲染 (确保每次刷新都能获取最新库存和价格)
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-  // 1. 从数据库读取所有上架商品
   const products = await prisma.product.findMany({
     where: { status: 'active' },
     include: { brand: true },
     orderBy: { createdAt: 'desc' },
-    take: 8, // 限制数量
+    take: 8, 
   });
-  // 序列化数据 (防止 Date/Decimal 对象报错)
+  
   const serializedProducts = JSON.parse(JSON.stringify(products));
 
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-100 selection:bg-red-500/30 selection:text-white">
       <AgeGate />
-      {/*  在这里添加联系组件 (放在 AgeGate 下面即可，因为它有 fixed 定位) */}
       <ContactWidget />
-      {/* Hero 区域 */}
-      <section className="relative h-[60vh] flex flex-col items-center justify-center border-b border-white/5 bg-[url('https://images.unsplash.com/photo-1559132039-b9d297ff0d05?auto=format&fit=crop&q=80')] bg-cover bg-center">
       
-       
-        {/* 黑色遮罩层，加深一点以突出文字 */}
+      {/* Hero 区域 */}
+      <section className="relative h-[70vh] flex flex-col items-center justify-center border-b border-white/5 bg-[url('https://images.unsplash.com/photo-1559132039-b9d297ff0d05?auto=format&fit=crop&q=80')] bg-cover bg-center">
+        
         <div className="absolute inset-0 bg-zinc-950/80 backdrop-blur-[1px]" /> 
         
-        <div className="relative z-10 text-center px-4">
-          {/* 主标题：增加字间距，显得更稳重 */}
+        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
           <h1 className="text-6xl md:text-8xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-600 tracking-tight">
             GLOBAL TOBACCO
           </h1>
           
-          {/* 副标题 */}
-          <p className="text-xl md:text-2xl text-zinc-300 max-w-2xl mx-auto font-light">
+          <p className="text-xl md:text-2xl text-zinc-300 max-w-2xl mx-auto font-light mb-8">
             Global Tobacco & International Logistics
           </p>
           
-          {/* 双语标语 */}
-          <div className="mt-8 flex flex-col items-center gap-2 border-t border-white/10 pt-6">
+          <div className="flex flex-col items-center gap-3 pt-4 border-t border-white/10 w-full">
             <p className="text-sm text-zinc-400 font-mono tracking-wider uppercase">
               Global Authentic Shopping • Fast Shipping • 100% Authentic
             </p>
-            <p className="text-xs text-zinc-500 font-sans tracking-widest">
+            <p className="text-xs text-zinc-500 font-sans tracking-widest mb-8">
               全球正品购货 · 国际极速发货 · 100% 正品保证
             </p>
+
+            {/* 👇 跳转按钮 👇 */}
+            <Link 
+              href="/product" 
+              className="group relative inline-flex items-center justify-center px-8 py-3 text-sm font-bold text-white transition-all duration-200 bg-red-600 font-mono rounded-full hover:bg-red-700 hover:shadow-lg hover:shadow-red-600/30 hover:-translate-y-1"
+            >
+              <span>EXPLORE COLLECTION</span>
+              <svg className="w-4 h-4 ml-2 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </Link>
           </div>
         </div>
       </section>
