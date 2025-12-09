@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import AgeGate from '@/components/AgeGate';
 import ProductSlider from '@/components/ProductSlider'; 
 import ContactWidget from '@/components/ContactWidget';
+import BrandStory from '@/components/BrandStory';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
@@ -73,6 +74,11 @@ export default async function Home() {
             <ProductSlider products={serializedProducts} />
           </div>
         )}
+      </section>
+
+      {/* 品牌故事区域 */}
+      <section className="bg-gradient-to-b from-zinc-900 to-zinc-950 border-t border-white/5">
+        <BrandStory />
       </section>
     </main>
   );
