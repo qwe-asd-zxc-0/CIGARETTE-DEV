@@ -1,17 +1,15 @@
 // prisma/seed.ts
-import { PrismaClient } from '@prisma/client';
-// 加载环境变量（确保能读取到 .env 中的 DATABASE_URL）
-import dotenv from 'dotenv';
-dotenv.config();
+import 'dotenv/config';
+import { Prisma, PrismaClient } from '@prisma/client';
 
-// 修复1：从环境变量读取数据库URL，显式传入配置
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL is not set; seed aborted.');
+}
+
+// Prisma 7 需要在运行时提供连接串；类型定义暂未暴露 datasourceUrl，这里显式断言
 const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL, // 直接使用 Supabase 的连接地址
-    },
-  },
-});
+  datasourceUrl: process.env.DATABASE_URL,
+} as Prisma.PrismaClientOptions);
 
 async function seed() {
   try {
@@ -26,6 +24,7 @@ async function seed() {
           name: 'Marlboro',
           logoUrl: 'https://picsum.photos/id/1/200/200', // 占位图
           description: 'Famous international tobacco brand',
+          slug: 'marlboro',
         },
       }),
       prisma.brand.create({
@@ -33,6 +32,7 @@ async function seed() {
           name: 'Camel',
           logoUrl: 'https://picsum.photos/id/2/200/200',
           description: 'Classic tobacco brand with rich flavor',
+          slug: 'camel',
         },
       }),
       prisma.brand.create({
@@ -40,6 +40,7 @@ async function seed() {
           name: 'L&M',
           logoUrl: 'https://picsum.photos/id/3/200/200',
           description: 'Affordable and popular tobacco brand',
+          slug: 'l-and-m',
         },
       }),
     ]);
@@ -49,6 +50,7 @@ async function seed() {
       prisma.product.create({
         data: {
           title: 'Marlboro Red 100s',
+          slug: 'marlboro-red-100s',
           basePrice: 12.99,
           coverImageUrl: 'https://picsum.photos/id/10/400/500',
           status: 'active', // 上架状态
@@ -59,11 +61,13 @@ async function seed() {
                 flavor: 'Original',
                 price: 12.99,
                 stockQuantity: 150,
+                nicotineStrength: '5%',
               },
               {
                 flavor: 'Menthol',
                 price: 13.99,
                 stockQuantity: 120,
+                nicotineStrength: '3%',
               },
             ],
           },
@@ -72,6 +76,7 @@ async function seed() {
       prisma.product.create({
         data: {
           title: 'Camel Blue Light',
+          slug: 'camel-blue-light',
           basePrice: 11.99,
           coverImageUrl: 'https://picsum.photos/id/11/400/500',
           status: 'active',
@@ -82,6 +87,7 @@ async function seed() {
                 flavor: 'Light',
                 price: 11.99,
                 stockQuantity: 200,
+                nicotineStrength: '3%',
               },
             ],
           },
@@ -90,6 +96,7 @@ async function seed() {
       prisma.product.create({
         data: {
           title: 'L&M Bold',
+          slug: 'l-and-m-bold',
           basePrice: 9.99,
           coverImageUrl: 'https://picsum.photos/id/12/400/500',
           status: 'active',
@@ -100,6 +107,7 @@ async function seed() {
                 flavor: 'Bold',
                 price: 9.99,
                 stockQuantity: 300,
+                nicotineStrength: '5%',
               },
             ],
           },

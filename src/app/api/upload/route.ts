@@ -28,8 +28,9 @@ export async function POST(request: Request) {
     // 5. 返回成功结果给前端
     return NextResponse.json({ url: publicUrl });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Upload API Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Upload failed';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

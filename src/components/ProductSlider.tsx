@@ -1,10 +1,23 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import Slider from 'react-slick';
+import React from 'react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
+
+type Product = {
+  id: string | number;
+  coverImageUrl?: string | null;
+  title: string;
+  basePrice: number | string;
+  brand?: { name?: string | null } | null;
+};
+
+const Slider = dynamic(() => import('react-slick'), {
+  ssr: false,
+  loading: () => <div className="h-64 w-full bg-white/5 animate-pulse rounded-xl"></div>
+});
 
 // 定义 Slider 的配置
 const settings = {
@@ -37,20 +50,7 @@ const settings = {
   ]
 };
 
-export default function ProductSlider({ products }: { products: any[] }) {
-  // 1. 新增：状态来追踪组件是否已在客户端挂载
-  const [mounted, setMounted] = useState(false);
-
-  // 2. 新增：组件加载后设置 mounted 为 true
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // 3. 新增：如果在服务端或尚未挂载，显示加载占位符（避免 SSR 报错）
-  if (!mounted) {
-    return <div className="h-64 w-full bg-white/5 animate-pulse rounded-xl"></div>;
-  }
-
+export default function ProductSlider({ products }: { products: Product[] }) {
   if (!products || products.length === 0) return null;
 
   return (

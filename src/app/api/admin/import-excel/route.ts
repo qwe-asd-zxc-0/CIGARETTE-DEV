@@ -10,6 +10,18 @@ function generateSlug(text: string) {
     .replace(/^-+|-+$/g, '');   // 去头尾的 -
 }
 
+type ImportRow = {
+  Brand?: unknown;
+  'Product Title'?: unknown;
+  Description?: unknown;
+  Price?: unknown;
+  Image?: unknown;
+  'SKU Code'?: unknown;
+  Flavor?: unknown;
+  Strength?: unknown;
+  Stock?: unknown;
+};
+
 export async function POST(request: Request) {
   try {
     const formData = await request.formData();
@@ -29,7 +41,7 @@ export async function POST(request: Request) {
     const sheet = workbook.Sheets[sheetName];
     
     // 将 Excel 转换为 JSON 数组
-    const rows: any[] = XLSX.utils.sheet_to_json(sheet);
+    const rows = XLSX.utils.sheet_to_json<ImportRow>(sheet);
 
     console.log(`📊 解析到 ${rows.length} 行数据，开始入库...`);
 
@@ -50,7 +62,7 @@ export async function POST(request: Request) {
       const flavor = row['Flavor'] ? String(row['Flavor']) : 'Default';
       
       // 🔥 关键修复：强制转换为 String，解决 5% 变成 0.05 报错的问题
-      let strength = row['Strength'] !== undefined ? String(row['Strength']) : 'N/A';
+      const strength = row['Strength'] !== undefined ? String(row['Strength']) : 'N/A';
       
       // 库存转整数
       const stock = parseInt(row['Stock']) || 0;
@@ -130,8 +142,9 @@ export async function POST(request: Request) {
       message: `成功处理 ${successCount} 条数据` 
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Excel Import Error:', error);
-    return NextResponse.json({ error: error.message || 'Import failed' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Import failed';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

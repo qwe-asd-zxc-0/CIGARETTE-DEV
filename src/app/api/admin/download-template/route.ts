@@ -55,6 +55,7 @@ export async function GET() {
     });
 
   } catch (error) {
+    console.error('Download template error:', error);
     return NextResponse.json({ error: 'Failed to generate template' }, { status: 500 });
   }
 }

@@ -4,7 +4,9 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  
+  // 仅操作 public schema，避免触碰 Supabase 内置 auth 表
+  schemas   = ["public"]
+  relationMode = "prisma" // 由 Prisma 维护关系，不改数据库 FK
 }
 
 // --- 1. 用户与画像 ---
@@ -26,6 +28,7 @@ model Profile {
   addresses     UserAddress[]
 
   @@map("profiles")
+  @@schema("public")
 }
 
 model UserAddress {
@@ -45,6 +48,7 @@ model UserAddress {
   user         Profile? @relation(fields: [userId], references: [id])
 
   @@map("user_addresses")
+  @@schema("public")
 }
 
 // --- 2. 商品与库存 ---
@@ -60,6 +64,7 @@ model Brand {
   products    Product[]
 
   @@map("brands")
+  @@schema("public")
 }
 
 model Product {
@@ -81,6 +86,7 @@ model Product {
   reviews         Review[]
 
   @@map("products")
+  @@schema("public")
 }
 
 model ProductVariant {
@@ -101,6 +107,7 @@ model ProductVariant {
   restockSubs     RestockSubscription[]
 
   @@map("product_variants")
+  @@schema("public")
 }
 
 // --- 3. 订单与交易 ---
@@ -126,6 +133,7 @@ model Order {
   items           OrderItem[]
 
   @@map("orders")
+  @@schema("public")
 }
 
 model OrderItem {
@@ -142,6 +150,7 @@ model OrderItem {
   productVariant   ProductVariant? @relation(fields: [productVariantId], references: [id])
 
   @@map("order_items")
+  @@schema("public")
 }
 
 model CustomQuote {
@@ -156,6 +165,7 @@ model CustomQuote {
   createdAt        DateTime? @default(now()) @db.Timestamptz(6) @map("created_at")
 
   @@map("custom_quotes")
+  @@schema("public")
 }
 
 // --- 4. 营销与内容 ---
@@ -177,6 +187,7 @@ model Review {
   product    Product? @relation(fields: [productId], references: [id])
 
   @@map("reviews")
+  @@schema("public")
 }
 
 model Faq {
@@ -187,6 +198,7 @@ model Faq {
   displayOrder Int?    @default(0) @map("display_order")
 
   @@map("faqs")
+  @@schema("public")
 }
 
 model RestockSubscription {
@@ -200,4 +212,5 @@ model RestockSubscription {
   productVariant   ProductVariant? @relation(fields: [productVariantId], references: [id])
 
   @@map("restock_subscriptions")
+  @@schema("public")
 }

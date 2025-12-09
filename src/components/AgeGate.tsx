@@ -1,14 +1,12 @@
 'use client'; // 标记为客户端组件
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 export default function AgeGate() {
-  const [showModal, setShowModal] = useState(false);
-
-  useEffect(() => {
-    const isVerified = localStorage.getItem('age-verified');
-    if (!isVerified) setShowModal(true);
-  }, []);
+  const [showModal, setShowModal] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return !localStorage.getItem('age-verified');
+  });
 
   const handleVerify = () => {
     localStorage.setItem('age-verified', 'true');

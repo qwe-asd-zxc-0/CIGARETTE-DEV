@@ -15,7 +15,7 @@ export const supabaseAdmin = createClient(
  * @param fileBuffer 文件数据流
  */
 export async function uploadFileToStorage(filePath: string, fileBuffer: Buffer) {
-  const { data, error } = await supabaseAdmin.storage
+  const { error } = await supabaseAdmin.storage
     .from('product-images') // 替换为您创建的存储桶名称
     .upload(filePath, fileBuffer, {
       cacheControl: '3600',

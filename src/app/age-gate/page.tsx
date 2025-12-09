@@ -20,10 +20,10 @@ export default async function Home() {
     console.log(`✅ 数据库连接成功！读取到 ${count} 个商品。`);
     dbStatus = "连接成功 (Connected)";
 
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error("❌ 数据库连接失败:", e);
     dbStatus = "连接失败 (Connection Failed)";
-    errorMsg = e.message;
+    errorMsg = e instanceof Error ? e.message : 'Unknown error';
   }
 
   return (

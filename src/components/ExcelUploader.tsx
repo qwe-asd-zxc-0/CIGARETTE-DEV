@@ -29,7 +29,7 @@ export default function ExcelUploader() {
       } else {
         setMessage(`❌ 失败: ${data.error}`);
       }
-    } catch (error) {
+    } catch {
       setMessage('❌ 网络错误');
     } finally {
       setUploading(false);
