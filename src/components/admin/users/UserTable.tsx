@@ -16,6 +16,32 @@ export default function UserTable({ users }: { users: any[] }) {
     setSelectedUser(user);
   };
 
+  // ✅ 包装函数：处理管理员状态切换 (返回 void，满足 form action 类型要求)
+  const handleToggleAdminStatus = async (userId: string, currentStatus: boolean) => {
+    setLoadingId(userId);
+    const res = await toggleAdminStatus(userId, currentStatus);
+    setLoadingId(null);
+
+    if (res.success) {
+      alert("✅ " + res.message);
+    } else {
+      alert("❌ " + res.message);
+    }
+  };
+
+  // ✅ 包装函数：处理年龄验证状态切换 (返回 void，满足 form action 类型要求)
+  const handleToggleAgeVerified = async (userId: string, currentStatus: boolean) => {
+    setLoadingId(userId);
+    const res = await toggleAgeVerified(userId, currentStatus);
+    setLoadingId(null);
+
+    if (res.success) {
+      alert("✅ " + res.message);
+    } else {
+      alert("❌ " + res.message);
+    }
+  };
+
   // 处理发送重置邮件
   const handleResetPassword = async (e: React.MouseEvent, email: string, userId: string) => {
     e.stopPropagation(); // 防止触发打开详情页
@@ -81,12 +107,18 @@ export default function UserTable({ users }: { users: any[] }) {
                   {/* 安全操作区：管理员开关 + 重置密码 */}
                   <td className="p-4 text-center" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-center gap-2">
-                      {/* 1. 管理员开关 */}
-                      <form action={toggleAdminStatus.bind(null, user.id, !!user.isAdmin)}>
-                        <button type="submit" className={`p-1.5 rounded-lg border transition-all ${user.isAdmin ? "bg-purple-500/10 text-purple-400 border-purple-500/20" : "bg-zinc-800 text-zinc-500 border-zinc-700 hover:text-white"}`} title="Toggle Admin">
-                          <Shield className="w-4 h-4" />
-                        </button>
-                      </form>
+                      {/* 1. 管理员开关 - 使用包装函数处理返回值 */}
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleAdminStatus(user.id, !!user.isAdmin);
+                        }}
+                        disabled={loadingId === user.id}
+                        className={`p-1.5 rounded-lg border transition-all ${user.isAdmin ? "bg-purple-500/10 text-purple-400 border-purple-500/20" : "bg-zinc-800 text-zinc-500 border-zinc-700 hover:text-white"}`} 
+                        title="Toggle Admin"
+                      >
+                        {loadingId === user.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
+                      </button>
 
                       {/* 2. 发送重置邮件按钮 */}
                       <button 
@@ -100,14 +132,19 @@ export default function UserTable({ users }: { users: any[] }) {
                     </div>
                   </td>
 
-                  {/* 年龄验证状态 */}
+                  {/* 年龄验证状态 - 使用包装函数处理返回值 */}
                   <td className="p-4 text-center" onClick={(e) => e.stopPropagation()}>
-                    <form action={toggleAgeVerified.bind(null, user.id, !!user.isAgeVerified)}>
-                      <button type="submit" className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all border ${user.isAgeVerified ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-red-500/10 text-red-400 border-red-500/20"}`}>
-                        {user.isAgeVerified ? <ShieldCheck className="w-3.5 h-3.5" /> : <ShieldAlert className="w-3.5 h-3.5" />}
-                        {user.isAgeVerified ? "Verified" : "Check"}
-                      </button>
-                    </form>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleAgeVerified(user.id, !!user.isAgeVerified);
+                      }}
+                      disabled={loadingId === user.id}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all border ${user.isAgeVerified ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-red-500/10 text-red-400 border-red-500/20"}`}
+                    >
+                      {loadingId === user.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : user.isAgeVerified ? <ShieldCheck className="w-3.5 h-3.5" /> : <ShieldAlert className="w-3.5 h-3.5" />}
+                      {loadingId === user.id ? "..." : user.isAgeVerified ? "Verified" : "Check"}
+                    </button>
                   </td>
 
                   <td className="p-4 text-right pr-6 text-zinc-500 text-xs">

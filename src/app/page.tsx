@@ -1,10 +1,11 @@
 import { prisma } from '@/lib/prisma';
-import AgeGate from '@/components/AgeGate';
+// ❌ 移除 AgeGate 引用，因为它现在由 layout.tsx 中的 GlobalOverlay 全局管理
+// import AgeGate from '@/components/AgeGate'; 
 import ProductSlider from '@/components/ProductSlider'; 
 import BrandStory from '@/components/BrandStory';
 import Link from 'next/link';
 import { ArrowRight, Sparkles } from 'lucide-react';
-import ActivityBanner from "@/components/ActivityBanner"; // ✅ 1. 引入活动组件
+import ActivityBanner from "@/components/ActivityBanner"; 
 
 export const dynamic = 'force-dynamic';
 
@@ -13,7 +14,7 @@ export default async function Home() {
     where: { status: 'active' },
     include: { 
       brand: true,
-      variants: true // 记得加上 variants，否则 Slider 可能报错
+      variants: true 
     },
     orderBy: { createdAt: 'desc' },
     take: 8, 
@@ -23,7 +24,7 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen bg-black text-zinc-100 selection:bg-red-500/30 selection:text-white overflow-x-hidden">
-      <AgeGate />
+      {/* ❌ 移除 <AgeGate /> 组件调用，避免重复显示 */}
       
       {/* ⭐⭐⭐ 统一视觉容器 ⭐⭐⭐ */}
       <div className="relative w-full">
@@ -31,7 +32,7 @@ export default async function Home() {
         {/* === 1. 全局动态背景层 (z-0) === */}
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none">
           <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1559132039-b9d297ff0d05?auto=format&fit=crop&q=80')] bg-cover bg-center opacity-20 mix-blend-overlay" />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-zinc-950/80 to-zinc-950" />
+          <div className="absolute inset-0 bg-linear-to-b from-black/40 via-zinc-950/80 to-zinc-950" />
 
           {/* 烟雾/光影动画 */}
           <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-40">
@@ -53,7 +54,7 @@ export default async function Home() {
 
           <h1 className="text-5xl md:text-7xl lg:text-9xl font-bold mb-6 tracking-tighter text-white drop-shadow-2xl text-center">
             GLOBAL <br className="md:hidden" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-br from-red-500 via-orange-600 to-red-800">
+            <span className="text-transparent bg-clip-text bg-linear-to-br from-red-500 via-orange-600 to-red-800">
               TOBACCO
             </span>
           </h1>
@@ -84,8 +85,7 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* ✅ 3. 活动 Banner 区域 (插在这里) */}
-        {/* z-20 确保它浮在背景上，mt-[-50px] 让它稍微向上侵入 Hero 区域一点，增加层次感 (可选) */}
+        {/* ✅ 3. 活动 Banner 区域 */}
         <div className="relative z-20 px-4 sm:px-6 mb-10">
            <ActivityBanner />
         </div>
@@ -95,7 +95,7 @@ export default async function Home() {
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4 border-b border-white/5 pb-6">
             <div>
               <h2 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
-                <span className="w-1.5 h-8 bg-gradient-to-b from-red-500 to-orange-600 rounded-full inline-block shadow-[0_0_15px_rgba(239,68,68,0.5)]" />
+                <span className="w-1.5 h-8 bg-linear-to-b from-red-500 to-orange-600 rounded-full inline-block shadow-[0_0_15px_rgba(239,68,68,0.5)]" />
                 Latest Arrivals
               </h2>
               <p className="text-zinc-400 font-light text-sm ml-5 tracking-wide">
@@ -118,15 +118,15 @@ export default async function Home() {
             </div>
           ) : (
             <div className="relative">
-               <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-black/0 to-transparent z-10 pointer-events-none" />
-               <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-black/0 to-transparent z-10 pointer-events-none" />
+               <div className="absolute left-0 top-0 bottom-0 w-12 bg-linear-to-r from-black/0 to-transparent z-10 pointer-events-none" />
+               <div className="absolute right-0 top-0 bottom-0 w-12 bg-linear-to-l from-black/0 to-transparent z-10 pointer-events-none" />
                
               <ProductSlider products={serializedProducts} />
             </div>
           )}
         </section>
 
-        <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-zinc-950 to-transparent pointer-events-none z-0" />
+        <div className="absolute bottom-0 left-0 w-full h-32 bg-linear-to-t from-zinc-950 to-transparent pointer-events-none z-0" />
       </div>
 
       {/* === 5. 品牌故事区域 === */}
