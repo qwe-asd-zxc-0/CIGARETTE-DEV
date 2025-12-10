@@ -2,14 +2,15 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { MapPin, Shield, ShieldCheck, ShieldAlert, Key, Loader2 } from "lucide-react"; // ✅ 引入 Key 图标
+import { MapPin, Shield, ShieldCheck, ShieldAlert, Key, Loader2 } from "lucide-react"; 
 import { AnimatePresence } from "framer-motion";
 import UserDrawer from "./UserDrawer";
-import { toggleAgeVerified, toggleAdminStatus, sendPasswordResetEmail } from "@/app/admin/(protected)/users/actions"; // ✅ 引入发邮件 action
+// ✅ 关键点：只引用，不定义
+import { toggleAgeVerified, toggleAdminStatus, sendPasswordResetEmail } from "@/app/admin/(protected)/users/actions";
 
 export default function UserTable({ users }: { users: any[] }) {
   const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [loadingId, setLoadingId] = useState<string | null>(null); // 用于显示加载状态
+  const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const handleRowClick = (user: any) => {
     setSelectedUser(user);
@@ -40,7 +41,7 @@ export default function UserTable({ users }: { users: any[] }) {
               <tr>
                 <th className="p-4 pl-6">User Profile</th>
                 <th className="p-4">Location</th>
-                <th className="p-4 text-center">Security</th> {/* ✅ 合并了 Role 和 Pwd Reset */}
+                <th className="p-4 text-center">Security</th>
                 <th className="p-4 text-center">Status</th>
                 <th className="p-4 text-right pr-6">Joined</th>
               </tr>
@@ -73,7 +74,7 @@ export default function UserTable({ users }: { users: any[] }) {
                   <td className="p-4">
                     <div className="flex items-center gap-2">
                       <MapPin className="w-4 h-4 text-zinc-600" />
-                      <span>{user.addresses[0] ? `${user.addresses[0].city || '-'}, ${user.addresses[0].country}` : <span className="text-zinc-600 italic">No Address</span>}</span>
+                      <span>{user.addresses?.[0] ? `${user.addresses[0].city || '-'}, ${user.addresses[0].country}` : <span className="text-zinc-600 italic">No Address</span>}</span>
                     </div>
                   </td>
 
@@ -87,7 +88,7 @@ export default function UserTable({ users }: { users: any[] }) {
                         </button>
                       </form>
 
-                      {/* 2. ✅ 发送重置邮件按钮 */}
+                      {/* 2. 发送重置邮件按钮 */}
                       <button 
                         onClick={(e) => handleResetPassword(e, user.email, user.id)}
                         className="p-1.5 rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-400 hover:bg-red-900/30 hover:text-red-400 hover:border-red-500/30 transition-all"
@@ -99,6 +100,7 @@ export default function UserTable({ users }: { users: any[] }) {
                     </div>
                   </td>
 
+                  {/* 年龄验证状态 */}
                   <td className="p-4 text-center" onClick={(e) => e.stopPropagation()}>
                     <form action={toggleAgeVerified.bind(null, user.id, !!user.isAgeVerified)}>
                       <button type="submit" className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all border ${user.isAgeVerified ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-red-500/10 text-red-400 border-red-500/20"}`}>
@@ -126,3 +128,5 @@ export default function UserTable({ users }: { users: any[] }) {
     </>
   );
 }
+
+// ⚠️ 此处原有的 toggleAdminStatus 等代码已删除，因为它们已移至 actions.ts

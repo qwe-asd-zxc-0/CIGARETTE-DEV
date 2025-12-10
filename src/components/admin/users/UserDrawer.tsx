@@ -1,138 +1,243 @@
 "use client";
 
-import { X, MapPin, User, Calendar, Activity } from "lucide-react";
+import { useState } from "react";
+import { X, Save, Trash2, Key, Shield, User, Wallet, Mail } from "lucide-react";
 import { motion } from "framer-motion";
-import Image from "next/image";
+import { updateUserProfile, resetUserPassword, deleteUser, sendPasswordResetEmail } from "@/app/admin/(protected)/users/actions";
 
 interface UserDrawerProps {
-  user: any; // 这里的类型建议使用 Prisma 生成的 Profile 类型
+  user: any;
   onClose: () => void;
 }
 
 export default function UserDrawer({ user, onClose }: UserDrawerProps) {
-  if (!user) return null;
+  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<"profile" | "security">("profile");
+  
+  // 表单状态
+  const [formData, setFormData] = useState({
+    fullName: user.fullName || "",
+    balance: user.balance ? Number(user.balance) : 0,
+    isAgeVerified: user.isAgeVerified || false,
+    isAdmin: user.isAdmin || false,
+  });
+
+  const [newPassword, setNewPassword] = useState("");
+
+  // 保存资料
+  const handleSaveProfile = async () => {
+    setLoading(true);
+    const res = await updateUserProfile(user.id, formData);
+    setLoading(false);
+    if (res.success) alert("✅ 资料已保存");
+    else alert("❌ 保存失败");
+  };
+
+  // 强制重置密码
+  const handleResetPassword = async () => {
+    if (!newPassword) return alert("请输入新密码");
+    setLoading(true);
+    const res = await resetUserPassword(user.id, newPassword);
+    setLoading(false);
+    if (res.success) {
+      alert("✅ 密码修改成功，请通知用户。");
+      setNewPassword("");
+    } else {
+      alert("❌ 修改失败: " + res.message);
+    }
+  };
+
+  // 发送重置邮件
+  const handleSendEmail = async () => {
+    if(!confirm(`确定向 ${user.email} 发送重置邮件吗？`)) return;
+    setLoading(true);
+    const res = await sendPasswordResetEmail(user.email);
+    setLoading(false);
+    if (res.success) alert("📧 邮件已发送");
+    else alert("❌ 发送失败: " + res.message);
+  }
+
+  // 删除用户
+  const handleDelete = async () => {
+    if (!confirm(`⚠️ 危险操作！\n确定要删除用户 ${user.email} 吗？\n此操作将清除所有订单和关联数据，且不可恢复！`)) return;
+    
+    setLoading(true);
+    const res = await deleteUser(user.id);
+    if (res.success) {
+      alert("✅ 用户已删除");
+      onClose();
+    } else {
+      alert("❌ 删除失败: " + res.message);
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[100] flex justify-end font-sans">
-      {/* 遮罩层 */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-      />
-
-      {/* 侧边栏内容 */}
-      <motion.div
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      
+      <motion.div 
         initial={{ x: "100%" }}
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
         transition={{ type: "spring", damping: 25, stiffness: 200 }}
         className="relative w-full max-w-md h-full bg-zinc-900 border-l border-white/10 shadow-2xl overflow-y-auto"
       >
-        {/* 头部 */}
-        <div className="sticky top-0 z-10 bg-zinc-900/95 backdrop-blur-md border-b border-white/10 p-6 flex justify-between items-center">
-          <h3 className="text-xl font-bold text-white">User Details</h3>
-          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-zinc-400 hover:text-white">
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-zinc-900/95 border-b border-white/10 p-6 flex justify-between items-center backdrop-blur-md">
+          <div>
+            <h3 className="text-xl font-bold text-white">编辑用户</h3>
+            <p className="text-xs text-zinc-500 font-mono mt-1">{user.email}</p>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
+        {/* Tabs */}
+        <div className="flex border-b border-white/10 px-6">
+          <button 
+            onClick={() => setActiveTab("profile")}
+            className={`pb-3 pt-4 text-sm font-bold mr-6 border-b-2 transition-colors ${activeTab === "profile" ? "border-blue-500 text-white" : "border-transparent text-zinc-500 hover:text-zinc-300"}`}
+          >
+            基本资料
+          </button>
+          <button 
+            onClick={() => setActiveTab("security")}
+            className={`pb-3 pt-4 text-sm font-bold border-b-2 transition-colors ${activeTab === "security" ? "border-red-500 text-white" : "border-transparent text-zinc-500 hover:text-zinc-300"}`}
+          >
+            安全与权限
+          </button>
+        </div>
+
         <div className="p-6 space-y-8">
-          {/* 头像与基础信息 */}
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-zinc-800 border border-white/10 flex items-center justify-center overflow-hidden relative">
-              {user.avatarUrl ? (
-                <Image src={user.avatarUrl} alt="Avatar" fill className="object-cover" />
-              ) : (
-                <span className="text-xl font-bold text-zinc-500">
-                  {(user.fullName || user.email || "U").substring(0, 2).toUpperCase()}
-                </span>
-              )}
+          {activeTab === "profile" && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+              {/* 1. 基础信息 */}
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-bold text-zinc-500 uppercase mb-1 block">Full Name</label>
+                  <input 
+                    value={formData.fullName}
+                    onChange={(e) => setFormData({...formData, fullName: e.target.value})}
+                    className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:border-blue-500 outline-none transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-zinc-500 uppercase mb-1 flex items-center gap-2">
+                    <Wallet className="w-4 h-4 text-green-500" /> Account Balance ($)
+                  </label>
+                  <input 
+                    type="number"
+                    step="0.01"
+                    value={formData.balance}
+                    onChange={(e) => setFormData({...formData, balance: parseFloat(e.target.value)})}
+                    className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-white font-mono text-lg focus:border-green-500 outline-none transition-colors"
+                  />
+                  <p className="text-[10px] text-zinc-500 mt-1">正数表示余额，可用于抵扣订单。</p>
+                </div>
+              </div>
+
+              {/* 2. 权限开关 */}
+              <div className="bg-white/5 rounded-xl p-4 space-y-4 border border-white/5">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                      <User className="w-4 h-4 text-blue-400" /> 年龄验证
+                    </h4>
+                    <p className="text-xs text-zinc-500">允许购买受限商品</p>
+                  </div>
+                  <input 
+                    type="checkbox" 
+                    checked={formData.isAgeVerified}
+                    onChange={(e) => setFormData({...formData, isAgeVerified: e.target.checked})}
+                    className="w-5 h-5 accent-blue-600 cursor-pointer"
+                  />
+                </div>
+                <div className="w-full h-px bg-white/10" />
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-red-500" /> 管理员权限
+                    </h4>
+                    <p className="text-xs text-zinc-500">允许访问后台 (慎用!)</p>
+                  </div>
+                  <input 
+                    type="checkbox" 
+                    checked={formData.isAdmin}
+                    onChange={(e) => setFormData({...formData, isAdmin: e.target.checked})}
+                    className="w-5 h-5 accent-red-600 cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              <button 
+                onClick={handleSaveProfile}
+                disabled={loading}
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-900/20"
+              >
+                {loading ? "Saving..." : <><Save className="w-4 h-4" /> 保存修改</>}
+              </button>
             </div>
-            <div>
-              <h2 className="text-lg font-bold text-white">{user.fullName || "Unnamed User"}</h2>
-              <p className="text-zinc-400 text-sm">{user.email}</p>
-              <div className="flex gap-2 mt-2">
-                <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold border ${user.isAdmin ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : 'bg-zinc-800 text-zinc-400 border-zinc-700'}`}>
-                  {user.isAdmin ? 'Admin' : 'Customer'}
-                </span>
-                <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold border ${user.isAgeVerified ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}>
-                  {user.isAgeVerified ? 'Verified' : 'Unverified'}
-                </span>
+          )}
+
+          {activeTab === "security" && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
+              {/* 重置密码 */}
+              <div className="bg-zinc-800/50 p-4 rounded-xl border border-white/5 space-y-4">
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Key className="w-4 h-4 text-yellow-500" /> 密码管理
+                </h4>
+                
+                <div className="flex gap-2">
+                  <input 
+                    type="text"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="输入新密码..."
+                    className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                  />
+                  <button 
+                    onClick={handleResetPassword}
+                    disabled={loading || !newPassword}
+                    className="px-4 bg-zinc-700 hover:bg-zinc-600 text-white text-xs font-bold rounded-lg whitespace-nowrap"
+                  >
+                    强制修改
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                  <span className="text-xs text-zinc-500">或发送重置邮件给用户</span>
+                  <button 
+                    onClick={handleSendEmail}
+                    disabled={loading}
+                    className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                  >
+                    <Mail className="w-3 h-3" /> 发送邮件
+                  </button>
+                </div>
+              </div>
+
+              {/* 危险区域 */}
+              <div className="bg-red-900/10 p-5 rounded-xl border border-red-900/30">
+                <h4 className="text-sm font-bold text-red-400 mb-2 flex items-center gap-2">
+                  <Trash2 className="w-4 h-4" /> Danger Zone
+                </h4>
+                <p className="text-xs text-zinc-500 mb-4 leading-relaxed">
+                  删除账号是不可逆的操作。该用户的所有关联数据（订单、评论、地址）将被清除，可能导致报表数据不一致。
+                </p>
+                <button 
+                  onClick={handleDelete}
+                  disabled={loading}
+                  className="w-full bg-red-600/10 hover:bg-red-600 text-red-500 hover:text-white border border-red-600/50 font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all"
+                >
+                  <Trash2 className="w-4 h-4" /> 彻底删除该用户
+                </button>
               </div>
             </div>
-          </div>
-
-          {/* 详细数据列表 */}
-          <div className="space-y-6">
-            <Section title="Account Info">
-              <InfoItem icon={User} label="User ID" value={user.id} mono />
-              <InfoItem icon={Calendar} label="Registered" value={new Date(user.createdAt).toLocaleString()} />
-              <InfoItem icon={Activity} label="Traffic Source" value={user.trafficSource || "Direct"} />
-            </Section>
-
-            <Section title="Addresses">
-              {user.addresses && user.addresses.length > 0 ? (
-                <div className="space-y-3">
-                  {user.addresses.map((addr: any, i: number) => (
-                    <div key={addr.id} className={`p-3 rounded-lg border ${addr.isDefault ? 'bg-white/5 border-red-500/30' : 'bg-zinc-800/30 border-white/5'}`}>
-                      <div className="flex justify-between mb-1">
-                        <span className="text-xs text-zinc-500">Address #{i + 1} {addr.isDefault && "(Default)"}</span>
-                        <span className="text-xs text-zinc-400">{addr.country}</span>
-                      </div>
-                      <p className="text-sm text-zinc-300">
-                        {addr.addressLine1} {addr.addressLine2}
-                      </p>
-                      <p className="text-xs text-zinc-500 mt-1">
-                        {addr.city}, {addr.state} {addr.zipCode}
-                      </p>
-                      {addr.phoneNumber && (
-                        <p className="text-xs text-zinc-500 mt-1 flex items-center gap-1">
-                          Phone: {addr.phoneNumber}
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-zinc-500 italic">No addresses saved.</p>
-              )}
-            </Section>
-
-            <Section title="Raw Data (Debug)">
-              <pre className="text-[10px] text-zinc-600 bg-black p-3 rounded-lg overflow-x-auto font-mono">
-                {JSON.stringify(user, null, 2)}
-              </pre>
-            </Section>
-          </div>
+          )}
         </div>
       </motion.div>
-    </div>
-  );
-}
-
-// 辅助子组件
-function Section({ title, children }: { title: string, children: React.ReactNode }) {
-  return (
-    <div>
-      <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3 pb-1 border-b border-white/5">
-        {title}
-      </h4>
-      <div className="space-y-3">{children}</div>
-    </div>
-  );
-}
-
-function InfoItem({ icon: Icon, label, value, mono }: any) {
-  return (
-    <div className="flex items-start gap-3">
-      <Icon className="w-4 h-4 text-zinc-600 mt-0.5" />
-      <div className="flex-1">
-        <p className="text-xs text-zinc-500">{label}</p>
-        <p className={`text-sm text-zinc-300 break-all ${mono ? 'font-mono' : ''}`}>{value}</p>
-      </div>
     </div>
   );
 }

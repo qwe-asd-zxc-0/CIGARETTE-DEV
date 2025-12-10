@@ -1,60 +1,93 @@
-import { prisma } from "@/lib/prisma";
-import { Search } from "lucide-react";
-import UserTable from "@/components/admin/users/UserTable"; // 引入新组件
+"use client";
 
-export const dynamic = 'force-dynamic';
+import { useEffect, useState } from "react";
+import { UserPlus, Search, Loader2 } from "lucide-react";
+import UserTable from "@/components/admin/users/UserTable";
+import CreateUserModal from "@/components/admin/users/CreateUserModal";
+import { getUsers } from "./actions";
 
-export default async function UsersPage({
-  searchParams,
-}: {
-  searchParams: { q?: string };
-}) {
-  const query = searchParams?.q || "";
+export default function UsersPage() {
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [search, setSearch] = useState("");
 
-  // 查询用户数据 (包含所有地址，以便在详情页展示)
-  const users = await prisma.profile.findMany({
-    where: {
-      OR: [
-        { email: { contains: query, mode: "insensitive" } },
-        { fullName: { contains: query, mode: "insensitive" } },
-      ],
-    },
-    include: {
-      addresses: true, // ✅ 获取所有地址
-      _count: {
-        select: { orders: true }
-      }
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  // 加载数据函数
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const data = await getUsers(search);
+      setUsers(data as any);
+    } catch (error) {
+      console.error("Failed to fetch users", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 监听搜索输入（带防抖效果更好，这里简化为直接监听）
+  useEffect(() => {
+    // 简单防抖：输入停止 500ms 后才查询
+    const timer = setTimeout(() => {
+      loadData();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search]); 
+
+  // 当关闭新建窗口时，刷新列表
+  useEffect(() => {
+    if (!showCreateModal) {
+      loadData();
+    }
+  }, [showCreateModal]);
 
   return (
     <div className="space-y-6">
-      {/* 顶部标题与搜索 */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-white">User Management</h2>
-          <p className="text-zinc-400 text-sm">Manage user profiles, roles, and verifications.</p>
+          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+            User Management
+            {loading && <Loader2 className="w-4 h-4 animate-spin text-zinc-500" />}
+          </h2>
+          <p className="text-zinc-400 text-sm mt-1">Manage customers, balances, and permissions.</p>
         </div>
         
-        <div className="relative group">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-zinc-500 group-focus-within:text-white transition-colors" />
-          </div>
-          <form>
-            <input
-              type="text"
-              name="q"
-              placeholder="Search users..."
-              defaultValue={query}
-              className="bg-zinc-900 border border-white/10 text-white text-sm rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 w-64 transition-all"
-            />
-          </form>
-        </div>
+        {/* 新建用户按钮 */}
+        <button 
+          onClick={() => setShowCreateModal(true)}
+          className="flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition-colors shadow-lg shadow-green-900/20"
+        >
+          <UserPlus className="w-4 h-4" /> Add User
+        </button>
       </div>
 
-      {/* 渲染交互式表格 */}
-      <UserTable users={users} />
+      {/* 搜索框 */}
+      <div className="relative max-w-md group">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 group-focus-within:text-white transition-colors" />
+        <input 
+          placeholder="Search by name or email..." 
+          className="w-full bg-zinc-900 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-white focus:border-blue-500 outline-none transition-colors"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+
+      {/* 用户列表 */}
+      <div className="bg-zinc-900/50 border border-white/10 rounded-2xl overflow-hidden min-h-[400px]">
+        <UserTable users={users} />
+        
+        {!loading && users.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-20 text-zinc-500">
+            <p>No users found matching "{search}"</p>
+          </div>
+        )}
+      </div>
+
+      {/* 新建用户弹窗 */}
+      {showCreateModal && (
+        <CreateUserModal onClose={() => setShowCreateModal(false)} />
+      )}
     </div>
   );
 }
