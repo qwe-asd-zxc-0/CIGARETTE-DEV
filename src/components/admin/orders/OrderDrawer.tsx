@@ -4,7 +4,7 @@ import { useState } from "react";
 import { X, MapPin, Package, Truck, CreditCard, Save, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { updateOrderStatus, updateTrackingInfo } from "@/app/admin/orders/actions";
+import { updateOrderStatus, updateTrackingInfo } from "@/app/admin/(protected)/orders/actions";
 
 interface OrderDrawerProps {
   order: any; // 包含 user, items 等关联数据

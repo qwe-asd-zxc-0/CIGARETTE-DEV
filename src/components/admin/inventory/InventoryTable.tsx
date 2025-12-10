@@ -5,7 +5,7 @@ import Image from "next/image";
 import { 
   Search, Save, Bell, Loader2, Filter 
 } from "lucide-react";
-import { updateStock, notifySubscribers } from "@/app/admin/inventory/actions";
+import { updateStock, notifySubscribers } from "@/app/admin/(protected)/inventory/actions";
 import { useRouter } from "next/navigation";
 
 // 定义 props 类型

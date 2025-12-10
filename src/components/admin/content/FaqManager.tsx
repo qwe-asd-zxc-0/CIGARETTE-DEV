@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Plus, Edit2, Trash2, Save, X, ChevronDown, ChevronUp } from "lucide-react";
-import { createFaq, updateFaq, deleteFaq } from "@/app/admin/content/actions";
+import { createFaq, updateFaq, deleteFaq } from "@/app/admin/(protected)/content/actions";
 
 export default function FaqManager({ faqs }: { faqs: any[] }) {
   const [isEditing, setIsEditing] = useState<string | null>(null); // 'new' or id

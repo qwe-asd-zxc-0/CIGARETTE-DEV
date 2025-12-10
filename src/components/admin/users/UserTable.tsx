@@ -5,7 +5,7 @@ import Image from "next/image";
 import { MapPin, Shield, ShieldCheck, ShieldAlert, Key, Loader2 } from "lucide-react"; // ✅ 引入 Key 图标
 import { AnimatePresence } from "framer-motion";
 import UserDrawer from "./UserDrawer";
-import { toggleAgeVerified, toggleAdminStatus, sendPasswordResetEmail } from "@/app/admin/users/actions"; // ✅ 引入发邮件 action
+import { toggleAgeVerified, toggleAdminStatus, sendPasswordResetEmail } from "@/app/admin/(protected)/users/actions"; // ✅ 引入发邮件 action
 
 export default function UserTable({ users }: { users: any[] }) {
   const [selectedUser, setSelectedUser] = useState<any>(null);
