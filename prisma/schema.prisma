@@ -72,11 +72,13 @@ model Product {
   id                 String   @id @default(uuid()) @db.Uuid
   brandId            Int?     @map("brand_id")
   title              String
+  origin             String?  
   description        String?
   basePrice          Decimal  @map("base_price") @db.Decimal
   tieredPricingRules Json?    @default("[]") @map("tiered_pricing_rules")
   specifications     Json?    @default("{}")
   coverImageUrl      String?  @map("cover_image_url")
+  images             String[]  @default([])
   slug               String   @unique
   status             String?  @default("active") // active, draft, archived
   createdAt          DateTime? @default(now()) @db.Timestamptz(6) @map("created_at")

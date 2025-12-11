@@ -1,25 +1,30 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
-// 👇 1. 引入 GlobalOverlay 组件 (它包含了联系按钮、优惠券弹窗和年龄验证)
-import GlobalOverlay from "@/components/GlobalOverlay";
+import Header from "@/components/Header"; // ✅ 确保引入正确的 Header 组件
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "GLOBAL TOBACCO",
-  description: "Global Tobacco & International Logistics",
+  title: "Global Tobacco",
+  description: "Premium Vapes & E-Liquids",
 };
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <html lang="en">
-      <body>
-        {children}
+      <body className={`${inter.className} bg-black text-white antialiased`}>
+        {/* ✅ 这里只放 Header，绝对不要放 ProductPage */}
+        <Header />
         
-        {/* 👇 2. 在这里渲染全局悬浮层，确保它覆盖在页面内容之上 */}
-        <GlobalOverlay />
+        {/* 页面内容会自动填充到这里 */}
+        <main>
+          {children}
+        </main>
       </body>
     </html>
   );
