@@ -5,14 +5,14 @@ import { useCartDrawer } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
 import { 
   Lock, ArrowLeft, Loader2, MapPin, Mail, User, Phone, 
-  Minus, Plus, BookOpen, X, AlertCircle
+  Minus, Plus, BookOpen, X, AlertCircle, Check
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-// ✅ 引入两个 Server Action: 获取地址 & 创建订单
-import { getUserAddresses, createOrder } from "./actions";
+// 引入 Server Action
+import { getUserAddresses } from "./actions";
 
-// === 📦 组件：数量输入框 (保持不变) ===
+// === 📦 组件：数量输入框 ===
 function QuantityInput({ 
   item, 
   updateQuantity, 
@@ -71,10 +71,7 @@ function QuantityInput({
 }
 
 export default function CheckoutPage() {
-  // ✅ 获取 cartItems 和 清除购物车的方法
-  // 注意：如果您的 Context 还没加 clearCart，请在 Context 里加一下，或者这里用循环删除代替
   const { cartItems, updateQuantity, removeFromCart } = useCartDrawer();
-  
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -95,7 +92,7 @@ export default function CheckoutPage() {
   const [loadingAddresses, setLoadingAddresses] = useState(false);
 
   const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-  const total = subtotal; // 暂时免运费
+  const total = subtotal;
 
   // 加载用户地址
   useEffect(() => {
@@ -110,6 +107,7 @@ export default function CheckoutPage() {
         setLoadingAddresses(false);
       }
     };
+    
     loadAddresses();
   }, []);
 
@@ -117,13 +115,13 @@ export default function CheckoutPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // 选择地址填充
+  // ✅ 核心升级：选择地址时，同时也填充姓名和邮箱
   const handleSelectAddress = (addr: any) => {
     setFormData(prev => ({
       ...prev,
-      firstName: addr.firstName || "",
-      lastName: addr.lastName || "",
-      email: addr.email || prev.email,
+      firstName: addr.firstName || "", // 填充名字
+      lastName: addr.lastName || "",   // 填充姓氏
+      email: addr.email || prev.email, // 填充邮箱（如果地址里没存，保留原来的）
       address: addr.addressLine1 || "",
       city: addr.city || "",
       zip: addr.zipCode || "",
@@ -132,42 +130,16 @@ export default function CheckoutPage() {
     setShowAddressBook(false);
   };
 
-  // 🔥 核心逻辑：提交订单
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (cartItems.length === 0) return alert("购物车为空");
     
-    // 简单校验
-    if (!formData.firstName || !formData.lastName || !formData.phone || !formData.address) {
-      return alert("请填写完整的收货信息");
-    }
-
     setLoading(true);
-
-    try {
-      // 1. 调用 Server Action 创建订单
-      await createOrder({
-        items: cartItems,
-        shippingAddress: formData, // 把表单数据存为快照
-        subtotalAmount: subtotal,
-        totalAmount: total
-      });
-
-      // 2. 清空购物车 (模拟)
-      // 由于这是客户端组件，最好调用 Context 的 clearCart()
-      // 这里暂时用循环删除模拟
-      cartItems.forEach(item => removeFromCart(item.id));
-
-      // 3. 跳转
-      alert("🎉 订单创建成功！即将跳转...");
-      router.push("/profile/orders");
-
-    } catch (error: any) {
-      console.error("Order creation failed:", error);
-      alert(error.message || "订单创建失败，请重试");
-    } finally {
-      setLoading(false);
-    }
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    alert("订单支付成功！(演示)");
+    router.push("/profile/orders");
+    setLoading(false);
   };
 
   if (cartItems.length === 0) {
@@ -217,6 +189,7 @@ export default function CheckoutPage() {
                             默认
                           </span>
                         )}
+                        {/* 🔥 弹窗列表里也显示姓名 */}
                         <span className="text-sm font-bold text-white">
                           {addr.firstName} {addr.lastName}
                         </span>
@@ -228,6 +201,7 @@ export default function CheckoutPage() {
                       {addr.addressLine1}, {addr.city}, {addr.state} {addr.zipCode}
                     </div>
 
+                    {/* 选中时的装饰效果 */}
                     <div className="absolute right-0 top-0 bottom-0 w-1 bg-red-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </button>
                 ))
@@ -251,7 +225,12 @@ export default function CheckoutPage() {
             </div>
             
             <div className="p-4 border-t border-zinc-800 bg-zinc-900/30 text-center">
-              <button onClick={() => setShowAddressBook(false)} className="text-xs font-bold text-zinc-500 hover:text-white transition">取消</button>
+              <button 
+                onClick={() => setShowAddressBook(false)}
+                className="text-xs font-bold text-zinc-500 hover:text-white transition"
+              >
+                取消
+              </button>
             </div>
           </div>
         </div>
@@ -329,6 +308,7 @@ export default function CheckoutPage() {
             </button>
           </div>
           
+          {/* 提示：如果没地址，显示提醒 */}
           {savedAddresses.length === 0 && !loadingAddresses && (
              <div className="mb-6 p-3 bg-yellow-900/20 border border-yellow-700/50 rounded-lg flex items-start gap-3">
                 <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />

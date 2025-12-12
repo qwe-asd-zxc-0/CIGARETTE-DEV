@@ -5,6 +5,16 @@ import { Eye, Search, Filter } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import OrderDrawer from "./OrderDrawer";
 
+// 🇨🇳 状态汉化映射表
+const STATUS_MAP: Record<string, string> = {
+  all: "全部",
+  pending_payment: "待支付",
+  paid: "已支付",
+  shipped: "已发货",
+  completed: "已完成",
+  cancelled: "已取消",
+};
+
 export default function OrderTable({ orders }: { orders: any[] }) {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [statusFilter, setStatusFilter] = useState("all");
@@ -35,30 +45,32 @@ export default function OrderTable({ orders }: { orders: any[] }) {
     <div className="space-y-6">
       {/* 工具栏 */}
       <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
-        <div className="flex bg-zinc-900 p-1 rounded-xl border border-white/10 overflow-x-auto max-w-full">
-          {['all', 'pending_payment', 'paid', 'shipped', 'completed'].map((s) => (
+        {/* 状态筛选按钮组 */}
+        <div className="flex bg-zinc-900 p-1 rounded-xl border border-white/10 overflow-x-auto max-w-full no-scrollbar">
+          {['all', 'pending_payment', 'paid', 'shipped', 'completed', 'cancelled'].map((s) => (
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
-              className={`px-4 py-2 rounded-lg text-xs font-bold uppercase whitespace-nowrap transition-all ${
+              className={`px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
                 statusFilter === s 
                   ? "bg-zinc-800 text-white shadow-sm" 
                   : "text-zinc-500 hover:text-zinc-300"
               }`}
             >
-              {s.replace('_', ' ')}
+              {STATUS_MAP[s] || s}
             </button>
           ))}
         </div>
 
-        <div className="relative group w-full md:w-64">
+        {/* 搜索框 */}
+        <div className="relative group w-full md:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 group-focus-within:text-white transition-colors" />
           <input
             type="text"
-            placeholder="Search Order ID / Email..."
+            placeholder="搜索订单号 / 客户邮箱..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-zinc-900 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-blue-500 transition-all"
+            className="w-full bg-zinc-900 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-blue-500 transition-all placeholder:text-zinc-600"
           />
         </div>
       </div>
@@ -67,14 +79,14 @@ export default function OrderTable({ orders }: { orders: any[] }) {
       <div className="bg-zinc-900/50 border border-white/10 rounded-2xl overflow-hidden backdrop-blur-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-zinc-400">
-            <thead className="bg-white/5 uppercase font-bold text-xs tracking-wider text-zinc-200">
+            <thead className="bg-white/5 font-bold text-xs text-zinc-200">
               <tr>
-                <th className="p-4 pl-6">Order ID</th>
-                <th className="p-4">Customer</th>
-                <th className="p-4 text-center">Status</th>
-                <th className="p-4 text-right">Total</th>
-                <th className="p-4 text-right">Date</th>
-                <th className="p-4 text-right pr-6">Action</th>
+                <th className="p-4 pl-6 whitespace-nowrap">订单号 (Order ID)</th>
+                <th className="p-4 whitespace-nowrap">客户信息</th>
+                <th className="p-4 text-center whitespace-nowrap">当前状态</th>
+                <th className="p-4 text-right whitespace-nowrap">总金额</th>
+                <th className="p-4 text-right whitespace-nowrap">下单时间</th>
+                <th className="p-4 text-right pr-6 whitespace-nowrap">操作</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -85,25 +97,25 @@ export default function OrderTable({ orders }: { orders: any[] }) {
                   className="hover:bg-white/5 transition-colors cursor-pointer group"
                 >
                   <td className="p-4 pl-6 font-mono text-white group-hover:text-blue-400 transition-colors">
-                    #{order.id.slice(0, 8)}...
+                    #{order.id.slice(0, 8).toUpperCase()}
                   </td>
                   <td className="p-4">
-                    <p className="text-white font-medium">{order.user?.fullName || "Guest"}</p>
+                    <p className="text-white font-medium">{order.user?.fullName || "游客用户"}</p>
                     <p className="text-xs text-zinc-500">{order.user?.email || order.guestEmail}</p>
                   </td>
                   <td className="p-4 text-center">
-                    <span className={`px-2 py-1 rounded border text-[10px] uppercase font-bold ${getStatusColor(order.status || "")}`}>
-                      {order.status?.replace('_', ' ')}
+                    <span className={`px-2.5 py-1 rounded border text-[11px] font-bold ${getStatusColor(order.status || "")}`}>
+                      {STATUS_MAP[order.status || ""] || order.status}
                     </span>
                   </td>
                   <td className="p-4 text-right font-mono text-white">
                     ${Number(order.totalAmount).toFixed(2)}
                   </td>
                   <td className="p-4 text-right text-xs">
-                    {new Date(order.createdAt).toLocaleDateString()}
+                    {new Date(order.createdAt).toLocaleString('zh-CN', { hour12: false })}
                   </td>
                   <td className="p-4 text-right pr-6">
-                    <button className="p-2 bg-zinc-800 rounded-lg hover:bg-white/10 hover:text-white transition-colors">
+                    <button className="p-2 bg-zinc-800 rounded-lg hover:bg-white/10 hover:text-white transition-colors" title="查看详情">
                       <Eye className="w-4 h-4" />
                     </button>
                   </td>
@@ -114,7 +126,7 @@ export default function OrderTable({ orders }: { orders: any[] }) {
                   <td colSpan={6} className="p-12 text-center text-zinc-500">
                     <div className="flex flex-col items-center gap-2">
                       <Filter className="w-8 h-8 opacity-20" />
-                      <p>No orders found.</p>
+                      <p>暂无符合条件的订单数据</p>
                     </div>
                   </td>
                 </tr>

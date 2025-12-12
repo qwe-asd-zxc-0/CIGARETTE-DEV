@@ -33,10 +33,10 @@ export default async function OrdersPage() {
         <div>
           <h2 className="text-2xl font-bold text-white flex items-center gap-3">
             <ClipboardList className="w-6 h-6 text-blue-500" />
-            Order Management
+            订单管理 (Order Management)
           </h2>
           <p className="text-zinc-400 text-sm mt-1">
-            Track orders, manage shipments, and view details.
+            追踪订单状态、管理发货流程及查看详细交易记录。
           </p>
         </div>
       </div>

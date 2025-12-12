@@ -15,11 +15,12 @@ export default function CouponPopup() {
   // 优惠券配置
   const couponConfig = {
     title: "Welcome Gift",
-    // 👇 核心文案：去掉了 Code，直接强调注册福利
     description: "Register now to get 10% OFF your first order", 
   };
 
   useEffect(() => {
+    // 检查本次会话是否已经看过 (Session Storage)
+    // 逻辑：每次打开浏览器第一次会弹出大窗，之后刷新页面会默认最小化，但一直存在
     const hasSeen = sessionStorage.getItem("hasSeenCoupon");
 
     if (!hasSeen) {
@@ -30,6 +31,7 @@ export default function CouponPopup() {
       }, 1500);
       return () => clearTimeout(timer);
     } else {
+      // 如果看过了，默认显示小图标（不自动弹大窗）
       setIsOpen(false);
       setIsMinimized(true);
     }
@@ -48,7 +50,7 @@ export default function CouponPopup() {
   const handleGetCoupon = () => {
     router.push("/sign-up"); // 跳转注册页
     setIsOpen(false);
-    setIsMinimized(true);
+    setIsMinimized(true); // 点击后只是最小化，不消失
   };
 
   return (
@@ -88,7 +90,6 @@ export default function CouponPopup() {
               {/* 内容区 */}
               <div className="p-8 flex flex-col items-center text-center relative z-0">
                 
-                {/* 图标 (换成了 Gift 图标，更有新人礼的感觉) */}
                 <div className="w-20 h-20 rounded-full bg-gradient-to-br from-red-600 to-red-700 flex items-center justify-center mb-6 shadow-lg shadow-red-900/40 ring-4 ring-black/50">
                   <Gift className="w-10 h-10 text-white animate-bounce-slow" />
                 </div>
@@ -97,7 +98,6 @@ export default function CouponPopup() {
                   {couponConfig.title}
                 </h2>
 
-                {/* 🚀 核心修改：放大并加粗文案 */}
                 <p className="text-2xl font-bold text-white mb-8 leading-snug px-2">
                   Register now to get <br />
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500">
@@ -107,7 +107,6 @@ export default function CouponPopup() {
                   your first order
                 </p>
 
-                {/* 跳转按钮 */}
                 <button
                   onClick={handleGetCoupon}
                   className="w-full py-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-red-900/20 active:scale-95 flex items-center justify-center gap-2 text-lg"
@@ -129,7 +128,8 @@ export default function CouponPopup() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleRestore}
-            className="fixed bottom-24 right-6 z-50 group w-14 h-14 rounded-full shadow-lg shadow-red-900/20 flex items-center justify-center transition-all duration-300 bg-gradient-to-br from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 border border-white/10"
+            // ✅ 核心修改：bottom-44 (约176px)，完美避开下方两个按钮
+            className="fixed bottom-44 right-6 z-50 group w-14 h-14 rounded-full shadow-lg shadow-red-900/20 flex items-center justify-center transition-all duration-300 bg-gradient-to-br from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 border border-white/10"
             aria-label="Get Coupon"
           >
             {/* 提示气泡 */}

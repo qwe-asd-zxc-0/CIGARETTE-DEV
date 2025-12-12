@@ -35,6 +35,8 @@ model Profile {
 model UserAddress {
   id           String   @id @default(uuid()) @db.Uuid
   userId       String?  @db.Uuid @map("user_id")
+  firstName    String?  @map("first_name")
+  lastName     String?  @map("last_name")
   country      String
   state        String?
   city         String?
