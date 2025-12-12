@@ -1,4 +1,6 @@
 // src/lib/cart.ts
+"use client";
+
 export interface CartItem {
   productId: string;
   variantId: string;
@@ -18,6 +20,14 @@ export function getCart(): CartItem[] {
   return json ? JSON.parse(json) : [];
 }
 
+export function saveCart(cart: CartItem[]) {
+  localStorage.setItem(CART_KEY, JSON.stringify(cart));
+  if (typeof window !== 'undefined') {
+    // 触发自定义事件，通知组件更新
+    window.dispatchEvent(new Event('cart-updated'));
+  }
+}
+
 export function addToCart(item: CartItem) {
   const cart = getCart();
   const existingItem = cart.find(i => i.variantId === item.variantId);
@@ -27,15 +37,33 @@ export function addToCart(item: CartItem) {
   } else {
     cart.push(item);
   }
+  saveCart(cart);
+}
 
-  localStorage.setItem(CART_KEY, JSON.stringify(cart));
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new Event('cart-updated'));
+export function updateQuantity(variantId: string, delta: number) {
+  const cart = getCart();
+  const item = cart.find(i => i.variantId === variantId);
+  if (item) {
+    const newQuantity = item.quantity + delta;
+    if (newQuantity > 0) {
+      item.quantity = newQuantity;
+    } else {
+      // 数量小于1时移除该商品
+      return removeFromCart(variantId);
+    }
+    saveCart(cart);
   }
 }
 
-export function buyNow(item: CartItem) {
-  addToCart(item);
-  console.log("跳转结算:", item);
-  // window.location.href = '/checkout';
+export function removeFromCart(variantId: string) {
+  const cart = getCart();
+  const newCart = cart.filter(i => i.variantId !== variantId);
+  saveCart(newCart);
+}
+
+export function clearCart() {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem(CART_KEY);
+    window.dispatchEvent(new Event('cart-updated'));
+  }
 }
