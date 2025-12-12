@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import * as XLSX from 'xlsx';
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 // 辅助: 生成 URL Slug
 function generateSlug(text: string) {
@@ -26,6 +28,37 @@ function generateAutoSKU(brand: string, title: string, flavor: string, strength:
 
 export async function POST(request: Request) {
   try {
+    // --- 🛡️ 安全检查 Start ---
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+        },
+      }
+    );
+
+    // 1. 验证登录
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // 2. 验证管理员权限
+    const profile = await prisma.profile.findUnique({
+      where: { id: user.id },
+      select: { isAdmin: true }
+    });
+
+    if (!profile || !profile.isAdmin) {
+      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+    }
+    // --- 🛡️ 安全检查 End ---
+
     const formData = await request.formData();
     const file = formData.get('file') as File;
 
@@ -41,7 +74,7 @@ export async function POST(request: Request) {
     let successCount = 0;
 
     for (const row of rows) {
-      // 1. 读取基础字段 (兼容旧版 Key)
+      // 1. 读取基础字段
       const brandName = (row['品牌 (Brand)'] || row['Brand'] || '').toString().trim();
       const title = (row['商品名称 (Product Title)'] || row['Product Title'] || '').toString().trim();
       const flavor = (row['口味 (Flavor)'] || row['Flavor'] || 'Default').toString().trim();
@@ -56,13 +89,13 @@ export async function POST(request: Request) {
       const coverImageUrl = (row['封面图URL (Cover Image)'] || row['Cover Image'] || '').toString();
       const description = (row['描述 (Description)'] || row['Description'] || '').toString();
 
-      // 2. 🔥 智能组装: 规格参数 (从分散列 -> JSON)
+      // 2. 🔥 智能组装: 规格参数
       const specifications: Record<string, string> = {};
       if (row['规格:口数 (Puffs)']) specifications['Puffs'] = String(row['规格:口数 (Puffs)']);
       if (row['规格:容量 (Capacity)']) specifications['Capacity'] = String(row['规格:容量 (Capacity)']);
       if (row['规格:电池 (Battery)']) specifications['Battery'] = String(row['规格:电池 (Battery)']);
 
-      // 3. 🔥 智能组装: 阶梯定价 (从分散列 -> JSON Array)
+      // 3. 🔥 智能组装: 阶梯定价
       const tieredPricingRules = [];
       for (let i = 1; i <= 3; i++) {
         const qty = parseInt(row[`批发:数量${i} (Qty ${i})`] || 0);
@@ -90,11 +123,9 @@ export async function POST(request: Request) {
 
       // B. 商品 (SPU)
       const productSlugCandidate = generateSlug(title);
-      // 简单查重：按标题查找，如果存在则复用，否则创建
-      // 注意：这里为了简化，假设同名即为同一商品。实际可能需要更复杂的逻辑。
       let product = await prisma.product.findFirst({
         where: { 
-            title: { equals: title, mode: 'insensitive' }, // 忽略大小写
+            title: { equals: title, mode: 'insensitive' },
             brandId: brand.id 
         }
       });
@@ -108,14 +139,13 @@ export async function POST(request: Request) {
             description,
             origin,
             coverImageUrl,
-            tieredPricingRules, // ✅ 存入组装好的 JSON
-            specifications,     // ✅ 存入组装好的 JSON
+            tieredPricingRules,
+            specifications,
             brandId: brand.id,
             status: 'active'
           }
         });
       } else {
-        // 更新商品信息 (可选：比如更新阶梯价或封面)
         await prisma.product.update({
             where: { id: product.id },
             data: { tieredPricingRules, specifications, coverImageUrl }
@@ -123,7 +153,6 @@ export async function POST(request: Request) {
       }
 
       // C. 变体 (SKU)
-      // 使用自动生成的 skuCode 查找或创建
       const existingSku = await prisma.productVariant.findUnique({
         where: { skuCode }
       });
@@ -137,7 +166,7 @@ export async function POST(request: Request) {
         await prisma.productVariant.create({
           data: {
             productId: product.id,
-            skuCode, // ✅ 使用自动生成的 SKU
+            skuCode,
             flavor,
             nicotineStrength: strength,
             stockQuantity: stock,

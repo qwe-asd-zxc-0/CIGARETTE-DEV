@@ -10,12 +10,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 2. 如果请求路径不是以 /admin 开头，直接放行
-  if (!pathname.startsWith("/admin")) {
-    return NextResponse.next();
-  }
-
-  // 3. 初始化 Supabase
+  // 2. 初始化 Supabase
+  // 创建一个响应对象，以便后续设置 Cookie
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -52,21 +48,36 @@ export async function middleware(request: NextRequest) {
     }
   );
 
+  // 3. 检查用户登录状态
   const { data: { user } } = await supabase.auth.getUser();
 
-  // 4. 如果是访问后台但未登录 -> 跳转登录
+  // 4. 鉴权逻辑：未登录处理
   if (!user) {
+    // 如果是 API 请求，返回 401 JSON 错误，防止前端解析 HTML 报错
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json(
+        { error: "Unauthorized: Please log in." },
+        { status: 401 }
+      );
+    }
+
+    // 如果是页面访问，跳转到登录页
     const url = request.nextUrl.clone();
     url.pathname = "/admin/login";
     return NextResponse.redirect(url);
   }
 
+  // 注意：中间件无法直接连接数据库检查 isAdmin，
+  // 必须在后续的 API Route 中配合数据库检查权限。
+
   return response;
 }
 
-// ⚠️ 关键修复在这里：只让中间件在 /admin 路径下生效
+// ⚠️ 关键修复：扩大匹配范围，包含 /api 下的敏感路径
 export const config = {
   matcher: [
-    "/admin/:path*", 
+    "/admin/:path*",          // 保护所有后台页面
+    "/api/admin/:path*",      // 保护所有后台 API
+    "/api/upload",            // 保护上传接口
   ],
 };
