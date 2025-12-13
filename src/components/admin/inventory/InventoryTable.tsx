@@ -114,9 +114,9 @@ export default function InventoryTable({ variants }: { variants: VariantWithProd
                   : "text-zinc-500 hover:text-zinc-300"
               }`}
             >
-              {type === 'all' && 'All Items'}
-              {type === 'low' && 'Low Stock (<10)'}
-              {type === 'out' && 'Out of Stock (0)'}
+              {type === 'all' && '全部商品 (All)'}
+              {type === 'low' && '库存紧张 (<10)'}
+              {type === 'out' && '已售罄 (0)'}
             </button>
           ))}
         </div>
@@ -125,7 +125,7 @@ export default function InventoryTable({ variants }: { variants: VariantWithProd
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 group-focus-within:text-white transition-colors" />
           <input
             type="text"
-            placeholder="Search SKU, Product..."
+            placeholder="搜索 SKU, 商品名称..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full bg-zinc-900 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-red-600 transition-all"
@@ -139,12 +139,12 @@ export default function InventoryTable({ variants }: { variants: VariantWithProd
           <table className="w-full text-left text-sm text-zinc-400">
             <thead className="bg-white/5 uppercase font-bold text-xs tracking-wider text-zinc-200">
               <tr>
-                <th className="p-4 pl-6">Product & Variant</th>
-                <th className="p-4">SKU</th>
-                <th className="p-4">Price</th>
-                <th className="p-4">Stock Level</th>
-                <th className="p-4 text-center">Waitlist</th>
-                <th className="p-4 text-right pr-6">Actions</th>
+                <th className="p-4 pl-6">商品 & 变体 (Product & Variant)</th>
+                <th className="p-4">SKU 编码</th>
+                <th className="p-4">价格 (Price)</th>
+                <th className="p-4">库存数量 (Stock)</th>
+                <th className="p-4 text-center">等待通知 (Waitlist)</th>
+                <th className="p-4 text-right pr-6">操作 (Actions)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">

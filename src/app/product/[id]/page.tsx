@@ -59,19 +59,8 @@ export default async function ProductDetail({ params }: ProductDetailProps) {
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-100 pb-20">
       <ContactWidget />
-      
-      {/* 面包屑导航 */}
-      <nav className="border-b border-white/5 px-6 py-4 bg-zinc-900/50 sticky top-0 z-10 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto flex items-center gap-2 text-xs font-mono text-zinc-500">
-          <Link href="/" className="hover:text-white transition">首页</Link>
-          <span>/</span>
-          <Link href="/product" className="hover:text-white transition">所有商品</Link>
-          <span>/</span>
-          <span className="text-zinc-300 truncate max-w-[150px]">{product.title}</span>
-        </div>
-      </nav>
 
-      <div className="max-w-7xl mx-auto px-6 py-12">
+      <div className="max-w-7xl mx-auto px-6 pt-24 pb-12">
         
         {/* 传入序列化后的 product 数据 */}
         <ProductDetailClient product={product} />

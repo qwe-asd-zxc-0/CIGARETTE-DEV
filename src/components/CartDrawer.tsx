@@ -42,9 +42,9 @@ export default function CartDrawer() {
             {cartItems.length === 0 ? (
               <div className="text-center py-20">
                 <p className="text-zinc-500 mb-4">您的购物车是空的</p>
-                <button onClick={closeCart} className="text-red-500 hover:text-red-400 font-medium">
+                <Link href="/product" onClick={closeCart} className="text-red-500 hover:text-red-400 font-medium">
                   去选购商品 &gt;
-                </button>
+                </Link>
               </div>
             ) : (
               cartItems.map((item) => (

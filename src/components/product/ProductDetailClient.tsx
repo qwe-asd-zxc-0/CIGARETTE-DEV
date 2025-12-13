@@ -64,10 +64,10 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
       stock: currentStock             // 🔥 关键：必须传入库存，Context 会帮我们做校验
     };
 
-    // 调用 Context 方法 (会自动做库存检查 + 更新状态 + 打开侧边栏)
-    addToCart(cartItem);
+    // 调用 Context 方法 (会自动做库存检查 + 更新状态)
+    // 如果是"立即购买"，则不显示购物车侧边栏，直接跳转结算
+    addToCart(cartItem, !isBuyNow);
     
-    // 如果是“立即购买”，则跳转结算
     if (isBuyNow) {
       router.push("/checkout");
     }

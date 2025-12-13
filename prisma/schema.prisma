@@ -75,6 +75,7 @@ model Product {
   brandId            Int?     @map("brand_id")
   title              String
   origin             String?  
+  category           String?  // 商品分类：Disposable, E-Liquid, Traditional 等
   description        String?
   basePrice          Decimal  @map("base_price") @db.Decimal
   tieredPricingRules Json?    @default("[]") @map("tiered_pricing_rules")
@@ -84,6 +85,7 @@ model Product {
   slug               String   @unique
   status             String?  @default("active") // active, draft, archived
   createdAt          DateTime? @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt          DateTime? @updatedAt @map("updated_at")
 
   // 关系
   brand           Brand?           @relation(fields: [brandId], references: [id])

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { MessageSquare, HelpCircle } from "lucide-react";
+import Link from "next/link";
 import ReviewManager from "@/components/admin/content/ReviewManager";
 import FaqManager from "@/components/admin/content/FaqManager";
 
@@ -32,15 +33,15 @@ export default async function ContentPage({
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-bold text-white">Content Management</h2>
-        <p className="text-zinc-400 text-sm">Moderate user reviews and manage website FAQs.</p>
+        <h2 className="text-2xl font-bold text-white">内容管理</h2>
+        <p className="text-zinc-400 text-sm">管理用户评论和网站常见问题解答。</p>
       </div>
 
       {/* Tab 导航 */}
       <div className="border-b border-white/10">
         <div className="flex gap-8">
-          <a
-            href="?tab=reviews"
+          <Link
+            href="/admin/content?tab=reviews"
             className={`pb-4 flex items-center gap-2 text-sm font-bold border-b-2 transition-colors ${
               activeTab === "reviews"
                 ? "border-red-600 text-white"
@@ -48,14 +49,14 @@ export default async function ContentPage({
             }`}
           >
             <MessageSquare className="w-4 h-4" />
-            Product Reviews
+            商品评论
             <span className="ml-1 px-2 py-0.5 bg-zinc-800 text-zinc-400 rounded-full text-xs">
               {reviews.length}
             </span>
-          </a>
+          </Link>
           
-          <a
-            href="?tab=faqs"
+          <Link
+            href="/admin/content?tab=faqs"
             className={`pb-4 flex items-center gap-2 text-sm font-bold border-b-2 transition-colors ${
               activeTab === "faqs"
                 ? "border-red-600 text-white"
@@ -63,11 +64,11 @@ export default async function ContentPage({
             }`}
           >
             <HelpCircle className="w-4 h-4" />
-            FAQs
+            常见问题 (FAQ)
             <span className="ml-1 px-2 py-0.5 bg-zinc-800 text-zinc-400 rounded-full text-xs">
               {faqs.length}
             </span>
-          </a>
+          </Link>
         </div>
       </div>
 

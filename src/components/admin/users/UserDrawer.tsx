@@ -1,19 +1,25 @@
 "use client";
 
-import { useState } from "react";
-import { X, Save, Trash2, Key, Shield, User, Wallet, Mail } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, Save, Trash2, Key, Shield, User, Wallet, Mail, MapPin, ShoppingBag, Star, Package } from "lucide-react";
 import { motion } from "framer-motion";
-import { updateUserProfile, resetUserPassword, deleteUser, sendPasswordResetEmail } from "@/app/admin/(protected)/users/actions";
+import Image from "next/image";
+import { updateUserProfile, resetUserPassword, deleteUser, sendPasswordResetEmail, getUserDetails } from "@/app/admin/(protected)/users/actions";
 
 interface UserDrawerProps {
   user: any;
   onClose: () => void;
+  onUpdate?: () => void; // 新增回调
 }
 
-export default function UserDrawer({ user, onClose }: UserDrawerProps) {
+export default function UserDrawer({ user, onClose, onUpdate }: UserDrawerProps) {
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<"profile" | "security">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "history" | "security">("profile");
   
+  // 详细信息状态
+  const [detailedUser, setDetailedUser] = useState<any>(null);
+  const [detailsLoading, setDetailsLoading] = useState(true);
+
   // 表单状态
   const [formData, setFormData] = useState({
     fullName: user.fullName || "",
@@ -24,13 +30,32 @@ export default function UserDrawer({ user, onClose }: UserDrawerProps) {
 
   const [newPassword, setNewPassword] = useState("");
 
+  // 获取详细信息
+  useEffect(() => {
+    let isMounted = true;
+    const fetchDetails = async () => {
+      setDetailsLoading(true);
+      const res = await getUserDetails(user.id);
+      if (isMounted && res.success) {
+        setDetailedUser(res.data);
+      }
+      if (isMounted) setDetailsLoading(false);
+    };
+    fetchDetails();
+    return () => { isMounted = false; };
+  }, [user.id]);
+
   // 保存资料
   const handleSaveProfile = async () => {
     setLoading(true);
     const res = await updateUserProfile(user.id, formData);
     setLoading(false);
-    if (res.success) alert("✅ 资料已保存");
-    else alert("❌ 保存失败");
+    if (res.success) {
+      alert("✅ 资料已保存");
+      if (onUpdate) onUpdate(); // 触发刷新
+    } else {
+      alert("❌ 保存失败");
+    }
   };
 
   // 强制重置密码
@@ -103,6 +128,12 @@ export default function UserDrawer({ user, onClose }: UserDrawerProps) {
             基本资料
           </button>
           <button 
+            onClick={() => setActiveTab("history")}
+            className={`pb-3 pt-4 text-sm font-bold mr-6 border-b-2 transition-colors ${activeTab === "history" ? "border-purple-500 text-white" : "border-transparent text-zinc-500 hover:text-zinc-300"}`}
+          >
+            历史记录
+          </button>
+          <button 
             onClick={() => setActiveTab("security")}
             className={`pb-3 pt-4 text-sm font-bold border-b-2 transition-colors ${activeTab === "security" ? "border-red-500 text-white" : "border-transparent text-zinc-500 hover:text-zinc-300"}`}
           >
@@ -171,6 +202,32 @@ export default function UserDrawer({ user, onClose }: UserDrawerProps) {
                 </div>
               </div>
 
+              {/* 3. 地址信息 */}
+              <div>
+                <h4 className="text-sm font-bold text-zinc-400 mb-3 flex items-center gap-2">
+                  <MapPin className="w-4 h-4" /> 收货地址
+                </h4>
+                {detailsLoading ? (
+                  <div className="text-zinc-600 text-xs animate-pulse">加载地址中...</div>
+                ) : detailedUser?.addresses?.length > 0 ? (
+                  <div className="space-y-2">
+                    {detailedUser.addresses.map((addr: any) => (
+                      <div key={addr.id} className="bg-zinc-800/50 p-3 rounded-lg border border-white/5 text-sm">
+                        <div className="flex justify-between mb-1">
+                          <span className="text-white font-bold">{addr.firstName} {addr.lastName}</span>
+                          <span className="text-zinc-500 text-xs">{addr.phone}</span>
+                        </div>
+                        <p className="text-zinc-400 text-xs leading-relaxed">
+                          {addr.addressLine1} {addr.addressLine2}, {addr.city}, {addr.state} {addr.zipCode}, {addr.country}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-zinc-600 text-xs italic">暂无地址记录</div>
+                )}
+              </div>
+
               <button 
                 onClick={handleSaveProfile}
                 disabled={loading}
@@ -178,6 +235,81 @@ export default function UserDrawer({ user, onClose }: UserDrawerProps) {
               >
                 {loading ? "Saving..." : <><Save className="w-4 h-4" /> 保存修改</>}
               </button>
+            </div>
+          )}
+
+          {activeTab === "history" && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
+              {/* 订单记录 */}
+              <div>
+                <h4 className="text-sm font-bold text-zinc-400 mb-3 flex items-center gap-2">
+                  <ShoppingBag className="w-4 h-4" /> 最近订单
+                </h4>
+                {detailsLoading ? (
+                  <div className="text-zinc-600 text-xs animate-pulse">加载订单中...</div>
+                ) : detailedUser?.orders?.length > 0 ? (
+                  <div className="space-y-3">
+                    {detailedUser.orders.map((order: any) => (
+                      <div key={order.id} className="bg-zinc-800/50 p-3 rounded-lg border border-white/5">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-xs font-mono text-zinc-500">#{order.id.slice(0, 8)}</span>
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                            order.status === 'paid' ? 'bg-green-500/20 text-green-400' : 
+                            order.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' : 
+                            'bg-zinc-700 text-zinc-400'
+                          }`}>
+                            {order.status}
+                          </span>
+                        </div>
+                        <div className="flex gap-2 overflow-x-auto pb-2">
+                          {order.items.map((item: any, idx: number) => (
+                            <div key={idx} className="flex-shrink-0 w-10 h-10 bg-black rounded border border-white/10 relative overflow-hidden">
+                              {item.productVariant?.product?.images?.[0] && (
+                                <Image src={item.productVariant.product.images[0]} alt="" fill className="object-cover" />
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        <div className="flex justify-between items-center mt-2 text-xs">
+                          <span className="text-zinc-500">{new Date(order.createdAt).toLocaleDateString()}</span>
+                          <span className="text-white font-mono">${Number(order.totalAmount).toFixed(2)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-zinc-600 text-xs italic">暂无订单记录</div>
+                )}
+              </div>
+
+              {/* 评论记录 */}
+              <div>
+                <h4 className="text-sm font-bold text-zinc-400 mb-3 flex items-center gap-2">
+                  <Star className="w-4 h-4" /> 最近评价
+                </h4>
+                {detailsLoading ? (
+                  <div className="text-zinc-600 text-xs animate-pulse">加载评价中...</div>
+                ) : detailedUser?.reviews?.length > 0 ? (
+                  <div className="space-y-3">
+                    {detailedUser.reviews.map((review: any) => (
+                      <div key={review.id} className="bg-zinc-800/50 p-3 rounded-lg border border-white/5">
+                        <div className="flex justify-between items-start mb-1">
+                          <span className="text-xs text-blue-400 font-bold line-clamp-1">{review.product?.title}</span>
+                          <div className="flex text-yellow-500">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} className={`w-3 h-3 ${i < review.rating ? "fill-current" : "text-zinc-700"}`} />
+                            ))}
+                          </div>
+                        </div>
+                        <p className="text-xs text-zinc-300 line-clamp-2">{review.content}</p>
+                        <p className="text-[10px] text-zinc-600 mt-2 text-right">{new Date(review.createdAt).toLocaleDateString()}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-zinc-600 text-xs italic">暂无评价记录</div>
+                )}
+              </div>
             </div>
           )}
 

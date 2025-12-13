@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { Plus, Edit, Trash2, Eye } from "lucide-react";
+import { Plus, Edit, Eye } from "lucide-react";
+import DeleteProductButton from "@/components/admin/products/DeleteProductButton";
+import ProductStatusBadge from "@/components/admin/products/ProductStatusBadge";
 
 export const dynamic = 'force-dynamic';
 
@@ -20,7 +22,7 @@ export default async function ProductsPage() {
     <div className="space-y-6">
       {/* 头部操作栏 */}
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-white">Product Management</h2>
+        <h2 className="text-2xl font-bold text-white">商品管理</h2>
         <Link 
           href="/admin/products/new" 
           className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium"
@@ -34,12 +36,12 @@ export default async function ProductsPage() {
         <table className="w-full text-left text-sm text-zinc-400">
           <thead className="bg-white/5 text-zinc-100 uppercase font-bold text-xs tracking-wider">
             <tr>
-              <th className="p-4">Product Info</th>
-              <th className="p-4">Brand</th>
-              <th className="p-4">Price</th>
-              <th className="p-4">Status</th>
-              <th className="p-4">Variants</th>
-              <th className="p-4 text-right">Actions</th>
+              <th className="p-4">商品信息</th>
+              <th className="p-4">品牌</th>
+              <th className="p-4">价格</th>
+              <th className="p-4">状态</th>
+              <th className="p-4">规格</th>
+              <th className="p-4 text-right">操作</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
@@ -63,27 +65,24 @@ export default async function ProductsPage() {
                 <td className="p-4 text-white">{product.brand?.name || '-'}</td>
                 <td className="p-4 font-mono text-white">${product.basePrice.toString()}</td>
                 <td className="p-4">
-                  <span className={`px-2 py-1 rounded text-xs font-bold ${
-                    product.status === 'active' ? 'bg-green-500/20 text-green-400' : 
-                    product.status === 'draft' ? 'bg-yellow-500/20 text-yellow-400' : 
-                    'bg-red-500/20 text-red-400'
-                  }`}>
-                    {product.status?.toUpperCase()}
-                  </span>
+                  <ProductStatusBadge productId={product.id} status={product.status || 'active'} />
                 </td>
                 <td className="p-4">
                   <span className="px-2 py-1 bg-zinc-800 rounded text-xs">
-                    {product._count.variants} SKUs
+                    {product._count.variants} 项
                   </span>
                 </td>
-                <td className="p-4 text-right space-x-2">
-                  <Link href={`/admin/products/${product.id}`} className="inline-block p-2 hover:text-white transition-colors" title="Edit">
-                    <Edit className="w-4 h-4" />
-                  </Link>
-                  {/* 这里可以放一个 Server Action 的删除按钮 */}
-                  <button className="inline-block p-2 hover:text-red-500 transition-colors" title="Delete">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                <td className="p-4 text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    <Link 
+                      href={`/admin/products/${product.id}`} 
+                      className="p-2 text-zinc-400 hover:text-blue-400 hover:bg-blue-400/10 rounded-md transition-all" 
+                      title="编辑"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Link>
+                    <DeleteProductButton productId={product.id} />
+                  </div>
                 </td>
               </tr>
             ))}

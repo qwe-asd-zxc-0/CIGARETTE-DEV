@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useCartDrawer } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
 import { 
-  Lock, ArrowLeft, Loader2, MapPin, Mail, User, Phone, 
+  Lock, ArrowLeft, Loader2, MapPin, User, Phone, 
   Minus, Plus, BookOpen, X, AlertCircle, Building, Globe, ShoppingBag
 } from "lucide-react";
 import Link from "next/link";
@@ -73,7 +73,6 @@ export default function CheckoutPage() {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
-    email: "",
     phone: "",
     addressLine1: "",
     addressLine2: "",
@@ -116,7 +115,6 @@ export default function CheckoutPage() {
       ...prev,
       firstName: addr.firstName || "",
       lastName: addr.lastName || "",
-      email: addr.email || prev.email,
       phone: addr.phoneNumber || "",
       addressLine1: addr.addressLine1 || "",
       addressLine2: addr.addressLine2 || "",
@@ -144,7 +142,6 @@ export default function CheckoutPage() {
       payload.append("fullName", `${formData.firstName} ${formData.lastName}`.trim());
       
       // 添加其他字段
-      payload.append("email", formData.email);
       payload.append("phone", formData.phone);
       payload.append("addressLine1", formData.addressLine1);
       payload.append("addressLine2", formData.addressLine2);
@@ -325,9 +322,9 @@ export default function CheckoutPage() {
         <div className="max-w-lg mr-auto">
           
           <div className="flex items-center gap-2 mb-8 text-zinc-500 text-sm">
-            <span className="text-white font-bold">收货信息</span>
-            <span>/</span>
-            <span>支付方式</span>
+            <span className="text-white font-bold text-lg">1. 收货信息</span>
+            <span className="text-zinc-600">/</span>
+            <span className="text-zinc-600">2. 支付方式</span>
           </div>
           
           <div className="flex items-center justify-between mb-8">
@@ -374,15 +371,7 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* 联系方式 */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-zinc-500 uppercase ml-1">电子邮箱 (Email) *</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3.5 w-4 h-4 text-zinc-500" />
-                <input name="email" value={formData.email} onChange={handleInputChange} required placeholder="email@example.com" type="email" className="w-full bg-zinc-900 border border-white/10 rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 transition text-sm text-white placeholder:text-zinc-600" />
-              </div>
-            </div>
-
+            {/* 手机号码 */}
             <div className="space-y-2">
               <label className="text-xs font-bold text-zinc-500 uppercase ml-1">手机号码 (Phone) *</label>
               <div className="relative">
@@ -440,17 +429,57 @@ export default function CheckoutPage() {
 
             <button 
               type="submit" 
-              disabled={loading}
-              className="w-full py-4 mt-8 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-red-900/20"
+              disabled={loading || cartItems.length === 0}
+              className="w-full py-4 mt-8 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold rounded-xl transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-900/30 hover:shadow-red-900/50"
             >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Lock className="w-4 h-4" />}
-              {loading ? "处理订单中..." : `立即支付 $${total.toFixed(2)}`}
+              {loading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>正在处理支付...</span>
+                </>
+              ) : (
+                <>
+                  <Lock className="w-4 h-4" />
+                  <span>安全支付</span>
+                  <span>${total.toFixed(2)}</span>
+                </>
+              )}
             </button>
+
+            {/* 支付保障信息 */}
+            <div className="mt-6 p-4 bg-zinc-900/50 border border-green-500/20 rounded-xl">
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg className="w-3 h-3 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs text-green-400 font-bold">支付安全保障</p>
+                  <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed">
+                    所有交易采用 SSL 256位加密保护 • 遵守 PCI DSS 安全标准 • 符合国际支付规范
+                  </p>
+                </div>
+              </div>
+            </div>
           </form>
 
-          <p className="mt-8 text-xs text-zinc-600 leading-relaxed text-center">
-            点击支付即表示您同意我们的 <Link href="#" className="underline hover:text-white">服务条款</Link> 和 <Link href="#" className="underline hover:text-white">隐私政策</Link>。<br/>所有交易均经过 SSL 加密保护，安全无忧。
-          </p>
+          {/* 订单确认提示 */}
+          <div className="mt-6 p-4 bg-blue-900/20 border border-blue-500/20 rounded-xl">
+            <div className="flex items-start gap-3">
+              <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg className="w-3 h-3 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-blue-300 font-bold">订单确认</p>
+                <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed">
+                  请仔细核实收货信息，支付成功后将无法修改。如有问题可联系客服。
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

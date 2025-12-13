@@ -28,7 +28,10 @@ export default async function SettingsPage({
     prisma.profile.findMany({
       where: { isAdmin: true },
       orderBy: { createdAt: 'desc' }
-    }),
+    }).then(users => users.map(u => ({
+      ...u,
+      balance: u.balance ? Number(u.balance) : 0
+    }))),
     // 2. 获取年龄验证日志
     getAgeVerificationLogs(),
     // 3. 获取评论审核日志
@@ -45,9 +48,9 @@ export default async function SettingsPage({
       <div>
         <h2 className="text-2xl font-bold text-white flex items-center gap-3">
           <SettingsIcon className="w-6 h-6 text-zinc-400" />
-          System Configuration
+          系统配置 (System Configuration)
         </h2>
-        <p className="text-zinc-400 text-sm mt-1">Manage system access, audit logs, and homepage content.</p>
+        <p className="text-zinc-400 text-sm mt-1">管理系统权限、审计日志和首页活动内容。</p>
       </div>
 
       {/* Tab 导航栏 */}
@@ -63,7 +66,7 @@ export default async function SettingsPage({
             }`}
           >
             <Shield className="w-4 h-4" />
-            Admin Permissions
+            管理员权限 (Admins)
           </a>
 
           {/* Tab 2: 合规审计 */}
@@ -76,7 +79,7 @@ export default async function SettingsPage({
             }`}
           >
             <FileText className="w-4 h-4" />
-            Compliance Audit
+            合规审计 (Audit)
           </a>
 
           {/* Tab 3: 活动配置 (新增) */}
@@ -89,7 +92,7 @@ export default async function SettingsPage({
             }`}
           >
             <Megaphone className="w-4 h-4" />
-            Activity & Promo
+            营销活动配置 (Activity)
           </a>
         </div>
       </div>

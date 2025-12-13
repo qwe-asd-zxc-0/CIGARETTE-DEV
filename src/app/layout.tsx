@@ -7,9 +7,7 @@ import Header from "@/components/Header";
 import { CartProvider } from "@/context/CartContext";
 import CartDrawer from "@/components/CartDrawer";
 import FloatingCartButton from "@/components/FloatingCartButton";
-import AgeGate from "@/components/AgeGate";
-import CouponPopup from "@/components/CouponPopup";   // 🎟️ 补回：优惠券弹窗
-import ContactWidget from "@/components/ContactWidget"; // 💬 补回：联系我们挂件
+import GlobalOverlay from "@/components/GlobalOverlay"; // ✅ 使用 GlobalOverlay 统一管理全局弹窗组件
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -29,9 +27,8 @@ export default function RootLayout({
         {/* CartProvider 包裹整个应用状态 */}
         <CartProvider>
           
-          {/* 1. 全局拦截与弹窗层 */}
-          <AgeGate />       {/* 年龄验证 (最顶层) */}
-          <CouponPopup />   {/* 🎟️ 优惠券弹窗 (次顶层) */}
+          {/* 1. 全局拦截与弹窗层 (使用 GlobalOverlay 统一管理，自动在后台页面隐藏) */}
+          <GlobalOverlay /> {/* ✅ 包含 AgeGate、CouponPopup、ContactWidget，并在后台页面自动隐藏 */}
 
           {/* 2. 顶部导航 */}
           <Header />
@@ -46,7 +43,6 @@ export default function RootLayout({
           
           {/* 悬浮按钮组 */}
           <FloatingCartButton /> {/* 🛒 购物车入口 (位置: bottom-24 right-6) */}
-          <ContactWidget />      {/* 💬 联系我们入口 (位置: bottom-6 right-6) */}
           
         </CartProvider>
       </body>

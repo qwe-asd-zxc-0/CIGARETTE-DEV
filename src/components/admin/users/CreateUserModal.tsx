@@ -46,40 +46,40 @@ export default function CreateUserModal({ onClose }: { onClose: () => void }) {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-xs text-zinc-500 uppercase font-bold mb-1.5 block">Email *</label>
+              <label className="text-xs text-zinc-500 uppercase font-bold mb-1.5 block">电子邮箱 *</label>
               <input 
                 required type="email"
                 value={formData.email}
                 onChange={e => setFormData({...formData, email: e.target.value})}
                 className="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-white focus:border-green-500 outline-none"
-                placeholder="user@example.com"
+                placeholder="请输入邮箱..."
               />
             </div>
             <div>
-              <label className="text-xs text-zinc-500 uppercase font-bold mb-1.5 block">Password *</label>
+              <label className="text-xs text-zinc-500 uppercase font-bold mb-1.5 block">初始密码 *</label>
               <input 
                 required type="text"
                 value={formData.password}
                 onChange={e => setFormData({...formData, password: e.target.value})}
                 className="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-white focus:border-green-500 outline-none"
-                placeholder="Initial password"
+                placeholder="设置初始密码..."
               />
             </div>
           </div>
 
           <div>
-            <label className="text-xs text-zinc-500 uppercase font-bold mb-1.5 block">Full Name</label>
+            <label className="text-xs text-zinc-500 uppercase font-bold mb-1.5 block">姓名</label>
             <input 
               required
               value={formData.fullName}
               onChange={e => setFormData({...formData, fullName: e.target.value})}
               className="w-full bg-black/40 border border-white/10 rounded-lg p-2.5 text-white focus:border-green-500 outline-none"
-              placeholder="John Doe"
+              placeholder="请输入用户姓名..."
             />
           </div>
 
           <div>
-             <label className="text-xs text-zinc-500 uppercase font-bold mb-1.5 block">Initial Balance ($)</label>
+             <label className="text-xs text-zinc-500 uppercase font-bold mb-1.5 block">初始余额 ($)</label>
              <input 
                 type="number" step="0.01"
                 value={formData.balance}
@@ -97,7 +97,7 @@ export default function CreateUserModal({ onClose }: { onClose: () => void }) {
               className="w-4 h-4 accent-green-600"
             />
             <label htmlFor="ageCheck" className="text-sm text-zinc-300 cursor-pointer select-none">
-              标记为已验证年龄 (Mark as Age Verified)
+              标记为已验证年龄 (允许购买受限商品)
             </label>
           </div>
 
@@ -105,7 +105,7 @@ export default function CreateUserModal({ onClose }: { onClose: () => void }) {
             type="submit" disabled={loading}
             className="w-full mt-4 bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-lg flex justify-center items-center gap-2 transition-all shadow-lg shadow-green-900/20"
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create User"}
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "创建用户"}
           </button>
         </form>
       </div>

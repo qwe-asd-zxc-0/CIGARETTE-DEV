@@ -25,6 +25,7 @@ export default async function ProductDetailPage({
   if (!isCreate) {
     const rawProduct = await prisma.product.findUnique({
       where: { id },
+      include: { variants: true } // ✅ 必须包含变体，否则无法读取库存
     });
     
     if (!rawProduct) return notFound();
@@ -32,9 +33,14 @@ export default async function ProductDetailPage({
     // 数据整形
     product = {
       ...rawProduct,
+      basePrice: Number(rawProduct.basePrice), // 转换 basePrice
       price: Number(rawProduct.basePrice), 
-      createdAt: rawProduct.createdAt.toISOString(),
-      updatedAt: rawProduct.updatedAt.toISOString(),
+      createdAt: rawProduct.createdAt?.toISOString() || new Date().toISOString(),
+      updatedAt: (rawProduct as any).updatedAt?.toISOString() || rawProduct.createdAt?.toISOString() || new Date().toISOString(),
+      variants: rawProduct.variants.map(v => ({
+        ...v,
+        price: v.price ? Number(v.price) : 0
+      }))
     };
   }
 

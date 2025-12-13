@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { 
   Users, ShoppingBag, Box, ClipboardList, 
   MessageSquare, Settings, BarChart3, LogOut, Home 
 } from "lucide-react";
+import { createBrowserClient } from "@supabase/ssr";
 
 const menuItems = [
   { name: "数据看板", href: "/admin", icon: BarChart3 },
@@ -19,6 +20,18 @@ const menuItems = [
 
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.refresh();
+    router.push("/admin/login");
+  };
 
   return (
     <aside className="w-64 bg-zinc-900 border-r border-white/10 min-h-screen flex flex-col fixed left-0 top-0 bottom-0 z-50">
@@ -56,7 +69,10 @@ export default function AdminSidebar() {
 
       {/* 底部退出按钮 */}
       <div className="p-4 border-t border-white/10 bg-zinc-900">
-        <button className="flex items-center gap-3 px-4 py-3 w-full text-zinc-400 hover:text-red-500 transition-colors rounded-xl hover:bg-white/5 text-sm font-medium">
+        <button 
+          onClick={handleSignOut}
+          className="flex items-center gap-3 px-4 py-3 w-full text-zinc-400 hover:text-red-500 transition-colors rounded-xl hover:bg-white/5 text-sm font-medium"
+        >
           <LogOut className="w-5 h-5" />
           <span>退出登录</span>
         </button>

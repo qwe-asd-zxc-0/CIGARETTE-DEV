@@ -130,6 +130,9 @@ export async function POST(request: Request) {
         }
       });
 
+      // ✅ 从 Excel 中读取分类（如果有 Category 列）
+      const category = (row['Category'] || row['分类'] || '').toString().trim() || null;
+
       if (!product) {
         product = await prisma.product.create({
           data: {
@@ -138,6 +141,7 @@ export async function POST(request: Request) {
             basePrice: price,
             description,
             origin,
+            category, // ✅ 新增：分类字段
             coverImageUrl,
             tieredPricingRules,
             specifications,
@@ -148,7 +152,7 @@ export async function POST(request: Request) {
       } else {
         await prisma.product.update({
             where: { id: product.id },
-            data: { tieredPricingRules, specifications, coverImageUrl }
+            data: { tieredPricingRules, specifications, coverImageUrl, category: category || undefined }
         });
       }
 

@@ -57,6 +57,16 @@ export async function createOrder(formData: FormData) {
     return { success: false, message: "请先登录" };
   }
 
+  // 1.5 验证年龄 (新增)
+  const profile = await prisma.profile.findUnique({
+    where: { id: user.id },
+    select: { isAgeVerified: true }
+  });
+
+  if (!profile?.isAgeVerified) {
+    return { success: false, message: "您的账户尚未通过年龄验证，无法购买商品。" };
+  }
+
   // 2. 解析商品数据
   const itemsJson = formData.get("items") as string;
   const clientItems = itemsJson ? JSON.parse(itemsJson) : [];
@@ -90,6 +100,7 @@ export async function createOrder(formData: FormData) {
     });
 
     if (!variant) return { success: false, message: `商品失效 ID: ${item.productVariantId}` };
+    if (!variant.product) return { success: false, message: `关联商品数据缺失 ID: ${item.productVariantId}` };
     
     // ✅ 修复 1: 检查库存时使用 correct 字段名 (stockQuantity)
     // 注意: stockQuantity 在数据库中可能为空，给个默认值 0
@@ -109,7 +120,7 @@ export async function createOrder(formData: FormData) {
       quantity: item.quantity,
       unitPrice: unitPrice,
       productTitleSnapshot: variant.product.title,
-      flavorSnapshot: variant.flavorName || "Default",
+      flavorSnapshot: variant.flavor || "Default",
     });
   }
 
@@ -117,6 +128,21 @@ export async function createOrder(formData: FormData) {
   const totalAmount = subtotal + shippingCost;
 
   try {
+    // 4.5 检查用户余额
+    const userProfile = await prisma.profile.findUnique({
+      where: { id: user.id },
+      select: { balance: true }
+    });
+
+    if (!userProfile) {
+      return { success: false, message: "用户信息不存在" };
+    }
+
+    const currentBalance = Number(userProfile.balance) || 0;
+    if (currentBalance < totalAmount) {
+      return { success: false, message: `余额不足，需要 $${totalAmount.toFixed(2)}，当前余额 $${currentBalance.toFixed(2)}` };
+    }
+
     // 5. 自动保存地址逻辑
     const addressCount = await prisma.userAddress.count({ where: { userId: user.id } });
     const existingAddress = await prisma.userAddress.findFirst({
@@ -163,7 +189,25 @@ export async function createOrder(formData: FormData) {
         });
       }
 
-      // (3) 保存地址
+      // (3) 扣减用户余额
+      await tx.profile.update({
+        where: { id: user.id },
+        data: {
+          balance: {
+            decrement: totalAmount
+          }
+        }
+      });
+
+      // (4) 余额扣除成功后，更新订单状态为已支付
+      await tx.order.update({
+        where: { id: newOrder.id },
+        data: {
+          status: "paid"
+        }
+      });
+
+      // (5) 保存地址
       if (shouldSaveAddress) {
         await tx.userAddress.create({
           data: {

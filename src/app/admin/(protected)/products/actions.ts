@@ -33,6 +33,7 @@ export async function upsertProduct(formData: FormData, productId?: string) {
     const title = formData.get("title") as string;
     const priceRaw = formData.get("price") as string;
     const origin = formData.get("origin") as string;
+    const category = formData.get("category") as string; // ✅ 新增：分类字段
     const description = formData.get("description") as string;
     const status = formData.get("status") as string;
     const brandIdRaw = formData.get("brandId");
@@ -59,6 +60,7 @@ export async function upsertProduct(formData: FormData, productId?: string) {
       title,
       basePrice,
       origin,
+      category: category || null, // ✅ 新增：分类字段
       description,
       brandId: brandId || null,
       coverImageUrl,
@@ -122,6 +124,54 @@ export async function upsertProduct(formData: FormData, productId?: string) {
 
   } catch (error: any) {
     console.error("❌ Save error:", error);
+    return { success: false, message: error.message };
+  }
+}
+
+export async function deleteProduct(productId: string) {
+  try {
+    // 1. 检查是否有订单关联
+    const variantsWithOrders = await prisma.productVariant.findFirst({
+      where: {
+        productId: productId,
+        orderItems: { some: {} }
+      }
+    });
+
+    if (variantsWithOrders) {
+      return { success: false, message: "该商品已有订单记录，无法物理删除。请尝试将其状态改为下架。" };
+    }
+
+    // 2. 删除关联的变体
+    await prisma.productVariant.deleteMany({
+      where: { productId: productId }
+    });
+
+    // 3. 删除商品本身
+    await prisma.product.delete({
+      where: { id: productId }
+    });
+
+    revalidatePath("/admin/products");
+    revalidatePath("/admin/inventory");
+    
+    return { success: true, message: "删除成功" };
+
+  } catch (error: any) {
+    console.error("Delete error:", error);
+    return { success: false, message: "删除失败: " + error.message };
+  }
+}
+
+export async function updateProductStatus(productId: string, newStatus: string) {
+  try {
+    await prisma.product.update({
+      where: { id: productId },
+      data: { status: newStatus }
+    });
+    revalidatePath("/admin/products");
+    return { success: true, message: "状态已更新" };
+  } catch (error: any) {
     return { success: false, message: error.message };
   }
 }

@@ -11,11 +11,13 @@ const PAGE_SIZE = 20;
 export default async function ProductPage({
   searchParams,
 }: {
-  searchParams: Promise<{ origin?: string; q?: string; page?: string }>;
+  searchParams: Promise<{ origin?: string; q?: string; page?: string; category?: string; inStock?: string }>;
 }) {
   const params = await searchParams;
   const origin = params?.origin;
   const query = params?.q || "";
+  const category = params?.category;
+  const inStock = params?.inStock;
   const currentPage = Number(params?.page) || 1;
 
   // 1. 构造查询条件
@@ -27,17 +29,32 @@ export default async function ProductPage({
     where.origin = origin;
   }
 
+  // ✅ 分类筛选：使用 category 字段进行精确匹配
+  if (category) {
+    where.category = category;
+  }
+
   if (query) {
-    where.OR = [
+    const searchConditions = [
       { title: { contains: query, mode: 'insensitive' } },
       { description: { contains: query, mode: 'insensitive' } },
       { origin: { contains: query, mode: 'insensitive' } },
       { brand: { name: { contains: query, mode: 'insensitive' } } }
     ];
+    
+    if (category) {
+      // 如果同时有分类和搜索，需要合并条件
+      where.AND = [
+        ...(where.AND || []),
+        { OR: searchConditions }
+      ];
+    } else {
+      where.OR = searchConditions;
+    }
   }
 
   // 2. 并行查询
-  const [products, totalCount, origins] = await Promise.all([
+  let [products, totalCount, origins] = await Promise.all([
     prisma.product.findMany({
       where,
       orderBy: { createdAt: "desc" },
@@ -47,8 +64,8 @@ export default async function ProductPage({
           select: { stockQuantity: true }
         }
       },
-      take: PAGE_SIZE,
-      skip: (currentPage - 1) * PAGE_SIZE,
+      take: PAGE_SIZE * 10, // 先取更多，然后在内存中过滤
+      skip: 0,
     }),
     prisma.product.count({ where }),
     prisma.product.groupBy({
@@ -58,7 +75,19 @@ export default async function ProductPage({
     })
   ]);
 
-  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+  // 3. 库存过滤逻辑（在内存中执行）
+  if (inStock !== undefined) {
+    const hasStock = inStock === 'true';
+    products = products.filter((product) => {
+      const totalStock = product.variants?.reduce((acc, v) => acc + (v.stockQuantity || 0), 0) || 0;
+      return hasStock ? totalStock > 0 : totalStock <= 0;
+    });
+  }
+
+  // 4. 应用分页
+  const filteredProducts = products.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const filteredTotalCount = products.length;
+  const totalPages = Math.ceil(filteredTotalCount / PAGE_SIZE);
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
@@ -110,7 +139,7 @@ export default async function ProductPage({
                 o.origin && (
                   <Link
                     key={o.origin}
-                    href={`/product?origin=${o.origin}${query ? `&q=${query}` : ''}`}
+                    href={`/product?origin=${o.origin}${query ? `&q=${query}` : ''}${inStock ? `&inStock=${inStock}` : ''}`}
                     className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all border flex items-center gap-2 ${
                       origin === o.origin
                         ? "bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.2)] scale-105"
@@ -125,6 +154,45 @@ export default async function ProductPage({
                   </Link>
                 )
               ))}
+
+              {/* 库存筛选按钮 */}
+              <div className="w-full flex justify-center gap-3 mt-4">
+                <Link 
+                  href={`/product${origin ? `?origin=${origin}` : ''}${query ? `${origin ? '&' : '?'}q=${query}` : ''}`}
+                  className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all border flex items-center gap-2 ${
+                    !inStock 
+                      ? "bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.2)] scale-105" 
+                      : "bg-zinc-900/50 text-zinc-400 border-white/10 hover:bg-white/10 hover:text-white hover:border-white/30 backdrop-blur-md"
+                  }`}
+                >
+                  <Package className="w-4 h-4" />
+                  全部库存
+                </Link>
+
+                <Link 
+                  href={`/product?inStock=true${origin ? `&origin=${origin}` : ''}${query ? `&q=${query}` : ''}`}
+                  className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all border flex items-center gap-2 ${
+                    inStock === 'true'
+                      ? "bg-green-600/90 text-white border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.3)] scale-105"
+                      : "bg-zinc-900/50 text-zinc-400 border-white/10 hover:bg-white/10 hover:text-white hover:border-white/30 backdrop-blur-md"
+                  }`}
+                >
+                  <div className={`w-2 h-2 rounded-full ${inStock === 'true' ? "bg-white animate-pulse" : "bg-green-500"}`} />
+                  有货
+                </Link>
+
+                <Link 
+                  href={`/product?inStock=false${origin ? `&origin=${origin}` : ''}${query ? `&q=${query}` : ''}`}
+                  className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all border flex items-center gap-2 ${
+                    inStock === 'false'
+                      ? "bg-red-600/90 text-white border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.3)] scale-105"
+                      : "bg-zinc-900/50 text-zinc-400 border-white/10 hover:bg-white/10 hover:text-white hover:border-white/30 backdrop-blur-md"
+                  }`}
+                >
+                  <div className="w-2 h-2 rounded-full bg-red-500" />
+                  缺货
+                </Link>
+              </div>
             </div>
           </div>
 
@@ -156,9 +224,9 @@ export default async function ProductPage({
                </div>
 
                <span className="text-zinc-500 text-sm font-mono">
-                 {totalCount > 0 ? (
+                 {filteredTotalCount > 0 ? (
                     <>
-                      显示 {(currentPage - 1) * PAGE_SIZE + 1}-{Math.min(currentPage * PAGE_SIZE, totalCount)} 共 {totalCount} 件商品
+                      显示 {(currentPage - 1) * PAGE_SIZE + 1}-{Math.min(currentPage * PAGE_SIZE, filteredTotalCount)} 共 {filteredTotalCount} 件商品
                     </>
                  ) : (
                    "0 件商品"
@@ -179,7 +247,7 @@ export default async function ProductPage({
             ) : (
               <>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"> 
-                  {products.map((product) => {
+                  {filteredProducts.map((product) => {
                     const displayImage = product.coverImageUrl || (product.images && product.images[0]);
                     
                     // 计算总库存

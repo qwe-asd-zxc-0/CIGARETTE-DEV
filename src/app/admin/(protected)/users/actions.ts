@@ -30,7 +30,12 @@ export async function getUsers(query?: string) {
       _count: { select: { orders: true } },
     },
   });
-  return users;
+  
+  // 序列化 Decimal
+  return users.map(user => ({
+    ...user,
+    balance: user.balance ? Number(user.balance) : 0
+  }));
 }
 
 // ================= 2. 创建新用户 =================
@@ -125,21 +130,41 @@ export async function sendPasswordResetEmail(email: string) {
 // ================= 6. 删除用户 =================
 export async function deleteUser(userId: string) {
   try {
-    // 1. 从 Supabase Auth 删除
-    const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
-    if (error) throw error;
+    // 1. 数据库清理 (使用事务确保原子性)
+    await prisma.$transaction(async (tx) => {
+      // (1) 删除关联地址
+      await tx.userAddress.deleteMany({ where: { userId } });
+      
+      // (2) 删除关联评论
+      await tx.review.deleteMany({ where: { userId } });
 
-    // 2. 从 Prisma 删除 (通常会有级联删除，但为了保险手动执行)
-    try {
-      await prisma.profile.delete({ where: { id: userId } });
-    } catch (e) {
-      // 忽略错误，可能是因为 Auth 删除时触发器已经删除了 Profile
+      // (3) 解绑订单 (保留订单数据，但断开与用户的关联)
+      // 注意：如果您的业务逻辑要求删除订单，请改为 deleteMany
+      await tx.order.updateMany({
+        where: { userId },
+        data: { userId: null } 
+      });
+
+      // (4) 删除 Profile
+      // 使用 deleteMany 而不是 delete，以防记录已经被触发器删除而不报错
+      await tx.profile.deleteMany({ where: { id: userId } });
+    });
+
+    // 2. 从 Supabase Auth 删除
+    // 注意：如果 Auth 删除失败，数据库操作已经完成。
+    // 理想情况下 Auth 删除也应该在事务中，但 Supabase Admin API 是独立的。
+    // 通常 Auth 删除失败概率较低，除非 ID 不存在。
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
+    if (error) {
+      console.error("Supabase Auth delete error:", error);
+      // 不抛出错误，因为数据库数据已清理，视为"软成功"或提示警告
     }
 
     revalidatePath("/admin/users");
-    return { success: true, message: "用户已彻底删除" };
+    return { success: true, message: "用户及关联数据已删除" };
   } catch (error: any) {
-    return { success: false, message: error.message };
+    console.error("Delete user error:", error);
+    return { success: false, message: "删除失败: " + error.message };
   }
 }
 export async function toggleAdminStatus(userId: string, currentStatus: boolean) {
@@ -166,5 +191,70 @@ export async function toggleAgeVerified(userId: string, currentStatus: boolean) 
     return { success: true, message: "Age verification updated" };
   } catch (error) {
     return { success: false, message: "Failed to update status" };
+  }
+}
+
+// ================= 7. 获取用户详细信息 =================
+export async function getUserDetails(userId: string) {
+  try {
+    const user = await prisma.profile.findUnique({
+      where: { id: userId },
+      include: {
+        addresses: true,
+        orders: {
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+          include: {
+            items: {
+              include: {
+                productVariant: {
+                  include: {
+                    product: {
+                      select: { title: true, images: true }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        reviews: {
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+          include: {
+            product: {
+              select: { title: true }
+            }
+          }
+        }
+      }
+    });
+
+    if (!user) return { success: false, message: "User not found" };
+
+    // 序列化 Decimal
+    const serializedUser = {
+      ...user,
+      balance: user.balance ? Number(user.balance) : 0,
+      orders: user.orders.map(order => ({
+        ...order,
+        subtotalAmount: Number(order.subtotalAmount),
+        shippingCost: order.shippingCost ? Number(order.shippingCost) : 0,
+        totalAmount: Number(order.totalAmount),
+        items: order.items.map(item => ({
+          ...item,
+          unitPrice: Number(item.unitPrice),
+          productVariant: item.productVariant ? {
+            ...item.productVariant,
+            price: item.productVariant.price ? Number(item.productVariant.price) : 0
+          } : null
+        }))
+      }))
+    };
+
+    return { success: true, data: serializedUser };
+  } catch (error) {
+    console.error("获取用户详情失败:", error);
+    return { success: false, message: "获取用户详情失败" };
   }
 }

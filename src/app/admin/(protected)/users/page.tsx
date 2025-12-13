@@ -47,10 +47,10 @@ export default function UsersPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-            User Management
+            用户管理
             {loading && <Loader2 className="w-4 h-4 animate-spin text-zinc-500" />}
           </h2>
-          <p className="text-zinc-400 text-sm mt-1">Manage customers, balances, and permissions.</p>
+          <p className="text-zinc-400 text-sm mt-1">管理客户、余额及权限。</p>
         </div>
         
         {/* 新建用户按钮 */}
@@ -58,7 +58,7 @@ export default function UsersPage() {
           onClick={() => setShowCreateModal(true)}
           className="flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition-colors shadow-lg shadow-green-900/20"
         >
-          <UserPlus className="w-4 h-4" /> Add User
+          <UserPlus className="w-4 h-4" /> 新增用户
         </button>
       </div>
 
@@ -66,7 +66,7 @@ export default function UsersPage() {
       <div className="relative max-w-md group">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 group-focus-within:text-white transition-colors" />
         <input 
-          placeholder="Search by name or email..." 
+          placeholder="搜索姓名或邮箱..." 
           className="w-full bg-zinc-900 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-white focus:border-blue-500 outline-none transition-colors"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -75,11 +75,11 @@ export default function UsersPage() {
 
       {/* 用户列表 */}
       <div className="bg-zinc-900/50 border border-white/10 rounded-2xl overflow-hidden min-h-[400px]">
-        <UserTable users={users} />
+        <UserTable users={users} onUserDeleted={loadData} />
         
         {!loading && users.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-zinc-500">
-            <p>No users found matching "{search}"</p>
+            <p>未找到匹配 "{search}" 的用户</p>
           </div>
         )}
       </div>

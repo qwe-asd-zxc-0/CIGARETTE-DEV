@@ -132,11 +132,11 @@ export default async function AdminDashboard() {
             <table className="w-full text-left text-sm text-zinc-400">
               <thead className="bg-black/20 text-zinc-500 uppercase font-bold text-xs tracking-wider">
                 <tr>
-                  <th className="p-4 pl-6">Order ID</th>
-                  <th className="p-4">Customer</th>
-                  <th className="p-4">Status</th>
-                  <th className="p-4">Amount</th>
-                  <th className="p-4 text-right pr-6">Date</th>
+                  <th className="p-4 pl-6">订单号</th>
+                  <th className="p-4">客户</th>
+                  <th className="p-4">状态</th>
+                  <th className="p-4">金额</th>
+                  <th className="p-4 text-right pr-6">时间</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
@@ -197,10 +197,10 @@ export default async function AdminDashboard() {
 
           {/* 上架商品统计 */}
           <div className="bg-gradient-to-br from-red-900/20 to-black border border-red-500/20 rounded-2xl p-6">
-            <h3 className="text-zinc-400 text-sm font-medium mb-1">当前上架商品</h3>
+            <h3 className="text-zinc-400 text-sm font-medium mb-1">商品</h3>
             <div className="flex items-baseline gap-2">
               <span className="text-4xl font-bold text-white">{productCount}</span>
-              <span className="text-sm text-red-400">Products Active</span>
+              <span className="text-sm text-red-400">已上架</span>
             </div>
             <div className="mt-4 h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
               <div className="h-full bg-red-600 w-3/4 rounded-full"></div>

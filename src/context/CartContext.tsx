@@ -22,9 +22,10 @@ interface CartContextType {
   toggleCart: () => void;
   
   cartItems: CartItem[]; // 全局购物车数据
-  addToCart: (item: CartItem) => void;
+  addToCart: (item: CartItem, showDrawer?: boolean) => void;
   removeFromCart: (skuId: string) => void;
   updateQuantity: (skuId: string, delta: number) => void;
+  clearCart: () => void; // ✅ 清空购物车
   cartCount: number;
 }
 
@@ -54,7 +55,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // === 核心功能 ===
 
   // ✅ 添加商品 (含库存检查)
-  const addToCart = (newItem: CartItem) => {
+  const addToCart = (newItem: CartItem, showDrawer: boolean = true) => {
     setCartItems((prev) => {
       const existingItem = prev.find((item) => item.id === newItem.id);
 
@@ -81,8 +82,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
     });
     
-    // 添加成功后自动打开购物车，提升体验
-    setIsOpen(true);
+    // 根据参数决定是否打开购物车侧边栏（默认打开）
+    if (showDrawer) {
+      setIsOpen(true);
+    }
   };
 
   // ✅ 移除商品
@@ -116,6 +119,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const openCart = () => setIsOpen(true);
   const closeCart = () => setIsOpen(false);
   const toggleCart = () => setIsOpen((prev) => !prev);
+  
+  // ✅ 清空购物车
+  const clearCart = () => {
+    setCartItems([]);
+  };
 
   // 计算总数量 (用于角标)
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
@@ -124,7 +132,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     <CartContext.Provider 
       value={{ 
         isOpen, openCart, closeCart, toggleCart, 
-        cartItems, addToCart, removeFromCart, updateQuantity, cartCount 
+        cartItems, addToCart, removeFromCart, updateQuantity, clearCart, cartCount 
       }}
     >
       {children}

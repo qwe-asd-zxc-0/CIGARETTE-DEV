@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { X, MapPin, Package, Truck, CreditCard, Save, User, Mail, Phone } from "lucide-react";
+import { X, MapPin, Package, Truck, CreditCard, Save, User, Mail, Phone, Ban } from "lucide-react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { updateOrderStatus, updateTrackingInfo } from "@/app/admin/(protected)/orders/actions";
+import { updateOrderStatus, updateTrackingInfo, cancelOrder } from "@/app/admin/(protected)/orders/actions";
 
 interface OrderDrawerProps {
   order: any; // 包含 user, items 等关联数据
@@ -106,6 +106,32 @@ export default function OrderDrawer({ order, onClose }: OrderDrawerProps) {
                 更新状态
               </button>
             </div>
+            
+            {/* 取消订单按钮 */}
+            {status !== 'cancelled' && status !== 'completed' && (
+              <div className="mt-4 pt-4 border-t border-white/5 flex justify-end">
+                <button
+                  onClick={async () => {
+                    if (confirm("确定要取消此订单吗？此操作不可撤销。")) {
+                      setIsSaving(true);
+                      const res = await cancelOrder(order.id);
+                      setIsSaving(false);
+                      if (res.success) {
+                        setStatus('cancelled');
+                        alert("订单已取消");
+                      } else {
+                        alert(res.message);
+                      }
+                    }
+                  }}
+                  disabled={isSaving}
+                  className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors"
+                >
+                  <Ban className="w-3 h-3" />
+                  取消订单 (Cancel Order)
+                </button>
+              </div>
+            )}
           </section>
 
           {/* 2. 物流信息 */}

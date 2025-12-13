@@ -3,7 +3,6 @@
 import { usePathname } from "next/navigation";
 import AgeGate from "@/components/AgeGate";
 import ContactWidget from "@/components/ContactWidget";
-import CouponPopup from "@/components/CouponPopup";
 
 export default function GlobalOverlay() {
   const pathname = usePathname();
@@ -21,7 +20,6 @@ export default function GlobalOverlay() {
   return (
     <>
       <AgeGate />
-      <CouponPopup />
       <ContactWidget />
     </>
   );

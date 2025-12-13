@@ -61,9 +61,9 @@ export default function Header() {
   );
 
   const navLinks = [
-    { name: "All Products", href: "/product" },
-    { name: "Disposable", href: "/product?category=Disposable" },
-    { name: "E-Liquid", href: "/product?category=E-Liquid" },
+    { name: "全部商品", href: "/product" },
+    { name: "一次性电子烟", href: "/product?category=Disposable" },
+    { name: "电子烟油", href: "/product?category=E-Liquid" },
   ];
 
   return (
@@ -108,7 +108,7 @@ export default function Header() {
           </nav>
 
           {/* === 4. 右侧功能区 === */}
-          <div className="flex items-center gap-4 z-20">
+          <div className="flex items-center gap-4 z-20 ml-auto">
             {/* 🛒 购物车按钮 (触发抽屉) */}
             <button 
               onClick={openCart} 
@@ -128,7 +128,7 @@ export default function Header() {
                     <User className="w-4 h-4 text-zinc-200" />
                   </div>
                   <span className="text-xs font-bold text-white max-w-[80px] truncate">
-                    {user.user_metadata?.full_name || "Account"}
+                    {user.user_metadata?.full_name || "账户"}
                   </span>
                 </Link>
                 
@@ -136,13 +136,13 @@ export default function Header() {
                 <div className="absolute right-0 top-full mt-2 w-48 bg-zinc-950 border border-white/10 rounded-xl shadow-2xl overflow-hidden hidden group-hover:block pt-2">
                   <div className="p-1 space-y-1 bg-zinc-950">
                     <Link href="/profile" className="flex items-center gap-3 px-3 py-2 text-sm text-zinc-300 hover:bg-white/10 rounded-lg">
-                      <UserCircle className="w-4 h-4" /> Settings
+                      <UserCircle className="w-4 h-4" /> 账户设置
                     </Link>
                     <Link href="/profile/orders" className="flex items-center gap-3 px-3 py-2 text-sm text-zinc-300 hover:bg-white/10 rounded-lg">
-                      <Package className="w-4 h-4" /> Orders
+                      <Package className="w-4 h-4" /> 我的订单
                     </Link>
                     <button onClick={handleSignOut} className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg">
-                      <LogOut className="w-4 h-4" /> Sign Out
+                      <LogOut className="w-4 h-4" /> 退出登录
                     </button>
                   </div>
                 </div>
@@ -150,13 +150,13 @@ export default function Header() {
             ) : (
               <div className="hidden sm:flex items-center gap-3">
                 <Link href="/login" className="text-xs font-bold text-white hover:text-zinc-300 uppercase tracking-wide px-2">
-                  Log In
+                  登录
                 </Link>
                 <Link
                   href="/sign-up"
                   className="px-5 py-2.5 text-xs font-bold bg-white text-black rounded-full hover:bg-zinc-200 uppercase tracking-wide transition-transform hover:scale-105"
                 >
-                  Sign Up
+                  注册
                 </Link>
               </div>
             )}
@@ -171,7 +171,7 @@ export default function Header() {
         }`}
       >
         <div className="flex items-center justify-between p-6 border-b border-white/10">
-          <span className="text-xl font-black text-white">MENU</span>
+          <span className="text-xl font-black text-white">菜单</span>
           <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-zinc-400 hover:text-white">
             <X className="w-8 h-8" />
           </button>
@@ -194,22 +194,22 @@ export default function Header() {
           {user ? (
             <>
               <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)} className="text-lg text-zinc-300 flex items-center gap-3">
-                <UserCircle className="w-5 h-5" /> Account Settings
+                <UserCircle className="w-5 h-5" /> 账户设置
               </Link>
               <Link href="/profile/orders" onClick={() => setIsMobileMenuOpen(false)} className="text-lg text-zinc-300 flex items-center gap-3">
-                <Package className="w-5 h-5" /> My Orders
+                <Package className="w-5 h-5" /> 我的订单
               </Link>
               <button onClick={() => { handleSignOut(); setIsMobileMenuOpen(false); }} className="text-lg text-red-400 flex items-center gap-3 text-left">
-                <LogOut className="w-5 h-5" /> Sign Out
+                <LogOut className="w-5 h-5" /> 退出登录
               </button>
             </>
           ) : (
             <div className="flex flex-col gap-4 mt-4">
               <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="w-full py-4 text-center border border-white/20 rounded-lg text-white font-bold uppercase">
-                Log In
+                登录
               </Link>
               <Link href="/sign-up" onClick={() => setIsMobileMenuOpen(false)} className="w-full py-4 text-center bg-white text-black rounded-lg font-bold uppercase">
-                Sign Up
+                注册
               </Link>
             </div>
           )}

@@ -124,7 +124,7 @@ export default function ProductForm({ product, isCreate, brands }: ProductFormPr
             <h2 className="text-lg font-bold text-white border-b border-white/5 pb-4">基本信息</h2>
             
             <div>
-              <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">品牌 (Brand) *</label>
+              <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">品牌 *</label>
               <select name="brandId" required defaultValue={product?.brandId || ""} className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none">
                 <option value="" disabled>-- 请选择品牌 --</option>
                 {brands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -145,7 +145,7 @@ export default function ProductForm({ product, isCreate, brands }: ProductFormPr
                {/* ✅ 新增：库存输入框 */}
                <div>
                  <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">
-                    初始库存 (Stock) {isCreate ? "*" : ""}
+                    初始库存 {isCreate ? "*" : ""}
                  </label>
                  <input 
                     name="stock" 
@@ -158,7 +158,18 @@ export default function ProductForm({ product, isCreate, brands }: ProductFormPr
                  />
                </div>
 
-               <div className="col-span-2">
+               <div>
+                 <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">分类</label>
+                 <select name="category" defaultValue={product?.category || ""} className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none">
+                   <option value="">-- 请选择分类 --</option>
+                   <option value="Disposable">一次性电子烟 (Disposable)</option>
+                   <option value="E-Liquid">烟油 (E-Liquid)</option>
+                   <option value="Traditional">传统烟草 (Traditional)</option>
+                   <option value="Accessories">配件 (Accessories)</option>
+                 </select>
+               </div>
+
+               <div>
                  <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">产地</label>
                  <input name="origin" defaultValue={product?.origin || ""} className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none" />
                </div>
@@ -176,7 +187,7 @@ export default function ProductForm({ product, isCreate, brands }: ProductFormPr
             {/* 规格参数部分... */}
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <label className="block text-sm font-bold text-zinc-300">规格参数 (Specifications)</label>
+                <label className="block text-sm font-bold text-zinc-300">规格参数</label>
                 <button type="button" onClick={addSpec} className="text-xs flex items-center gap-1 text-blue-400 hover:text-blue-300 transition"><Plus className="w-3 h-3" /> 添加规格</button>
               </div>
               <div className="space-y-2">
