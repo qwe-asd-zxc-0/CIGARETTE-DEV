@@ -132,6 +132,7 @@ model Order {
   carrierName     String?  @map("carrier_name")
   trackingUrl     String?  @map("tracking_url")
   createdAt       DateTime? @default(now()) @db.Timestamptz(6) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 
   // 关系
   user            Profile?    @relation(fields: [userId], references: [id])
