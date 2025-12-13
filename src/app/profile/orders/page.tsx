@@ -30,25 +30,42 @@ export default async function OrderHistoryPage() {
     }
   });
 
-  // 数据转换
+  // ✅ 核心修复：彻底的数据清洗
   const orders = rawOrders.map(order => ({
     ...order,
+    // 1. 将所有 Decimal 转为 Number
+    subtotalAmount: Number(order.subtotalAmount), // 之前可能漏了这个
+    shippingCost: order.shippingCost ? Number(order.shippingCost) : 0, // 之前可能漏了这个
     totalAmount: Number(order.totalAmount),
+    
+    // 2. 处理日期
     createdAt: order.createdAt ? order.createdAt.toISOString() : new Date().toISOString(),
-    // ✅ 加回 updatedAt (如果有值就转字符串，没有就是 null)
     updatedAt: order.updatedAt ? order.updatedAt.toISOString() : null,
-    // 确保 shippingAddress 是对象 (Prisma 取出来可能是 null)
+    
+    // 3. 处理 Json 字段 (Prisma 查出来可能是 JsonValue，为了安全强转为 any 或 object)
     shippingAddress: order.shippingAddress || {}, 
+
+    // 4. 处理嵌套的 items
     items: order.items.map(item => ({
       ...item,
+      // Item 里的 Decimal 也要转
       unitPrice: Number(item.unitPrice),
-      totalPrice: Number(item.totalPrice),
+      // 数据库里没有 totalPrice 字段，如果有也需要转
+      // totalPrice: item.totalPrice ? Number(item.totalPrice) : 0, 
+      
+      // 处理 Item 里的变体价格 (如果有)
+      productVariant: item.productVariant ? {
+        ...item.productVariant,
+        price: item.productVariant.price ? Number(item.productVariant.price) : 0
+      } : null
     }))
   }));
 
   return (
     <div className="min-h-screen bg-black pt-28 pb-12 px-4 md:px-8">
       <div className="max-w-5xl mx-auto">
+        
+        {/* 顶部导航 */}
         <div className="flex items-center gap-4 mb-8">
           <Link href="/profile" className="p-2 bg-zinc-900 rounded-full hover:bg-zinc-800 transition text-zinc-400 hover:text-white">
             <ArrowLeft className="w-5 h-5" />
@@ -56,6 +73,7 @@ export default async function OrderHistoryPage() {
           <h1 className="text-3xl font-bold text-white">我的订单</h1>
         </div>
 
+        {/* 订单列表 */}
         {orders.length === 0 ? (
           <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-12 text-center">
             <div className="w-20 h-20 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-6 text-zinc-600">

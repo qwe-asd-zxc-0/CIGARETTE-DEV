@@ -1,11 +1,12 @@
 "use server";
 
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
-async function getCurrentUserId() {
+// === 辅助：获取当前用户 ===
+async function getUser() {
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,125 +14,104 @@ async function getCurrentUserId() {
     { cookies: { get(name) { return cookieStore.get(name)?.value; } } }
   );
   const { data: { user } } = await supabase.auth.getUser();
-  return user?.id;
+  return user;
 }
 
-export async function getUserAddresses() {
-  const userId = await getCurrentUserId();
-  if (!userId) return [];
+// === 新增地址 ===
+export async function addAddress(formData: FormData) {
+  const user = await getUser();
+  if (!user) return { success: false, message: "请先登录" };
 
-  return await prisma.userAddress.findMany({
-    where: { userId },
-    orderBy: [{ isDefault: 'desc' }, { createdAt: 'desc' }]
-  });
-}
+  const rawData = {
+    firstName: formData.get("firstName") as string,
+    lastName: formData.get("lastName") as string,
+    phone: formData.get("phone") as string,
+    addressLine1: formData.get("addressLine1") as string,
+    addressLine2: (formData.get("addressLine2") as string) || "",
+    city: formData.get("city") as string,
+    state: formData.get("state") as string,
+    postalCode: formData.get("postalCode") as string,
+    country: formData.get("country") as string,
+    isDefault: formData.get("isDefault") === "on",
+  };
 
-export async function addUserAddress(formData: FormData) {
-  const userId = await getCurrentUserId();
-  if (!userId) throw new Error("未登录");
-
-  // 🔥 获取姓名
-  const firstName = formData.get("firstName") as string;
-  const lastName = formData.get("lastName") as string;
-  
-  const addressLine1 = formData.get("addressLine1") as string;
-  const addressLine2 = formData.get("addressLine2") as string;
-  const city = formData.get("city") as string;
-  const state = formData.get("state") as string;
-  const zipCode = formData.get("zipCode") as string;
-  const country = formData.get("country") as string;
-  const phoneNumber = formData.get("phoneNumber") as string;
-  const isDefault = formData.get("isDefault") === "on";
-
-  if (isDefault) {
-    await prisma.userAddress.updateMany({
-      where: { userId },
-      data: { isDefault: false }
-    });
+  // 简单校验
+  if (!rawData.firstName || !rawData.lastName || !rawData.addressLine1 || !rawData.city) {
+    return { success: false, message: "请填写完整信息" };
   }
 
-  await prisma.userAddress.create({
-    data: {
-      userId,
-      firstName, // 保存
-      lastName,  // 保存
-      addressLine1,
-      addressLine2,
-      city,
-      state,
-      zipCode,
-      country,
-      phoneNumber,
-      isDefault
+  try {
+    // 检查地址数量限制 (例如最多 10 个)
+    const count = await prisma.userAddress.count({ where: { userId: user.id } });
+    if (count >= 10) {
+      return { success: false, message: "地址数量已达上限 (10个)" };
     }
-  });
 
-  revalidatePath("/profile/addresses");
-  revalidatePath("/checkout");
-}
-
-export async function updateUserAddress(formData: FormData) {
-  const userId = await getCurrentUserId();
-  if (!userId) throw new Error("未登录");
-
-  const id = formData.get("id") as string;
-  
-  // 🔥 获取姓名
-  const firstName = formData.get("firstName") as string;
-  const lastName = formData.get("lastName") as string;
-
-  const addressLine1 = formData.get("addressLine1") as string;
-  const addressLine2 = formData.get("addressLine2") as string;
-  const city = formData.get("city") as string;
-  const state = formData.get("state") as string;
-  const zipCode = formData.get("zipCode") as string;
-  const country = formData.get("country") as string;
-  const phoneNumber = formData.get("phoneNumber") as string;
-  const isDefault = formData.get("isDefault") === "on";
-
-  await prisma.$transaction(async (tx) => {
-    if (isDefault) {
-      await tx.userAddress.updateMany({
-        where: { userId, id: { not: id } },
+    // 如果设为默认，先取消其他的默认
+    if (rawData.isDefault || count === 0) {
+      await prisma.userAddress.updateMany({
+        where: { userId: user.id },
         data: { isDefault: false }
       });
     }
 
-    await tx.userAddress.update({
-      where: { id, userId },
+    await prisma.userAddress.create({
       data: {
-        firstName, // 更新
-        lastName,  // 更新
-        addressLine1,
-        addressLine2,
-        city,
-        state,
-        zipCode,
-        country,
-        phoneNumber,
-        isDefault
+        userId: user.id,
+        firstName: rawData.firstName,
+        lastName: rawData.lastName,
+        phoneNumber: rawData.phone,
+        addressLine1: rawData.addressLine1,
+        addressLine2: rawData.addressLine2,
+        city: rawData.city,
+        state: rawData.state,
+        zipCode: rawData.postalCode,
+        country: rawData.country,
+        isDefault: rawData.isDefault || count === 0 // 第一个地址强制默认
       }
     });
-  });
 
-  revalidatePath("/profile/addresses");
-  revalidatePath("/checkout");
+    revalidatePath("/profile/addresses");
+    return { success: true, message: "地址添加成功" };
+  } catch (error) {
+    console.error("Add address error:", error);
+    return { success: false, message: "添加失败，请重试" };
+  }
 }
 
-export async function deleteUserAddress(addressId: string) {
-  const userId = await getCurrentUserId();
-  if (!userId) return;
-  await prisma.userAddress.deleteMany({ where: { id: addressId, userId } });
-  revalidatePath("/profile/addresses");
+// === 删除地址 ===
+export async function deleteAddress(addressId: string) {
+  const user = await getUser();
+  if (!user) return;
+
+  try {
+    await prisma.userAddress.delete({
+      where: { id: addressId, userId: user.id }
+    });
+    revalidatePath("/profile/addresses");
+  } catch (error) {
+    console.error("Delete address error:", error);
+  }
 }
 
+// === 设为默认 ===
 export async function setDefaultAddress(addressId: string) {
-  const userId = await getCurrentUserId();
-  if (!userId) return;
-  await prisma.$transaction([
-    prisma.userAddress.updateMany({ where: { userId }, data: { isDefault: false } }),
-    prisma.userAddress.update({ where: { id: addressId, userId }, data: { isDefault: true } })
-  ]);
-  revalidatePath("/profile/addresses");
-  revalidatePath("/checkout");
+  const user = await getUser();
+  if (!user) return;
+
+  try {
+    await prisma.$transaction([
+      prisma.userAddress.updateMany({
+        where: { userId: user.id },
+        data: { isDefault: false }
+      }),
+      prisma.userAddress.update({
+        where: { id: addressId, userId: user.id },
+        data: { isDefault: true }
+      })
+    ]);
+    revalidatePath("/profile/addresses");
+  } catch (error) {
+    console.error("Set default error:", error);
+  }
 }
