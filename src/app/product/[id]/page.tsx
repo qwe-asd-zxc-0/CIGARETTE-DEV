@@ -18,7 +18,6 @@ export default async function ProductDetail({ params }: ProductDetailProps) {
     where: { id },
     include: { 
       brand: true,
-      variants: true 
     }
   });
 
@@ -31,12 +30,6 @@ export default async function ProductDetail({ params }: ProductDetailProps) {
   const product = {
     ...rawProduct,
     basePrice: Number(rawProduct.basePrice), // Decimal -> Number
-    variants: rawProduct.variants.map(v => ({
-      ...v,
-      price: v.price ? Number(v.price) : null, // Decimal -> Number
-      // 如果有 Date 类型也建议转 string，prisma 的 Date 对象通常可以直接传，但为了保险：
-      // createdAt: v.createdAt?.toISOString() 
-    }))
   };
 
   // 2. 查询相关商品

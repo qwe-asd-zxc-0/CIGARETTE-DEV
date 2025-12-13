@@ -290,9 +290,9 @@ export default function OrderDrawer({ order, onClose }: OrderDrawerProps) {
                           <div className="flex items-center gap-3">
                             {/* 图片 */}
                             <div className="w-10 h-10 bg-zinc-800 rounded-md relative overflow-hidden flex-shrink-0 border border-white/5">
-                              {(item.productVariant?.variantImageUrl || item.productVariant?.product?.coverImageUrl) && (
+                              {item.product?.coverImageUrl && (
                                 <Image 
-                                  src={item.productVariant.variantImageUrl || item.productVariant.product.coverImageUrl} 
+                                  src={item.product.coverImageUrl} 
                                   alt="img" fill className="object-cover" 
                                 />
                               )}

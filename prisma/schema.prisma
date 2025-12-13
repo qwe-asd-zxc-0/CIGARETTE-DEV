@@ -27,8 +27,24 @@ model Profile {
   orders        Order[]
   reviews       Review[]
   addresses     UserAddress[]
+  transactions  Transaction[]
 
   @@map("profiles")
+  @@schema("public")
+}
+
+model Transaction {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @db.Uuid @map("user_id")
+  type        String   // deposit, payment, refund
+  amount      Decimal  @db.Decimal(10, 2)
+  status      String   @default("completed") // pending, completed, failed
+  description String?
+  createdAt   DateTime @default(now()) @db.Timestamptz(6) @map("created_at")
+
+  user        Profile  @relation(fields: [userId], references: [id])
+
+  @@map("transactions")
   @@schema("public")
 }
 
@@ -84,38 +100,27 @@ model Product {
   images             String[]  @default([])
   slug               String   @unique
   status             String?  @default("active") // active, draft, archived
+  stockQuantity      Int      @default(0) @map("stock_quantity")
+  
+  // ✅ Merged Variant Fields
+  skuCode            String?  @unique @map("sku_code")
+  flavor             String?
+  nicotineStrength   String?  @map("nicotine_strength")
+  
   createdAt          DateTime? @default(now()) @db.Timestamptz(6) @map("created_at")
   updatedAt          DateTime? @updatedAt @map("updated_at")
 
   // 关系
   brand           Brand?           @relation(fields: [brandId], references: [id])
-  variants        ProductVariant[]
   reviews         Review[]
+  orderItems      OrderItem[]
+  restockSubs     RestockSubscription[]
 
   @@map("products")
   @@schema("public")
 }
 
-model ProductVariant {
-  id              String   @id @default(uuid()) @db.Uuid
-  productId       String?  @db.Uuid @map("product_id")
-  skuCode         String?  @unique @map("sku_code")
-  flavor          String
-  nicotineStrength String  @map("nicotine_strength")
-  colorHex        String?  @map("color_hex")
-  price           Decimal? @db.Decimal
-  stockQuantity   Int?     @default(0) @map("stock_quantity")
-  variantImageUrl String?  @map("variant_image_url")
-  isActive        Boolean? @default(true) @map("is_active")
-
-  // 关系
-  product         Product?              @relation(fields: [productId], references: [id])
-  orderItems      OrderItem[]
-  restockSubs     RestockSubscription[]
-
-  @@map("product_variants")
-  @@schema("public")
-}
+// ❌ Removed ProductVariant model
 
 // --- 3. 订单与交易 ---
 
@@ -147,15 +152,15 @@ model Order {
 model OrderItem {
   id                   String   @id @default(uuid()) @db.Uuid
   orderId              String?  @db.Uuid @map("order_id")
-  productVariantId     String?  @db.Uuid @map("product_variant_id")
+  productId            String?  @db.Uuid @map("product_id") // ✅ Changed from productVariantId
   productTitleSnapshot String?  @map("product_title_snapshot")
   flavorSnapshot       String?  @map("flavor_snapshot")
   quantity             Int
   unitPrice            Decimal  @map("unit_price") @db.Decimal
 
   // 关系
-  order            Order?          @relation(fields: [orderId], references: [id])
-  productVariant   ProductVariant? @relation(fields: [productVariantId], references: [id])
+  order            Order?   @relation(fields: [orderId], references: [id])
+  product          Product? @relation(fields: [productId], references: [id])
 
   @@map("order_items")
   @@schema("public")
@@ -212,12 +217,12 @@ model Faq {
 model RestockSubscription {
   id               String   @id @default(uuid()) @db.Uuid
   email            String
-  productVariantId String?  @db.Uuid @map("product_variant_id")
+  productId        String?  @db.Uuid @map("product_id") // ✅ Changed from productVariantId
   isNotified       Boolean? @default(false) @map("is_notified")
   createdAt        DateTime? @default(now()) @db.Timestamptz(6) @map("created_at")
 
   // 关系
-  productVariant   ProductVariant? @relation(fields: [productVariantId], references: [id])
+  product          Product? @relation(fields: [productId], references: [id])
 
   @@map("restock_subscriptions")
   @@schema("public")

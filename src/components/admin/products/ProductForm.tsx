@@ -22,9 +22,8 @@ export default function ProductForm({ product, isCreate, brands }: ProductFormPr
   const [galleryImages, setGalleryImages] = useState<string[]>(product?.images || []);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // ✅ 新增：库存状态 (尝试读取第一个变体的库存，如果没有则为 0)
-  // 注意：这需要 Page 页面查询时 include variants
-  const initialStock = product?.variants?.[0]?.stockQuantity || 0;
+  // ✅ 新增：库存状态 (优先读取 Product 表库存)
+  const initialStock = product?.stockQuantity || 0;
   const [stock, setStock] = useState(initialStock);
 
   // === 2. 高级配置状态 ===

@@ -12,7 +12,6 @@ const menuItems = [
   { name: "数据看板", href: "/admin", icon: BarChart3 },
   { name: "用户管理", href: "/admin/users", icon: Users },
   { name: "商品管理", href: "/admin/products", icon: ShoppingBag },
-  { name: "库存管理", href: "/admin/inventory", icon: Box },
   { name: "订单管理", href: "/admin/orders", icon: ClipboardList },
   { name: "内容管理", href: "/admin/content", icon: MessageSquare },
   { name: "系统配置", href: "/admin/settings", icon: Settings },

@@ -81,8 +81,8 @@ export default function OrderCard({ order }: { order: any }) {
             {order.items.map((item: any) => (
               <div key={item.id} className="flex gap-4 items-center bg-zinc-800/30 p-3 rounded-lg border border-white/5">
                 <div className="relative w-12 h-12 bg-zinc-800 rounded-lg overflow-hidden border border-white/5 flex-shrink-0">
-                  {item.productVariant?.variantImageUrl ? (
-                    <Image src={item.productVariant.variantImageUrl} alt="product" fill className="object-cover"/>
+                  {item.product?.coverImageUrl ? (
+                    <Image src={item.product.coverImageUrl} alt="product" fill className="object-cover"/>
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-zinc-600"><Package className="w-4 h-4"/></div>
                   )}

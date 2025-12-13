@@ -16,7 +16,7 @@ export default async function AdminDashboard() {
     prisma.profile.count(), // 总用户数
     prisma.order.count(),   // 总订单数
     prisma.product.count({ where: { status: 'active' } }), // 上架商品数
-    prisma.productVariant.count({ where: { stockQuantity: { lt: 10 } } }), // 低库存预警 (少于10)
+    prisma.product.count({ where: { stockQuantity: { lt: 10 }, status: 'active' } }), // 低库存预警 (少于10)
     
     // 获取最近 5 笔订单
     prisma.order.findMany({
@@ -68,7 +68,7 @@ export default async function AdminDashboard() {
       icon: AlertTriangle, 
       color: "text-orange-500", 
       bg: "bg-orange-500/10",
-      desc: "库存 < 10 的变体"
+      desc: "库存 < 10 的商品"
     },
   ];
 
@@ -78,7 +78,7 @@ export default async function AdminDashboard() {
       <div className="flex justify-between items-end">
         <div>
           <h2 className="text-3xl font-bold text-white mb-2">Dashboard</h2>
-          <p className="text-zinc-400">欢迎回来，管理员。这里是今日的业务概览。</p>
+          <p className="text-zinc-400">欢迎回来管理员。这是业务概览。</p>
         </div>
         <div className="text-right">
           <p className="text-sm text-zinc-500 font-mono">
@@ -140,21 +140,44 @@ export default async function AdminDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {recentOrders.map((order) => (
-                  <tr key={order.id} className="hover:bg-white/5 transition-colors group">
-                    <td className="p-4 pl-6 font-mono text-white group-hover:text-red-400 transition-colors">
-                      {order.id.slice(0, 8)}...
-                    </td>
-                    <td className="p-4">
-                      {order.user?.fullName || order.guestEmail || 'Guest'}
-                    </td>
-                    <td className="p-4">
+                {recentOrders.map((order) => {
+                  // 解析收货地址信息
+                  const address = order.shippingAddress as any || {};
+                  const recipientName = address.firstName 
+                    ? `${address.firstName} ${address.lastName || ''}`.trim()
+                    : null;
+
+                  return (
+                    <tr key={order.id} className="hover:bg-white/5 transition-colors group">
+                      <td className="p-4 pl-6 font-mono text-white group-hover:text-red-400 transition-colors">
+                        {order.id.slice(0, 8)}...
+                      </td>
+                      <td className="p-4">
+                        <div className="flex flex-col">
+                          <span className="text-white font-medium">
+                            {recipientName || order.user?.fullName || 'Guest'}
+                          </span>
+                          <span className="text-xs text-zinc-500">
+                            {order.user?.email || order.guestEmail}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="p-4">
                       <span className={`px-2.5 py-1 rounded-full text-xs font-bold capitalize ${
                         order.status === 'completed' ? 'bg-green-500/10 text-green-500' :
+                        order.status === 'paid' ? 'bg-blue-500/10 text-blue-500' :
+                        order.status === 'shipped' ? 'bg-purple-500/10 text-purple-500' :
                         order.status === 'pending_payment' ? 'bg-yellow-500/10 text-yellow-500' :
+                        order.status === 'cancelled' ? 'bg-red-500/10 text-red-500' :
                         'bg-zinc-800 text-zinc-400'
                       }`}>
-                        {order.status?.replace('_', ' ')}
+                        {{
+                          'pending_payment': '待支付',
+                          'paid': '已支付',
+                          'shipped': '已发货',
+                          'completed': '已完成',
+                          'cancelled': '已取消'
+                        }[order.status || ''] || order.status}
                       </span>
                     </td>
                     <td className="p-4 font-mono text-white">
@@ -164,7 +187,8 @@ export default async function AdminDashboard() {
                       {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : '-'}
                     </td>
                   </tr>
-                ))}
+                );
+                })}
                 {recentOrders.length === 0 && (
                   <tr>
                     <td colSpan={5} className="p-8 text-center text-zinc-600">

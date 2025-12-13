@@ -24,7 +24,7 @@ export default async function OrderHistoryPage() {
     include: {
       items: {
         include: {
-          productVariant: true 
+          product: true 
         }
       }
     }
@@ -53,10 +53,10 @@ export default async function OrderHistoryPage() {
       // 数据库里没有 totalPrice 字段，如果有也需要转
       // totalPrice: item.totalPrice ? Number(item.totalPrice) : 0, 
       
-      // 处理 Item 里的变体价格 (如果有)
-      productVariant: item.productVariant ? {
-        ...item.productVariant,
-        price: item.productVariant.price ? Number(item.productVariant.price) : 0
+      // 处理 Item 里的商品信息
+      product: item.product ? {
+        ...item.product,
+        basePrice: item.product.basePrice ? Number(item.product.basePrice) : 0
       } : null
     }))
   }));

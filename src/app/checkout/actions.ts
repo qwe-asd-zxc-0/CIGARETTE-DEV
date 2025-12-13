@@ -94,33 +94,33 @@ export async function createOrder(formData: FormData) {
   let subtotal = 0;
 
   for (const item of clientItems) {
-    const variant = await prisma.productVariant.findUnique({
-      where: { id: item.productVariantId },
-      include: { product: true }
+    // ✅ 扁平化：直接查询 Product 表
+    // 注意：前端传来的可能是 productVariantId (旧) 或 productId (新)
+    // 这里假设前端已经更新为传 productId，或者我们通过 ID 查找 Product
+    const product = await prisma.product.findUnique({
+      where: { id: item.productId || item.productVariantId }, // 兼容性处理
     });
 
-    if (!variant) return { success: false, message: `商品失效 ID: ${item.productVariantId}` };
-    if (!variant.product) return { success: false, message: `关联商品数据缺失 ID: ${item.productVariantId}` };
+    if (!product) return { success: false, message: `商品失效 ID: ${item.productId}` };
     
-    // ✅ 修复 1: 检查库存时使用 correct 字段名 (stockQuantity)
-    // 注意: stockQuantity 在数据库中可能为空，给个默认值 0
-    const currentStock = variant.stockQuantity ?? 0;
+    // ✅ 检查库存
+    const currentStock = product.stockQuantity ?? 0;
     if (currentStock < item.quantity) {
-        return { success: false, message: `${variant.product.title} 库存不足` };
+        return { success: false, message: `${product.title} 库存不足` };
     }
 
-    const unitPrice = Number(variant.price);
+    const unitPrice = Number(product.basePrice);
     const lineTotal = unitPrice * item.quantity;
     subtotal += lineTotal;
 
     orderItemsData.push({
-      productVariant: {
-        connect: { id: variant.id }
+      product: {
+        connect: { id: product.id }
       },
       quantity: item.quantity,
       unitPrice: unitPrice,
-      productTitleSnapshot: variant.product.title,
-      flavorSnapshot: variant.flavor || "Default",
+      productTitleSnapshot: product.title,
+      flavorSnapshot: product.flavor || "Default",
     });
   }
 
@@ -180,11 +180,11 @@ export async function createOrder(formData: FormData) {
 
       // (2) 扣减库存
       for (const item of clientItems) {
-        await tx.productVariant.update({
-          where: { id: item.productVariantId },
-          data: { 
-            // ✅ 修复 2: 扣减库存时使用 correct 字段名 (stockQuantity)
-            stockQuantity: { decrement: item.quantity } 
+        // ✅ 扁平化：直接扣减 Product 库存
+        await tx.product.update({
+          where: { id: item.productId || item.productVariantId },
+          data: {
+            stockQuantity: { decrement: item.quantity }
           }
         });
       }

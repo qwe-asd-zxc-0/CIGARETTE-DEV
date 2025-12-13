@@ -6,9 +6,11 @@ import { ShoppingCart, User, LogOut, Package, UserCircle, Menu, X } from "lucide
 import { createBrowserClient } from "@supabase/ssr";
 import { useRouter, usePathname } from "next/navigation";
 import { useCartDrawer } from "@/context/CartContext"; // ✅ 引入购物车 Context
+import { getHeaderProfile } from "@/app/actions";
 
 export default function Header() {
   const [user, setUser] = useState<any>(null);
+  const [profileName, setProfileName] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // 📱 移动端菜单状态
@@ -36,6 +38,7 @@ export default function Header() {
       if (event === 'SIGNED_OUT') {
         router.refresh();
         setIsMobileMenuOpen(false); // 登出时关闭菜单
+        setProfileName(null);
       }
     });
 
@@ -47,6 +50,15 @@ export default function Header() {
       window.removeEventListener("scroll", handleScroll);
     };
   }, [supabase, router]);
+
+  // ✅ 监听用户变化，获取最新 Profile 名字
+  useEffect(() => {
+    if (user) {
+      getHeaderProfile().then((p) => {
+        if (p?.fullName) setProfileName(p.fullName);
+      });
+    }
+  }, [user]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -128,7 +140,7 @@ export default function Header() {
                     <User className="w-4 h-4 text-zinc-200" />
                   </div>
                   <span className="text-xs font-bold text-white max-w-[80px] truncate">
-                    {user.user_metadata?.full_name || "账户"}
+                    {profileName || user.user_metadata?.full_name || "账户"}
                   </span>
                 </Link>
                 

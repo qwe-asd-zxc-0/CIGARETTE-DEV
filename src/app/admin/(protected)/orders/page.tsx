@@ -14,13 +14,8 @@ export default async function OrdersPage() {
       },
       items: {
         include: {
-          // 为了获取图片，需要层层关联
-          productVariant: {
-            include: {
-              product: {
-                select: { coverImageUrl: true }
-              }
-            }
+          product: {
+            select: { coverImageUrl: true }
           }
         }
       }

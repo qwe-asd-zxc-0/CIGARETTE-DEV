@@ -156,28 +156,70 @@ export async function POST(request: Request) {
         });
       }
 
-      // C. 变体 (SKU)
-      const existingSku = await prisma.productVariant.findUnique({
+      // C. 变体 (SKU) - 扁平化处理
+      // 由于现在 Product 表直接存储 SKU 信息，我们实际上是在更新 Product
+      // 如果是多变体导入，这可能会覆盖之前的记录，因为现在是 1 Product = 1 SKU
+      // 为了兼容，我们假设 Excel 每一行都是一个独立的 Product
+      
+      // 检查 SKU 是否已存在 (在 Product 表中)
+      const existingProductBySku = await prisma.product.findUnique({
         where: { skuCode }
       });
 
-      if (existingSku) {
-        await prisma.productVariant.update({
-          where: { id: existingSku.id },
-          data: { stockQuantity: stock, price: price, nicotineStrength: strength }
-        });
-      } else {
-        await prisma.productVariant.create({
-          data: {
-            productId: product.id,
-            skuCode,
-            flavor,
+      if (existingProductBySku) {
+        // 更新现有商品
+        await prisma.product.update({
+          where: { id: existingProductBySku.id },
+          data: { 
+            stockQuantity: stock, 
+            basePrice: price, 
             nicotineStrength: strength,
-            stockQuantity: stock,
-            variantImageUrl: coverImageUrl,
-            isActive: true
+            flavor: flavor
           }
         });
+      } else {
+        // 如果之前没有找到 Product (按标题)，或者找到了但 SKU 不同
+        // 这里有一个逻辑冲突：如果按标题找到了 Product，但 SKU 不同，说明是同名不同规格
+        // 在扁平化模式下，同名不同规格必须是不同的 Product 记录 (不同的 ID)
+        
+        if (product && product.skuCode !== skuCode) {
+             // 这是一个新的变体，需要创建新的 Product 记录
+             // 为了避免 Slug 冲突，我们需要重新生成 Slug
+             const newSlug = generateSlug(`${title}-${flavor}-${strength}`);
+             
+             await prisma.product.create({
+                data: {
+                    title,
+                    slug: newSlug,
+                    basePrice: price,
+                    description,
+                    origin,
+                    category,
+                    coverImageUrl,
+                    tieredPricingRules,
+                    specifications,
+                    brandId: brand.id,
+                    status: 'active',
+                    // SKU 字段
+                    skuCode,
+                    flavor,
+                    nicotineStrength: strength,
+                    stockQuantity: stock
+                }
+             });
+        } else {
+            // 这是一个全新的商品，或者刚刚创建的 Product 还没有 SKU
+            // 如果刚刚创建了 product (在 B 步骤)，我们更新它的 SKU 信息
+            await prisma.product.update({
+                where: { id: product.id },
+                data: {
+                    skuCode,
+                    flavor,
+                    nicotineStrength: strength,
+                    stockQuantity: stock
+                }
+            });
+        }
       }
       successCount++;
     }

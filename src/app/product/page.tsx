@@ -60,9 +60,6 @@ export default async function ProductPage({
       orderBy: { createdAt: "desc" },
       include: { 
         brand: true,
-        variants: {
-          select: { stockQuantity: true }
-        }
       },
       take: PAGE_SIZE * 10, // 先取更多，然后在内存中过滤
       skip: 0,
@@ -79,7 +76,7 @@ export default async function ProductPage({
   if (inStock !== undefined) {
     const hasStock = inStock === 'true';
     products = products.filter((product) => {
-      const totalStock = product.variants?.reduce((acc, v) => acc + (v.stockQuantity || 0), 0) || 0;
+      const totalStock = product.stockQuantity || 0;
       return hasStock ? totalStock > 0 : totalStock <= 0;
     });
   }
@@ -251,7 +248,7 @@ export default async function ProductPage({
                     const displayImage = product.coverImageUrl || (product.images && product.images[0]);
                     
                     // 计算总库存
-                    const totalStock = product.variants?.reduce((acc, v) => acc + (v.stockQuantity || 0), 0) || 0;
+                    const totalStock = product.stockQuantity || 0;
                     const isOutOfStock = totalStock <= 0;
 
                     return (

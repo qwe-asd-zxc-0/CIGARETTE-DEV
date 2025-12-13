@@ -43,6 +43,8 @@ export async function upsertProduct(formData: FormData, productId?: string) {
     const stockRaw = formData.get("stock");
     const stock = stockRaw ? parseInt(stockRaw.toString()) : 0;
 
+    console.log(`📦 [UpsertProduct] Stock received: ${stock}, Raw: ${stockRaw}`);
+
     // 2. 获取其他字段
     const coverImageUrl = formData.get("coverImageUrl") as string;
     const imagesJson = formData.get("images") as string;
@@ -56,68 +58,60 @@ export async function upsertProduct(formData: FormData, productId?: string) {
     const tieredPricingRules = parseJsonField(pricingJson, []);
 
     // Product 表基础数据
-    const dataPayload = {
+    const dataPayload: any = {
       title,
       basePrice,
       origin,
-      category: category || null, // ✅ 新增：分类字段
+      category: category || null,
       description,
-      brandId: brandId || null,
       coverImageUrl,
       images,
       specifications,
       tieredPricingRules,
-      status: status || 'active'
+      status: status || 'active',
+      stockQuantity: stock,
+      // ✅ 扁平化新增字段
+      skuCode: generateAutoSKU(title), // 默认生成一个 SKU
+      flavor: "Default",
+      nicotineStrength: "N/A"
     };
+
+    // ✅ 处理品牌关联
+    if (brandId) {
+      dataPayload.brand = { connect: { id: brandId } };
+    } else {
+      if (productId && productId !== "new") {
+         dataPayload.brand = { disconnect: true };
+      }
+    }
 
     if (productId && productId !== "new") {
       // === 更新模式 ===
       console.log(`🔄 Updating product: ${productId}`);
       
-      // 1. 更新商品主信息
+      // 移除 skuCode 更新，避免覆盖已有 SKU
+      delete dataPayload.skuCode;
+
       await prisma.product.update({
         where: { id: productId },
         data: dataPayload,
       });
 
-      // 2. ✅ 同步更新库存
-      // 逻辑：尝试更新该商品下所有“默认变体”的库存。
-      // 如果您主要销售单规格商品，这非常有效。如果是多规格，通常需要去库存页管理。
-      await prisma.productVariant.updateMany({
-        where: { 
-          productId: productId,
-          flavor: "Default" // 限制只更新默认变体，防止误伤多规格数据
-        },
-        data: { stockQuantity: stock }
-      });
+      // 3. 强制刷新缓存
+      revalidatePath("/admin/products");
+      revalidatePath(`/admin/products/${productId}`);
 
     } else {
       // === 创建模式 ===
       const slug = generateSlug(title);
       console.log(`✨ Creating product with slug: ${slug}`);
       
-      // 1. 创建商品
-      const newProduct = await prisma.product.create({
+      await prisma.product.create({
         data: { ...dataPayload, slug },
-      });
-
-      // 2. ✅ 创建默认变体（带库存）
-      await prisma.productVariant.create({
-        data: {
-          productId: newProduct.id,
-          skuCode: generateAutoSKU(title),
-          flavor: "Default",
-          nicotineStrength: "N/A",
-          price: basePrice,
-          stockQuantity: stock,    // 🔥 这里写入您提交的库存
-          variantImageUrl: coverImageUrl,
-          isActive: true
-        }
       });
     }
 
     revalidatePath("/admin/products");
-    revalidatePath("/admin/inventory"); // 同时刷新库存列表
     revalidatePath("/product");
     
     return { success: true, message: "保存成功" };
@@ -131,29 +125,23 @@ export async function upsertProduct(formData: FormData, productId?: string) {
 export async function deleteProduct(productId: string) {
   try {
     // 1. 检查是否有订单关联
-    const variantsWithOrders = await prisma.productVariant.findFirst({
+    const productWithOrders = await prisma.product.findFirst({
       where: {
-        productId: productId,
+        id: productId,
         orderItems: { some: {} }
       }
     });
 
-    if (variantsWithOrders) {
+    if (productWithOrders) {
       return { success: false, message: "该商品已有订单记录，无法物理删除。请尝试将其状态改为下架。" };
     }
 
-    // 2. 删除关联的变体
-    await prisma.productVariant.deleteMany({
-      where: { productId: productId }
-    });
-
-    // 3. 删除商品本身
+    // 2. 删除商品本身
     await prisma.product.delete({
       where: { id: productId }
     });
 
     revalidatePath("/admin/products");
-    revalidatePath("/admin/inventory");
     
     return { success: true, message: "删除成功" };
 

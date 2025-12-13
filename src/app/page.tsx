@@ -14,7 +14,6 @@ export default async function Home() {
     where: { status: 'active' },
     include: { 
       brand: true,
-      variants: true 
     },
     orderBy: { createdAt: 'desc' },
     take: 8, 

@@ -23,43 +23,24 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   ];
   const [selectedImage, setSelectedImage] = useState(allImages[0] || "");
   
-  // --- 变体数据处理 ---
-  const variants = product.variants || [];
-  const uniqueFlavors = Array.from(new Set(variants.map((v: any) => v.flavor))).filter(Boolean) as string[];
-  const uniqueStrengths = Array.from(new Set(variants.map((v: any) => v.strength))).filter(Boolean) as string[];
-
   // --- 选购状态 ---
-  const [selectedFlavor, setSelectedFlavor] = useState<string>(uniqueFlavors[0] || "");
-  const [selectedStrength, setSelectedStrength] = useState<string>(uniqueStrengths[0] || "");
+  // ✅ 扁平化：直接使用 Product 上的字段
   const [quantity, setQuantity] = useState(1);
 
-  // --- 查找当前选中的 SKU ---
-  const currentVariant = variants.find((v: any) => 
-    (!selectedFlavor || v.flavor === selectedFlavor) && 
-    (!selectedStrength || v.strength === selectedStrength)
-  );
-
-  const currentStock = currentVariant?.stockQuantity || 0;
+  const currentStock = product.stockQuantity || 0;
   const isOutOfStock = currentStock <= 0;
 
   // ✅ 3. 核心逻辑：加入购物车
   const handleAddToCart = (isBuyNow = false) => {
-    // 基础校验
-    if (!currentVariant) {
-      alert("请选择完整的规格（口味 & 浓度）");
-      return;
-    }
-
     // 构造商品数据
     const cartItem = {
-      id: currentVariant.id,          // SKU ID
+      id: product.id,                 // ✅ 使用 Product ID
       productId: product.id,          // 商品 ID
       title: product.title,
-      // 如果变体有特定价格就用变体的，否则用基础价
-      price: currentVariant.price || product.basePrice, 
+      price: product.basePrice,       // ✅ 使用基础价格
       image: selectedImage,
-      flavor: selectedFlavor || "默认口味",
-      strength: selectedStrength || "默认浓度",
+      flavor: product.flavor || "默认口味", // ✅ 使用 Product 字段
+      strength: product.nicotineStrength || "默认浓度", // ✅ 使用 Product 字段
       quantity: quantity,
       stock: currentStock             // 🔥 关键：必须传入库存，Context 会帮我们做校验
     };
@@ -107,46 +88,22 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
           </div>
         </div>
 
-        {/* 规格选择器 */}
+        {/* 规格展示 (只读) */}
         <div className="space-y-6 mb-8">
-          {uniqueFlavors.length > 0 && (
+          {product.flavor && (
             <div>
-              <label className="text-xs text-zinc-500 font-bold uppercase mb-3 block">选择口味 (Flavor)</label>
-              <div className="flex flex-wrap gap-2">
-                {uniqueFlavors.map(flavor => (
-                  <button
-                    key={flavor}
-                    onClick={() => setSelectedFlavor(flavor)}
-                    className={`px-4 py-2 text-sm rounded-lg border transition-all ${
-                      selectedFlavor === flavor 
-                      ? "bg-white text-black border-white font-bold" 
-                      : "bg-zinc-900 text-zinc-400 border-white/10 hover:border-white/30"
-                    }`}
-                  >
-                    {flavor}
-                  </button>
-                ))}
+              <label className="text-xs text-zinc-500 font-bold uppercase mb-3 block">口味 (Flavor)</label>
+              <div className="px-4 py-2 text-sm rounded-lg border bg-white text-black border-white font-bold inline-block">
+                {product.flavor}
               </div>
             </div>
           )}
 
-          {uniqueStrengths.length > 0 && (
+          {product.nicotineStrength && (
             <div>
               <label className="text-xs text-zinc-500 font-bold uppercase mb-3 block">尼古丁浓度 (Strength)</label>
-              <div className="flex flex-wrap gap-2">
-                {uniqueStrengths.map(strength => (
-                  <button
-                    key={strength}
-                    onClick={() => setSelectedStrength(strength)}
-                    className={`px-4 py-2 text-sm rounded-lg border transition-all ${
-                      selectedStrength === strength 
-                      ? "bg-white text-black border-white font-bold" 
-                      : "bg-zinc-900 text-zinc-400 border-white/10 hover:border-white/30"
-                    }`}
-                  >
-                    {strength}
-                  </button>
-                ))}
+              <div className="px-4 py-2 text-sm rounded-lg border bg-white text-black border-white font-bold inline-block">
+                {product.nicotineStrength}
               </div>
             </div>
           )}

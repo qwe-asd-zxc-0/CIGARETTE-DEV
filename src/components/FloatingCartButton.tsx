@@ -4,10 +4,15 @@ import { useCartDrawer } from '@/context/CartContext';
 // 确保您安装了 lucide-react (npm install lucide-react)
 import { ShoppingBag } from 'lucide-react'; 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 export default function FloatingCartButton() {
   const { toggleCart, isOpen } = useCartDrawer();
   const [cartCount, setCartCount] = useState(0);
+  const pathname = usePathname();
+
+  // 如果是后台页面，不显示悬浮购物车按钮
+  if (pathname?.startsWith('/admin')) return null;
 
   // 监听购物车数量变化 (模拟逻辑，实际应从 CartContext 获取 items)
   useEffect(() => {

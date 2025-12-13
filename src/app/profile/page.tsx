@@ -80,12 +80,12 @@ export default async function ProfilePage() {
                       ${Number(profile?.balance || 0).toFixed(2)}
                    </div>
                    <div className="flex gap-3">
-                      <button className="px-4 py-2 bg-white text-black font-bold text-sm rounded-lg hover:bg-zinc-200 transition-colors">
+                      <Link href="/profile/recharge" className="px-4 py-2 bg-white text-black font-bold text-sm rounded-lg hover:bg-zinc-200 transition-colors">
                          充值
-                      </button>
-                      <button className="px-4 py-2 bg-white/10 text-white font-bold text-sm rounded-lg hover:bg-white/20 transition-colors">
+                      </Link>
+                      <Link href="/profile/transactions" className="px-4 py-2 bg-white/10 text-white font-bold text-sm rounded-lg hover:bg-white/20 transition-colors">
                          查看交易记录
-                      </button>
+                      </Link>
                    </div>
                 </div>
              </div>
