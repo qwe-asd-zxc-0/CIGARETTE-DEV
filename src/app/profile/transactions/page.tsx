@@ -3,7 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { ArrowLeft, ArrowDownLeft, ArrowUpRight, History } from "lucide-react";
+import { ArrowLeft, ArrowDownLeft, ArrowUpRight, History, Wallet, RefreshCcw, ShoppingCart } from "lucide-react";
 
 export default async function TransactionsPage() {
   const cookieStore = await cookies();
@@ -21,6 +21,48 @@ export default async function TransactionsPage() {
     orderBy: { createdAt: "desc" }
   });
 
+  // 辅助函数：获取交易类型的配置
+  const getTransactionConfig = (type: string) => {
+    switch (type) {
+      case 'deposit':
+        return {
+          label: '账户充值',
+          icon: ArrowDownLeft,
+          colorClass: 'text-green-500',
+          bgClass: 'bg-green-500/10',
+          sign: '+',
+          amountClass: 'text-green-500'
+        };
+      case 'payment':
+        return {
+          label: '订单支付',
+          icon: ShoppingCart,
+          colorClass: 'text-white',
+          bgClass: 'bg-zinc-800',
+          sign: '-',
+          amountClass: 'text-white'
+        };
+      case 'refund':
+        return {
+          label: '订单退款',
+          icon: RefreshCcw,
+          colorClass: 'text-blue-400',
+          bgClass: 'bg-blue-500/10',
+          sign: '+',
+          amountClass: 'text-blue-400'
+        };
+      default:
+        return {
+          label: '其他交易',
+          icon: History,
+          colorClass: 'text-zinc-400',
+          bgClass: 'bg-zinc-800',
+          sign: '',
+          amountClass: 'text-zinc-400'
+        };
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black pt-28 pb-12 px-4">
       <div className="max-w-3xl mx-auto">
@@ -32,7 +74,29 @@ export default async function TransactionsPage() {
             <ArrowLeft className="w-4 h-4" />
             <span className="text-sm font-medium">返回账户</span>
           </Link>
-          <h1 className="text-2xl font-bold text-white">交易记录</h1>
+          <h1 className="text-2xl font-bold text-white">资金流水</h1>
+        </div>
+
+        {/* 汇总卡片 (可选) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+           <div className="bg-zinc-900 border border-white/10 p-6 rounded-xl">
+              <p className="text-zinc-500 text-xs font-bold uppercase mb-2">总支出</p>
+              <p className="text-2xl font-bold text-white">
+                ${transactions.filter(t => t.type === 'payment').reduce((acc, t) => acc + Number(t.amount), 0).toFixed(2)}
+              </p>
+           </div>
+           <div className="bg-zinc-900 border border-white/10 p-6 rounded-xl">
+              <p className="text-zinc-500 text-xs font-bold uppercase mb-2">总充值</p>
+              <p className="text-2xl font-bold text-green-500">
+                ${transactions.filter(t => t.type === 'deposit').reduce((acc, t) => acc + Number(t.amount), 0).toFixed(2)}
+              </p>
+           </div>
+           <div className="bg-zinc-900 border border-white/10 p-6 rounded-xl">
+              <p className="text-zinc-500 text-xs font-bold uppercase mb-2">总退款</p>
+              <p className="text-2xl font-bold text-blue-400">
+                ${transactions.filter(t => t.type === 'refund').reduce((acc, t) => acc + Number(t.amount), 0).toFixed(2)}
+              </p>
+           </div>
         </div>
 
         <div className="bg-zinc-900 border border-white/10 rounded-2xl overflow-hidden">
@@ -45,33 +109,43 @@ export default async function TransactionsPage() {
             </div>
           ) : (
             <div className="divide-y divide-white/5">
-              {transactions.map((tx) => (
-                <div key={tx.id} className="p-6 flex items-center justify-between hover:bg-white/5 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      tx.type === 'deposit' ? 'bg-green-500/10 text-green-500' : 'bg-white/10 text-white'
-                    }`}>
-                      {tx.type === 'deposit' ? <ArrowDownLeft className="w-5 h-5" /> : <ArrowUpRight className="w-5 h-5" />}
+              {transactions.map((tx) => {
+                const config = getTransactionConfig(tx.type);
+                const Icon = config.icon;
+                
+                return (
+                  <div key={tx.id} className="p-6 flex items-center justify-between hover:bg-white/5 transition-colors group">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${config.bgClass} ${config.colorClass}`}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-white font-bold">{config.label}</p>
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
+                            tx.status === 'completed' ? 'border-green-500/30 text-green-500' : 
+                            tx.status === 'pending' ? 'border-yellow-500/30 text-yellow-500' : 
+                            'border-red-500/30 text-red-500'
+                          }`}>
+                            {tx.status === 'completed' ? '成功' : tx.status === 'pending' ? '处理中' : '失败'}
+                          </span>
+                        </div>
+                        <p className="text-sm text-zinc-400 mt-0.5">
+                          {tx.description || "无详细描述"}
+                        </p>
+                        <p className="text-xs text-zinc-600 mt-1">
+                          {new Date(tx.createdAt).toLocaleString()}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-white font-bold">
-                        {tx.type === 'deposit' ? '充值' : tx.type === 'payment' ? '支付' : '退款'}
-                      </p>
-                      <p className="text-xs text-zinc-500">
-                        {new Date(tx.createdAt).toLocaleString()}
+                    <div className="text-right">
+                      <p className={`font-mono font-bold text-lg ${config.amountClass}`}>
+                        {config.sign}${Number(tx.amount).toFixed(2)}
                       </p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className={`font-mono font-bold ${
-                      tx.type === 'deposit' ? 'text-green-500' : 'text-white'
-                    }`}>
-                      {tx.type === 'deposit' ? '+' : '-'}${Number(tx.amount).toFixed(2)}
-                    </p>
-                    <p className="text-xs text-zinc-500 capitalize">{tx.status}</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

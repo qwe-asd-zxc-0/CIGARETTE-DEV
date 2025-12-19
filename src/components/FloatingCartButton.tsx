@@ -11,9 +11,6 @@ export default function FloatingCartButton() {
   const [cartCount, setCartCount] = useState(0);
   const pathname = usePathname();
 
-  // 如果是后台页面，不显示悬浮购物车按钮
-  if (pathname?.startsWith('/admin')) return null;
-
   // 监听购物车数量变化 (模拟逻辑，实际应从 CartContext 获取 items)
   useEffect(() => {
     // 这里简单演示：每当抽屉打开时，重新读取一下数量
@@ -21,6 +18,9 @@ export default function FloatingCartButton() {
     const items = JSON.parse(localStorage.getItem('cart') || '[]');
     setCartCount(items.reduce((acc: number, item: any) => acc + item.quantity, 0));
   }, [isOpen]);
+
+  // 如果是后台页面或登录/注册页面，不显示悬浮购物车按钮
+  if (pathname?.startsWith('/admin') || pathname === '/login' || pathname === '/sign-up') return null;
 
   return (
     <button

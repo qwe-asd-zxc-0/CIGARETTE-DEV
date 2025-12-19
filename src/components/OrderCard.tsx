@@ -73,6 +73,18 @@ export default function OrderCard({ order }: { order: any }) {
       {isExpanded && (
         <div className="p-6 space-y-6 animate-in slide-in-from-top-2 duration-300">
           
+          {/* 0. 取消原因 (如果已取消) */}
+          {order.status === 'cancelled' && order.cancelReason && (
+            <div className="bg-red-500/10 border border-red-500/20 p-3 rounded-lg">
+              <h4 className="text-xs font-bold text-red-400 uppercase tracking-wider mb-1">
+                取消原因 (Cancellation Reason)
+              </h4>
+              <p className="text-sm text-red-200">
+                {order.cancelReason}
+              </p>
+            </div>
+          )}
+
           {/* 1. 商品列表 */}
           <div className="space-y-3">
             <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">

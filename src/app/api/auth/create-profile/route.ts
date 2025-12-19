@@ -4,27 +4,56 @@ import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request: Request) {
   try {
+    // --- 🛡️ IP Rate Limit Check ---
+    const forwardedFor = request.headers.get("x-forwarded-for");
+    const ip = forwardedFor ? forwardedFor.split(',')[0].trim() : "unknown";
+    
+    // 限制规则：每个 IP 每小时最多注册 3 个账号
+    const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour
+    const MAX_REGISTRATIONS = 3; 
+
+    if (ip !== "unknown" && ip !== "::1" && ip !== "127.0.0.1") { // 本地开发可跳过，或者为了测试也加上
+      const recentRegistrations = await prisma.rateLimit.count({
+        where: {
+          ip: ip,
+          action: "register",
+          createdAt: {
+            gte: new Date(Date.now() - RATE_LIMIT_WINDOW)
+          }
+        }
+      });
+
+      if (recentRegistrations >= MAX_REGISTRATIONS) {
+        return NextResponse.json(
+          { error: "当前 IP 注册过于频繁，请稍后再试。" },
+          { status: 429 }
+        );
+      }
+    }
+    // ------------------------------
+
     const body = await request.json();
     const { email, password, fullName } = body;
 
-    // 0. ✅ 新增：先检查 email 或 fullName 是否已存在于 Profile 表中
-    // 虽然 Supabase Auth 会检查 email，但我们需要在创建之前拦截 fullName 重复的情况
-    const existingUser = await prisma.profile.findFirst({
-      where: {
-        OR: [
-          { email: email },
-          { fullName: fullName } // 检查用户名重复
-        ]
-      }
+    console.log(`[Register Attempt] Email: ${email}, FullName: ${fullName}, IP: ${ip}`);
+
+    // 0. 分别检查 Email 和 FullName，避免逻辑混淆
+    const existingEmail = await prisma.profile.findUnique({
+      where: { email: email }
     });
 
-    if (existingUser) {
-      if (existingUser.email === email) {
-        return NextResponse.json({ error: 'This email is already registered.' }, { status: 409 });
-      }
-      if (existingUser.fullName === fullName) {
-        return NextResponse.json({ error: 'This Full Name is already taken. Please choose another.' }, { status: 409 });
-      }
+    if (existingEmail) {
+      console.log(`[Register Fail] Email already exists: ${email}`);
+      return NextResponse.json({ error: '该邮箱已被注册，请直接登录。' }, { status: 409 });
+    }
+
+    const existingName = await prisma.profile.findUnique({
+      where: { fullName: fullName }
+    });
+
+    if (existingName) {
+      console.log(`[Register Fail] FullName already exists: ${fullName}`);
+      return NextResponse.json({ error: '该全名已被占用，请更换一个。' }, { status: 409 });
     }
 
     // 1. 初始化 Supabase Admin
@@ -68,10 +97,22 @@ export async function POST(request: Request) {
         email,
         fullName: fullName, // 此时已确信 fullName 不重复
         createdAt: new Date(),
+        isAgeVerified: true, // ✅ 默认所有注册用户年龄已验证
       },
     });
 
     console.log("数据库写入成功:", profile);
+
+    // --- 📝 Record Rate Limit ---
+    if (ip !== "unknown") {
+      await prisma.rateLimit.create({
+        data: {
+          ip: ip,
+          action: "register"
+        }
+      });
+    }
+    // ---------------------------
 
     return NextResponse.json({ success: true, profile });
 
@@ -81,21 +122,29 @@ export async function POST(request: Request) {
     // 双重保险：捕获 Prisma 的唯一性约束错误 (P2002)
     if (error.code === 'P2002') {
        const target = error.meta?.target;
-       if (Array.isArray(target)) {
-         if (target.includes('email')) return NextResponse.json({ error: 'This email is already registered.' }, { status: 409 });
-         if (target.includes('full_name')) return NextResponse.json({ error: 'This Full Name is already taken.' }, { status: 409 });
+       
+       // 🚨 特殊处理：如果是 ID 冲突，说明数据库 Trigger 可能已经自动写入了数据
+       // 这种情况下，我们视为注册成功，而不是报错
+       if (!target || (Array.isArray(target) && target.includes('id'))) {
+          console.log("⚠️ 检测到 ID 冲突，推测 Trigger 已自动写入 Profile，视为成功。");
+          return NextResponse.json({ success: true, message: "Profile created automatically" });
        }
-       return NextResponse.json({ error: 'User information already exists.' }, { status: 409 });
+
+       if (Array.isArray(target)) {
+         if (target.includes('email')) return NextResponse.json({ error: '该邮箱已被注册，请直接登录。' }, { status: 409 });
+         if (target.includes('full_name')) return NextResponse.json({ error: '该全名已被占用，请更换一个。' }, { status: 409 });
+       }
+       return NextResponse.json({ error: '用户信息已存在（邮箱或全名重复）。' }, { status: 409 });
     }
 
     if (error.code === 'P2003') {
        return NextResponse.json({ 
-         error: 'Write failed: User ID issue. Please check Supabase configuration.' 
+         error: '写入失败：用户 ID 异常，请检查 Supabase 配置。' 
        }, { status: 500 });
     }
 
     return NextResponse.json(
-      { error: error.message || 'Internal Server Error' },
+      { error: error.message || '服务器内部错误' },
       { status: 500 }
     );
   }

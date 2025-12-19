@@ -138,6 +138,7 @@ model Order {
   trackingNumber  String?  @map("tracking_number")
   carrierName     String?  @map("carrier_name")
   trackingUrl     String?  @map("tracking_url")
+  cancelReason    String?  @map("cancel_reason")
   createdAt       DateTime? @default(now()) @db.Timestamptz(6) @map("created_at")
   updatedAt DateTime? @updatedAt @map("updated_at")
 
@@ -249,5 +250,17 @@ model MarketingCampaign {
   createdAt   DateTime @default(now()) @map("created_at")
 
   @@map("marketing_campaigns")
+  @@schema("public")
+}
+
+// --- 7. 安全限制 (新增) ---
+model RateLimit {
+  id        String   @id @default(uuid()) @db.Uuid
+  ip        String
+  action    String   // e.g. "register"
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([ip, action, createdAt])
+  @@map("rate_limits")
   @@schema("public")
 }

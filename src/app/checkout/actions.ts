@@ -207,6 +207,18 @@ export async function createOrder(formData: FormData) {
         }
       });
 
+      // (4.5) 🔥 关键修复：创建交易流水记录 (Transaction)
+      await tx.transaction.create({
+        data: {
+          userId: user.id,
+          type: "payment", // 交易类型：支付
+          amount: totalAmount, // 金额
+          status: "completed", // 状态：完成
+          description: `订单支付 #${newOrder.id.slice(0, 8)}`, // 描述
+          createdAt: new Date()
+        }
+      });
+
       // (5) 保存地址
       if (shouldSaveAddress) {
         await tx.userAddress.create({
@@ -230,6 +242,9 @@ export async function createOrder(formData: FormData) {
     });
 
     revalidatePath("/profile/orders");
+    revalidatePath("/profile/transactions"); // ✅ 刷新交易记录
+    revalidatePath("/profile"); // ✅ 刷新余额显示
+    
     return { success: true, message: "订单创建成功", orderId: order.id };
 
   } catch (error: any) {

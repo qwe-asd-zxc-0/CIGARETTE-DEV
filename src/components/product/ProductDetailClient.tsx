@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { ShoppingCart, Zap, Minus, Plus } from "lucide-react";
+import { ShoppingCart, Zap, Minus, Plus, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { createBrowserClient } from "@supabase/ssr";
 // ✅ 1. 引入 Context Hook
 import { useCartDrawer } from "@/context/CartContext";
 
@@ -12,9 +13,16 @@ interface ProductDetailClientProps {
 
 export default function ProductDetailClient({ product }: ProductDetailClientProps) {
   const router = useRouter();
+  const [isCheckingAuth, setIsCheckingAuth] = useState(false);
+  const [loginTip, setLoginTip] = useState(""); // 提示信息状态
   
   // ✅ 2. 获取 Context 方法
   const { addToCart } = useCartDrawer();
+
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 
   // --- 图片处理 ---
   const allImages = [
@@ -31,7 +39,23 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
   const isOutOfStock = currentStock <= 0;
 
   // ✅ 3. 核心逻辑：加入购物车
-  const handleAddToCart = (isBuyNow = false) => {
+  const handleAddToCart = async (isBuyNow = false) => {
+    // 如果是立即购买，先检查登录状态
+    if (isBuyNow) {
+      setIsCheckingAuth(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsCheckingAuth(false);
+
+      if (!session) {
+        // 未登录 -> 显示提示并跳转
+        setLoginTip("请先登录账户，正在跳转...");
+        setTimeout(() => {
+          router.push("/login");
+        }, 2000);
+        return;
+      }
+    }
+
     // 构造商品数据
     const cartItem = {
       id: product.id,                 // ✅ 使用 Product ID
@@ -132,7 +156,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
              </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4 relative">
             <button 
               onClick={() => handleAddToCart(false)} // 加入购物车
               disabled={isOutOfStock}
@@ -142,11 +166,20 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
             </button>
             <button 
               onClick={() => handleAddToCart(true)} // 立即购买
-              disabled={isOutOfStock}
+              disabled={isOutOfStock || isCheckingAuth}
               className="py-4 bg-white text-black hover:bg-zinc-200 font-bold rounded-xl transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Zap className="w-4 h-4 fill-current" /> 立即购买
+              {isCheckingAuth ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 fill-current" />}
+              立即购买
             </button>
+
+            {/* 登录提示气泡 */}
+            {loginTip && (
+               <div className="absolute bottom-full mb-3 right-0 w-1/2 bg-red-600 text-white text-xs font-bold py-2 px-3 rounded-lg text-center animate-in fade-in slide-in-from-bottom-2 shadow-xl z-20">
+                 {loginTip}
+                 <div className="absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-3 h-3 bg-red-600 rotate-45"></div>
+               </div>
+            )}
           </div>
         </div>
       </div>

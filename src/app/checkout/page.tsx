@@ -195,7 +195,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white grid grid-cols-1 lg:grid-cols-2 relative">
+    <div className="min-h-screen bg-black text-white grid grid-cols-1 lg:grid-cols-2 relative pt-28">
       
       {/* ==================== 📖 地址簿弹窗 ==================== */}
       {showAddressBook && (
@@ -267,8 +267,8 @@ export default function CheckoutPage() {
       )}
 
       {/* ==================== 左侧：订单详情 (Summary) ==================== */}
-      <div className="relative bg-zinc-900/30 border-r border-white/5 p-6 md:p-12 lg:p-20 order-1 lg:order-1 lg:min-h-screen">
-        <div className="max-w-md ml-auto sticky top-12">
+      <div className="relative bg-zinc-900/30 border-b lg:border-b-0 lg:border-r border-white/5 p-6 md:p-12 lg:p-20 order-1 lg:order-1 lg:min-h-screen">
+        <div className="max-w-md mx-auto lg:ml-auto sticky top-12">
             <div className="mb-8">
               <Link href="/cart" className="inline-flex items-center gap-2 text-zinc-500 hover:text-white transition text-sm font-medium">
                 <ArrowLeft className="w-4 h-4" /> 返回购物车
@@ -319,7 +319,7 @@ export default function CheckoutPage() {
 
       {/* ==================== 右侧：收货信息表单 (Form) ==================== */}
       <div className="p-6 md:p-12 lg:p-20 order-2 lg:order-2 bg-black">
-        <div className="max-w-lg mr-auto">
+        <div className="max-w-lg mx-auto lg:mr-auto">
           
           <div className="flex items-center gap-2 mb-8 text-zinc-500 text-sm">
             <span className="text-white font-bold text-lg">1. 收货信息</span>

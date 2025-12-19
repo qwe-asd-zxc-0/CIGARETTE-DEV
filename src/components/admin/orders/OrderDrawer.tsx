@@ -112,9 +112,12 @@ export default function OrderDrawer({ order, onClose }: OrderDrawerProps) {
               <div className="mt-4 pt-4 border-t border-white/5 flex justify-end">
                 <button
                   onClick={async () => {
+                    const reason = prompt("请输入取消原因 (可选):");
+                    if (reason === null) return; // 用户点击取消
+
                     if (confirm("确定要取消此订单吗？此操作不可撤销。")) {
                       setIsSaving(true);
-                      const res = await cancelOrder(order.id);
+                      const res = await cancelOrder(order.id, reason);
                       setIsSaving(false);
                       if (res.success) {
                         setStatus('cancelled');

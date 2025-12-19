@@ -8,10 +8,16 @@ import {
   Eye, EyeOff, ShieldCheck, KeyRound, ArrowLeft // ✅ 新增 ArrowLeft 图标
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { createBrowserClient } from "@supabase/ssr";
 
 export default function SignUpPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
   
   // 表单状态
   const [formData, setFormData] = useState({
@@ -26,8 +32,8 @@ export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // 验证码倒计时状态
-  const [countdown, setCountdown] = useState(0);
+  // 验证码状态
+  const [generatedCode, setGeneratedCode] = useState("");
 
   // 错误信息状态
   const [errors, setErrors] = useState({
@@ -36,41 +42,28 @@ export default function SignUpPage() {
     code: ""
   });
 
-  // 倒计时逻辑
-  useEffect(() => {
-    if (countdown > 0) {
-      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [countdown]);
-
-  // 发送验证码处理
-  const handleSendCode = () => {
-    if (!formData.email) {
-      alert("Please enter your email address first.");
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      alert("Please enter a valid email address.");
-      return;
-    }
-
-    console.log(`Sending code to ${formData.email}...`);
-    setCountdown(60); 
-    alert(`Verification code sent to ${formData.email} (Simulated: 123456)`);
+  // 生成验证码
+  const generateCode = () => {
+    const code = Math.floor(1000 + Math.random() * 9000).toString();
+    setGeneratedCode(code);
   };
+
+  // 初始化验证码
+  useEffect(() => {
+    generateCode();
+  }, []);
 
   // 实时校验逻辑
   useEffect(() => {
     const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/;
     if (formData.password && !passwordRegex.test(formData.password)) {
-      setErrors(prev => ({ ...prev, password: "At least 8 chars, letters & numbers required." }));
+      setErrors(prev => ({ ...prev, password: "至少8位字符，需包含字母和数字" }));
     } else {
       setErrors(prev => ({ ...prev, password: "" }));
     }
 
     if (formData.confirmPassword && formData.password !== formData.confirmPassword) {
-      setErrors(prev => ({ ...prev, confirm: "Passwords do not match." }));
+      setErrors(prev => ({ ...prev, confirm: "两次输入的密码不一致" }));
     } else {
       setErrors(prev => ({ ...prev, confirm: "" }));
     }
@@ -81,8 +74,10 @@ export default function SignUpPage() {
     e.preventDefault();
     
     if (errors.password || errors.confirm) return;
-    if (formData.code !== "123456") { 
-       setErrors(prev => ({...prev, code: "Invalid verification code (Try 123456)"}));
+    if (formData.code !== generatedCode) { 
+       setErrors(prev => ({...prev, code: "验证码错误，请重试"}));
+       generateCode(); // 输错刷新验证码
+       setFormData(prev => ({...prev, code: ""}));
        return;
     }
 
@@ -108,25 +103,37 @@ export default function SignUpPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Failed to create profile");
+        throw new Error(data.error || "创建账户失败");
       }
 
-      alert("Account created successfully!"); 
-      router.push("/product"); 
+      // 注册成功后，自动执行登录
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (loginError) {
+        console.error("自动登录失败:", loginError);
+        alert("账户创建成功，但自动登录失败，请手动登录。");
+        router.push("/sign-in");
+      } else {
+        // 使用 window.location.href 强制跳转，确保 Auth 状态正确更新且页面刷新
+        window.location.href = "/"; 
+      }
 
     } catch (err: any) {
       console.error(err);
-      alert(err.message || "Registration failed. Please try again.");
+      alert(err.message || "注册失败，请重试。");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen w-full bg-black flex items-center justify-center relative overflow-hidden p-4 font-sans">
+    <div className="min-h-screen w-full bg-black flex items-center justify-center relative overflow-hidden p-4 pt-28 font-sans">
       
       {/* 🚀 新增：左上角返回箭头 */}
-      <div className="absolute top-6 left-6 z-50">
+      <div className="absolute top-28 left-6 z-50">
         <Link 
           href="/product" 
           className="group flex items-center gap-3 text-zinc-400 hover:text-white transition-all duration-300"
@@ -135,7 +142,7 @@ export default function SignUpPage() {
             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
           </div>
           <span className="text-sm font-bold tracking-widest opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 hidden sm:block">
-            BACK TO SHOP
+            返回商城
           </span>
         </Link>
       </div>
@@ -160,14 +167,14 @@ export default function SignUpPage() {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-6">
               <Sparkles className="w-4 h-4 text-orange-500" />
               <span className="text-xs font-bold text-zinc-300 tracking-widest uppercase">
-                Join Global Tobacco
+                加入 Global Tobacco
               </span>
             </div>
             <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">
-              Create Account
+              创建账户
             </h1>
             <p className="text-zinc-400 text-sm">
-              Sign up to unlock exclusive offers & tracking
+              注册以解锁独家优惠和订单追踪
             </p>
           </div>
 
@@ -175,7 +182,7 @@ export default function SignUpPage() {
             
             {/* Full Name */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider ml-1">Full Name</label>
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider ml-1">全名</label>
               <div className="relative group">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-red-500 transition-colors">
                   <User className="w-5 h-5" />
@@ -183,7 +190,7 @@ export default function SignUpPage() {
                 <input
                   type="text"
                   required
-                  placeholder="John Doe"
+                  placeholder="请输入您的全名"
                   className="w-full bg-black/40 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-white placeholder:text-zinc-600 focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 transition-all"
                   value={formData.fullName}
                   onChange={(e) => setFormData({...formData, fullName: e.target.value})}
@@ -193,7 +200,7 @@ export default function SignUpPage() {
 
             {/* Email */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider ml-1">Email Address</label>
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider ml-1">电子邮箱</label>
               <div className="relative group">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-red-500 transition-colors">
                   <Mail className="w-5 h-5" />
@@ -207,11 +214,14 @@ export default function SignUpPage() {
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
                 />
               </div>
+              <p className="text-xs text-zinc-500 ml-1">
+                邮箱是你在本网站的唯一凭证， 找回密码的关键。
+              </p>
             </div>
 
             {/* Verification Code */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider ml-1">Verification Code</label>
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider ml-1">验证码</label>
               <div className="flex gap-3">
                 <div className="relative group flex-1">
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-red-500 transition-colors">
@@ -220,8 +230,8 @@ export default function SignUpPage() {
                   <input
                     type="text"
                     required
-                    placeholder="Enter 6-digit code"
-                    maxLength={6}
+                    placeholder="请输入验证码"
+                    maxLength={4}
                     className={`w-full bg-black/40 border ${errors.code ? 'border-red-500' : 'border-white/10'} rounded-xl py-3.5 pl-12 pr-4 text-white placeholder:text-zinc-600 focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 transition-all`}
                     value={formData.code}
                     onChange={(e) => {
@@ -230,21 +240,22 @@ export default function SignUpPage() {
                     }}
                   />
                 </div>
-                <button
-                  type="button"
-                  onClick={handleSendCode}
-                  disabled={countdown > 0}
-                  className="px-4 py-3.5 min-w-[120px] bg-white/5 border border-white/10 rounded-xl text-white font-bold text-sm hover:bg-white/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                <div 
+                  onClick={generateCode}
+                  className="px-4 min-w-[120px] bg-white/5 border border-white/10 rounded-xl flex items-center justify-center cursor-pointer hover:bg-white/10 transition-all select-none"
+                  title="点击刷新验证码"
                 >
-                  {countdown > 0 ? `${countdown}s` : "Send Code"}
-                </button>
+                  <span className="text-2xl font-mono font-bold text-white tracking-widest italic" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>
+                    {generatedCode}
+                  </span>
+                </div>
               </div>
               {errors.code && <p className="text-xs text-red-500 ml-1 mt-1">{errors.code}</p>}
             </div>
 
             {/* Password */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider ml-1">Password</label>
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider ml-1">密码</label>
               <div className="relative group">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-red-500 transition-colors">
                   <Lock className="w-5 h-5" />
@@ -252,7 +263,7 @@ export default function SignUpPage() {
                 <input
                   type={showPassword ? "text" : "password"}
                   required
-                  placeholder="At least 8 chars (A-Z & 0-9)"
+                  placeholder="至少8位字符 (包含字母和数字)"
                   className={`w-full bg-black/40 border ${errors.password ? 'border-red-500' : 'border-white/10'} rounded-xl py-3.5 pl-12 pr-12 text-white placeholder:text-zinc-600 focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 transition-all`}
                   value={formData.password}
                   onChange={(e) => setFormData({...formData, password: e.target.value})}
@@ -270,7 +281,7 @@ export default function SignUpPage() {
 
             {/* Confirm Password */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider ml-1">Confirm Password</label>
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider ml-1">确认密码</label>
               <div className="relative group">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-red-500 transition-colors">
                   <KeyRound className="w-5 h-5" />
@@ -278,7 +289,7 @@ export default function SignUpPage() {
                 <input
                   type={showConfirmPassword ? "text" : "password"}
                   required
-                  placeholder="Repeat password"
+                  placeholder="请再次输入密码"
                   className={`w-full bg-black/40 border ${errors.confirm ? 'border-red-500' : 'border-white/10'} rounded-xl py-3.5 pl-12 pr-12 text-white placeholder:text-zinc-600 focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 transition-all`}
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
@@ -304,11 +315,11 @@ export default function SignUpPage() {
                 {isLoading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>CREATING ACCOUNT...</span>
+                    <span>正在创建账户...</span>
                   </>
                 ) : (
                   <>
-                    <span>REGISTER NOW</span>
+                    <span>立即注册</span>
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
@@ -319,12 +330,12 @@ export default function SignUpPage() {
 
           <div className="mt-8 text-center">
             <p className="text-zinc-500 text-sm">
-              Already have an account?{" "}
+              已有账户？{" "}
               <Link 
                 href="/sign-in" 
                 className="text-white font-bold hover:text-red-500 transition-colors underline decoration-zinc-700 underline-offset-4 hover:decoration-red-500"
               >
-                Sign In
+                立即登录
               </Link>
             </p>
           </div>

@@ -53,7 +53,7 @@ export async function middleware(request: NextRequest) {
 
   // 4. 鉴权逻辑：未登录处理
   if (!user) {
-    // 如果是 API 请求，返回 401 JSON 错误，防止前端解析 HTML 报错
+    // 如果是 API 请求，返回 401 JSON 错误
     if (pathname.startsWith("/api/")) {
       return NextResponse.json(
         { error: "Unauthorized: Please log in." },
@@ -61,14 +61,18 @@ export async function middleware(request: NextRequest) {
       );
     }
 
-    // 如果是页面访问，跳转到登录页
+    // 区分后台和前台的重定向逻辑
     const url = request.nextUrl.clone();
-    url.pathname = "/admin/login";
+    
+    if (pathname.startsWith("/admin")) {
+      url.pathname = "/admin/login";
+    } else {
+      // 前台受保护页面 (checkout, profile) 跳转到普通登录页
+      url.pathname = "/login";
+    }
+    
     return NextResponse.redirect(url);
   }
-
-  // 注意：中间件无法直接连接数据库检查 isAdmin，
-  // 必须在后续的 API Route 中配合数据库检查权限。
 
   return response;
 }
@@ -79,5 +83,7 @@ export const config = {
     "/admin/:path*",          // 保护所有后台页面
     "/api/admin/:path*",      // 保护所有后台 API
     "/api/upload",            // 保护上传接口
+    "/checkout",              // 保护结算页
+    "/profile/:path*",        // 保护个人中心
   ],
 };

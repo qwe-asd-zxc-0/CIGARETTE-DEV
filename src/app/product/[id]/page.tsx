@@ -53,7 +53,7 @@ export default async function ProductDetail({ params }: ProductDetailProps) {
     <main className="min-h-screen bg-zinc-950 text-zinc-100 pb-20">
       <ContactWidget />
 
-      <div className="max-w-7xl mx-auto px-6 pt-24 pb-12">
+      <div className="max-w-7xl mx-auto px-6 pt-28 pb-12">
         
         {/* 传入序列化后的 product 数据 */}
         <ProductDetailClient product={product} />

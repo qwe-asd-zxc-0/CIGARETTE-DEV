@@ -9,10 +9,10 @@ export default function GlobalOverlay() {
 
   // 判断当前路径是否以 /admin 开头
   const isAdminPage = pathname?.startsWith("/admin");
+  const isAuthPage = pathname === "/login" || pathname === "/sign-up";
 
-  // 如果是后台页面，什么都不渲染 (返回 null)
-  // 你也可以在这里排除登录页，例如: || pathname === "/sign-in"
-  if (isAdminPage) {
+  // 如果是后台页面或登录/注册页，什么都不渲染 (返回 null)
+  if (isAdminPage || isAuthPage) {
     return null;
   }
 

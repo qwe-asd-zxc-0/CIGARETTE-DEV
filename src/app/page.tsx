@@ -42,7 +42,7 @@ export default async function Home() {
         </div>
 
         {/* === 2. Hero 区域 (z-10) === */}
-        <section className="relative z-10 min-h-[80vh] flex flex-col items-center justify-center px-4 pt-20 pb-10">
+        <section className="relative z-10 min-h-[80vh] flex flex-col items-center justify-center px-4 pt-28 pb-10">
           
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md mb-8 animate-fade-in-up shadow-2xl shadow-black/50">
             <Sparkles className="w-3.5 h-3.5 text-orange-500" />

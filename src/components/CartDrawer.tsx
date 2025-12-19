@@ -1,15 +1,35 @@
 "use client";
 
 import { useCartDrawer } from "@/context/CartContext";
-import { X, Minus, Plus, Trash2 } from "lucide-react";
+import { X, Minus, Plus, Trash2, User, LogIn, Loader2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+import { createBrowserClient } from "@supabase/ssr";
 
 export default function CartDrawer() {
-  // ✅ 直接从 Context 获取所有数据和方法
   const { isOpen, closeCart, cartItems, removeFromCart, updateQuantity } = useCartDrawer();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
-  // 计算总价
+  useEffect(() => {
+    if (isOpen) {
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+      
+      const checkAuth = async () => {
+        setCheckingAuth(true);
+        const { data: { session } } = await supabase.auth.getSession();
+        setIsLoggedIn(!!session);
+        setCheckingAuth(false);
+      };
+      
+      checkAuth();
+    }
+  }, [isOpen]);
+
   const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
   return (
@@ -31,7 +51,7 @@ export default function CartDrawer() {
         <div className="flex flex-col h-full">
           {/* 1. 头部 */}
           <div className="flex items-center justify-between p-6 border-b border-zinc-800">
-            <h2 className="text-xl font-bold text-white">我的购物车 ({cartItems.length})</h2>
+            <h2 className="text-xl font-bold text-white">我的购物车 ({isLoggedIn ? cartItems.length : 0})</h2>
             <button onClick={closeCart} className="p-2 text-zinc-400 hover:text-white transition">
               <X className="w-6 h-6" />
             </button>
@@ -39,7 +59,40 @@ export default function CartDrawer() {
 
           {/* 2. 商品列表区 */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            {cartItems.length === 0 ? (
+            {checkingAuth ? (
+              <div className="flex justify-center items-center h-full">
+                <Loader2 className="w-8 h-8 text-zinc-500 animate-spin" />
+              </div>
+            ) : !isLoggedIn ? (
+              <div className="flex flex-col items-center justify-center h-full text-center space-y-6">
+                <div className="w-20 h-20 bg-zinc-800/50 rounded-full flex items-center justify-center mb-2 border border-zinc-700">
+                  <User className="w-10 h-10 text-zinc-400" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-2">请先登录</h3>
+                  <p className="text-zinc-400 text-sm max-w-[220px] mx-auto leading-relaxed">
+                    登录后即可查看购物车商品并进行结算
+                  </p>
+                </div>
+                <div className="flex flex-col gap-3 w-full max-w-[240px]">
+                  <Link 
+                    href="/login" 
+                    onClick={closeCart}
+                    className="w-full bg-white text-black font-bold py-3.5 rounded-xl hover:bg-zinc-200 transition flex items-center justify-center gap-2 shadow-lg shadow-white/5"
+                  >
+                    <LogIn className="w-4 h-4" />
+                    立即登录
+                  </Link>
+                  <Link 
+                    href="/sign-up" 
+                    onClick={closeCart}
+                    className="w-full bg-zinc-800 text-white font-bold py-3.5 rounded-xl hover:bg-zinc-700 transition border border-zinc-700"
+                  >
+                    注册账户
+                  </Link>
+                </div>
+              </div>
+            ) : cartItems.length === 0 ? (
               <div className="text-center py-20">
                 <p className="text-zinc-500 mb-4">您的购物车是空的</p>
                 <Link href="/product" onClick={closeCart} className="text-red-500 hover:text-red-400 font-medium">
@@ -103,7 +156,7 @@ export default function CartDrawer() {
           </div>
 
           {/* 3. 底部结算区 */}
-          {cartItems.length > 0 && (
+          {isLoggedIn && cartItems.length > 0 && (
             <div className="p-6 border-t border-zinc-800 bg-zinc-950">
               <div className="flex justify-between mb-4 text-zinc-300">
                 <span>Subtotal</span>
