@@ -42,6 +42,8 @@ export async function getUserAddresses() {
   }
 }
 
+import { sendOrderConfirmationEmail } from "@/lib/email";
+
 // === 🔥 创建订单 Action (最终修复版) ===
 export async function createOrder(formData: FormData) {
   const cookieStore = await cookies();
@@ -245,6 +247,23 @@ export async function createOrder(formData: FormData) {
     revalidatePath("/profile/transactions"); // ✅ 刷新交易记录
     revalidatePath("/profile"); // ✅ 刷新余额显示
     
+    // 📧 发送确认邮件 (异步发送，不阻塞响应)
+    // 注意：在 Serverless 环境中，最好 await 它，或者使用后台任务队列。
+    // 这里为了简单直接 await，可能会稍微增加响应时间。
+    try {
+      // 需要重新查询带 user 信息的 order，或者直接构造
+      // 这里简单起见，我们假设 order 对象里有我们需要的信息，或者重新查一次
+      const fullOrder = await prisma.order.findUnique({
+        where: { id: order.id },
+        include: { items: true, user: true }
+      });
+      if (fullOrder) {
+        await sendOrderConfirmationEmail(fullOrder);
+      }
+    } catch (emailErr) {
+      console.error("Failed to send confirmation email:", emailErr);
+    }
+
     return { success: true, message: "订单创建成功", orderId: order.id };
 
   } catch (error: any) {

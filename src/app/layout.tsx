@@ -4,6 +4,7 @@ import "./globals.css";
 
 // ✅ 引入所有全局组件
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import { CartProvider } from "@/context/CartContext";
 import CartDrawer from "@/components/CartDrawer";
 import FloatingCartButton from "@/components/FloatingCartButton";
@@ -37,6 +38,9 @@ export default function RootLayout({
           <main className="min-h-screen relative z-0">
             {children}
           </main>
+
+          {/* 5. 底部 Footer */}
+          <Footer />
 
           {/* 4. 全局悬浮组件 (Z轴层级通常较高) */}
           <CartDrawer />         {/* 右侧滑出购物车抽屉 */}

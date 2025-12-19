@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { sendShippingUpdateEmail, sendOrderCancellationEmail } from "@/lib/email";
 
 // 更新订单状态
 export async function updateOrderStatus(orderId: string, newStatus: string) {
@@ -29,12 +30,25 @@ export async function updateTrackingInfo(
         carrierName: data.carrierName,
         trackingNumber: data.trackingNumber,
         trackingUrl: data.trackingUrl,
-        // 如果填了单号且状态还是 pending/paid，自动改为 shipped (可选逻辑)
-        // status: "shipped" 
+        status: "shipped" // 自动更新为已发货
       },
     });
+
+    // 📧 发送发货邮件
+    try {
+      const order = await prisma.order.findUnique({
+        where: { id: orderId },
+        include: { user: true }
+      });
+      if (order) {
+        await sendShippingUpdateEmail(order);
+      }
+    } catch (e) {
+      console.error("Failed to send shipping email", e);
+    }
+
     revalidatePath("/admin/orders");
-    return { success: true, message: "Tracking info updated" };
+    return { success: true, message: "Tracking info updated & Email sent" };
   } catch (error) {
     return { success: false, message: "Failed to update tracking info" };
   }
@@ -112,6 +126,20 @@ export async function cancelOrder(orderId: string, reason?: string) {
     revalidatePath("/profile");
     revalidatePath("/profile/transactions");
     
+    // 📧 发送取消邮件
+    try {
+      // 重新获取带 user 的 order (因为上面只 include 了 items)
+      const fullOrder = await prisma.order.findUnique({
+        where: { id: orderId },
+        include: { user: true }
+      });
+      if (fullOrder) {
+        await sendOrderCancellationEmail(fullOrder, reason);
+      }
+    } catch (e) {
+      console.error("Failed to send cancellation email", e);
+    }
+
     return { success: true, message: "Order cancelled and refunded successfully" };
   } catch (error: any) {
     console.error("Cancel order error:", error);
