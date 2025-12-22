@@ -84,6 +84,7 @@ export const config = {
     "/api/admin/:path*",      // 保护所有后台 API
     "/api/upload",            // 保护上传接口
     "/checkout",              // 保护结算页
+    "/cart",                  // 保护购物车
     "/profile/:path*",        // 保护个人中心
   ],
 };

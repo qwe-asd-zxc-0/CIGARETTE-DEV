@@ -23,7 +23,7 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen bg-black text-zinc-100 selection:bg-red-500/30 selection:text-white overflow-x-hidden">
-      {/* ❌ 移除 <AgeGate /> 组件调用，避免重复显示 */}
+    
       
       {/* ⭐⭐⭐ 统一视觉容器 ⭐⭐⭐ */}
       <div className="relative w-full">

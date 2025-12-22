@@ -1,7 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import ContactWidget from '@/components/ContactWidget';
 import ProductDetailClient from '@/components/product/ProductDetailClient';
 
 export const dynamic = 'force-dynamic';
@@ -51,7 +50,6 @@ export default async function ProductDetail({ params }: ProductDetailProps) {
 
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-100 pb-20">
-      <ContactWidget />
 
       <div className="max-w-7xl mx-auto px-6 pt-28 pb-12">
         

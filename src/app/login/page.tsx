@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 import { Loader2, ArrowRight, Mail, Lock, Send } from "lucide-react";
 
+import { recordLoginSession } from "@/lib/session"; // 引入 Session 记录
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,7 +26,7 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -38,6 +40,11 @@ export default function LoginPage() {
       }
       setLoading(false);
     } else {
+      // ✅ 登录成功，记录 Session Token (实现单点登录互踢)
+      if (data.user) {
+        await recordLoginSession(data.user.id);
+      }
+      
       router.refresh();
       router.push("/profile"); // 登录成功跳转到个人中心
     }

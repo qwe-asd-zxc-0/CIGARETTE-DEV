@@ -125,3 +125,20 @@ export async function deleteCampaign(id: string) {
     return { success: false, message: "删除失败" };
   }
 }
+
+// ================= 邮件日志 =================
+
+export async function getEmailLogs() {
+  try {
+    const logs = await prisma.emailLog.findMany({
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: 50, // Limit to last 50 emails
+    });
+    return { success: true, data: logs };
+  } catch (error) {
+    console.error('Failed to fetch email logs:', error);
+    return { success: false, error: 'Failed to fetch email logs' };
+  }
+}

@@ -1,7 +1,24 @@
+"use client";
+
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Facebook, Instagram, Twitter, Mail, MapPin, Phone } from "lucide-react";
 
 export default function Footer() {
+  const pathname = usePathname();
+
+  // 1. 定义不需要显示 Footer 的路径特征
+  // - 所有以 /admin 开头的路径
+  // - 登录和注册页面
+  const isHidden = pathname?.startsWith("/admin") || 
+                   pathname === "/login" || 
+                   pathname === "/sign-up" ||
+                   pathname === "/admin/login";
+
+  if (isHidden) {
+    return null;
+  }
+
   return (
     <footer className="bg-zinc-900 border-t border-white/10 pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-4 md:px-8">

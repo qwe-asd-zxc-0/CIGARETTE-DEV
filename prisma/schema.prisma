@@ -22,6 +22,9 @@ model Profile {
   assignedAgentId  String?  @db.Uuid @map("assigned_agent_id")
   createdAt        DateTime? @default(now()) @db.Timestamptz(6) @map("created_at")
   isAdmin          Boolean? @default(false) @map("is_admin")
+  
+  // 单点登录控制
+  currentSessionToken String? @map("current_session_token")
 
   // 关系定义 (Prisma 自动生成)
   orders        Order[]
@@ -45,6 +48,18 @@ model Transaction {
   user        Profile  @relation(fields: [userId], references: [id])
 
   @@map("transactions")
+  @@schema("public")
+}
+
+model EmailLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  to        String
+  subject   String
+  status    String   // sent, failed
+  error     String?
+  createdAt DateTime @default(now()) @db.Timestamptz(6) @map("created_at")
+
+  @@map("email_logs")
   @@schema("public")
 }
 

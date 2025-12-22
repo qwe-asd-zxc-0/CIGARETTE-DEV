@@ -4,9 +4,10 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { 
   Users, ShoppingBag, Box, ClipboardList, 
-  MessageSquare, Settings, BarChart3, LogOut, Home 
+  MessageSquare, Settings, BarChart3, LogOut, Home, Menu, X 
 } from "lucide-react";
 import { createBrowserClient } from "@supabase/ssr";
+import { useState } from "react";
 
 const menuItems = [
   { name: "数据看板", href: "/admin", icon: BarChart3 },
@@ -20,6 +21,7 @@ const menuItems = [
 export default function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -32,8 +34,8 @@ export default function AdminSidebar() {
     router.push("/admin/login");
   };
 
-  return (
-    <aside className="w-64 bg-zinc-900 border-r border-white/10 min-h-screen flex flex-col fixed left-0 top-0 bottom-0 z-50">
+  const SidebarContent = () => (
+    <div className="flex flex-col h-full">
       {/* Logo 区域 */}
       <div className="p-6 border-b border-white/10 flex items-center justify-between">
         <h1 className="text-xl font-bold text-white tracking-wider">
@@ -53,6 +55,7 @@ export default function AdminSidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => setIsMobileMenuOpen(false)}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium text-sm ${
                 isActive 
                   ? "bg-red-600 text-white shadow-lg shadow-red-900/20" 
@@ -76,6 +79,51 @@ export default function AdminSidebar() {
           <span>退出登录</span>
         </button>
       </div>
-    </aside>
+    </div>
+  );
+
+  return (
+    <>
+      {/* === 桌面端侧边栏 === */}
+      <aside className="hidden md:flex w-64 bg-zinc-900 border-r border-white/10 min-h-screen flex-col fixed left-0 top-0 bottom-0 z-50">
+        <SidebarContent />
+      </aside>
+
+      {/* === 移动端顶部栏 === */}
+      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-zinc-900 border-b border-white/10 z-40 flex items-center justify-between px-4">
+        <h1 className="text-lg font-bold text-white tracking-wider">
+          GLOBAL <span className="text-red-600">ADMIN</span>
+        </h1>
+        <button 
+          onClick={() => setIsMobileMenuOpen(true)}
+          className="p-2 text-zinc-400 hover:text-white"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+      </div>
+
+      {/* === 移动端抽屉 === */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          {/* 遮罩 */}
+          <div 
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          
+          {/* 侧边栏内容 */}
+          <div className="absolute top-0 left-0 bottom-0 w-64 bg-zinc-900 border-r border-white/10 shadow-2xl animate-in slide-in-from-left duration-300">
+             <SidebarContent />
+             {/* 关闭按钮 */}
+             <button 
+               onClick={() => setIsMobileMenuOpen(false)}
+               className="absolute top-4 right-4 p-2 text-zinc-400 hover:text-white md:hidden"
+             >
+               <X className="w-5 h-5" />
+             </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

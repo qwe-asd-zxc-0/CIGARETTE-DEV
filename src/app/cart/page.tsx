@@ -4,8 +4,28 @@ import { useCartDrawer } from "@/context/CartContext";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { createBrowserClient } from "@supabase/ssr";
 
 export default function CartPage() {
+  const router = useRouter();
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  // 🛡️ 客户端双重验证：未登录直接踢走
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.replace("/login?next=/cart");
+      }
+    };
+    checkAuth();
+  }, [router, supabase]);
+
   // ✅ 直接连接全局大脑
   const { cartItems, updateQuantity, removeFromCart } = useCartDrawer();
 

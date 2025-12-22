@@ -1,8 +1,9 @@
 import { prisma } from "@/lib/prisma";
-import { Settings as SettingsIcon, Shield, FileText, Megaphone } from "lucide-react";
+import { Settings as SettingsIcon, Shield, FileText, Megaphone, Mail } from "lucide-react";
 import AdminManager from "@/components/admin/settings/AdminManager";
 import AuditLogs from "@/components/admin/settings/AuditLogs";
 import ActivityConfig from "@/components/admin/settings/ActivityConfig";
+import EmailManager from "@/components/admin/settings/EmailManager";
 import { 
   getAgeVerificationLogs, 
   getReviewAuditLogs, 
@@ -50,7 +51,7 @@ export default async function SettingsPage({
           <SettingsIcon className="w-6 h-6 text-zinc-400" />
           系统配置 (System Configuration)
         </h2>
-        <p className="text-zinc-400 text-sm mt-1">管理系统权限、审计日志和首页活动内容。</p>
+        <p className="text-zinc-400 text-sm mt-1">管理系统权限、审计日志、邮件通知和首页活动内容。</p>
       </div>
 
       {/* Tab 导航栏 */}
@@ -82,7 +83,20 @@ export default async function SettingsPage({
             合规审计 (Audit)
           </a>
 
-          {/* Tab 3: 活动配置 (新增) */}
+          {/* Tab 3: 邮件通知 (新增) */}
+          <a
+            href="?tab=email"
+            className={`pb-4 flex items-center gap-2 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${
+              activeTab === "email"
+                ? "border-yellow-500 text-white"
+                : "border-transparent text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            <Mail className="w-4 h-4" />
+            邮件通知 (Email)
+          </a>
+
+          {/* Tab 4: 活动配置 */}
           <a
             href="?tab=activity"
             className={`pb-4 flex items-center gap-2 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${
@@ -105,6 +119,10 @@ export default async function SettingsPage({
         
         {activeTab === "audit" && (
           <AuditLogs ageLogs={ageLogs} reviewLogs={reviewLogs} />
+        )}
+
+        {activeTab === "email" && (
+          <EmailManager />
         )}
         
         {activeTab === "activity" && (

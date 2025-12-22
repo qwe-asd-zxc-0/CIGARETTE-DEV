@@ -96,7 +96,7 @@ export default async function ProductsPage({
       </div>
 
       {/* 数据表格 */}
-      <div className="bg-zinc-900 border border-white/10 rounded-xl overflow-hidden">
+      <div className="bg-zinc-900 border border-white/10 rounded-xl overflow-hidden overflow-x-auto">
         <table className="w-full text-left text-sm text-zinc-400">
           <thead className="bg-white/5 text-zinc-100 uppercase font-bold text-xs tracking-wider">
             <tr>

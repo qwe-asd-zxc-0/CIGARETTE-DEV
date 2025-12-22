@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useCartDrawer } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
+import { createBrowserClient } from "@supabase/ssr";
 import { 
   Lock, ArrowLeft, Loader2, MapPin, User, Phone, 
   Minus, Plus, BookOpen, X, AlertCircle, Building, Globe, ShoppingBag
@@ -68,6 +69,21 @@ export default function CheckoutPage() {
   const { cartItems, updateQuantity, removeFromCart, clearCart } = useCartDrawer();
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  // 🛡️ 客户端双重验证
+  useEffect(() => {
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.replace("/login?next=/checkout");
+      }
+    };
+    checkAuth();
+  }, [router]);
 
   // 表单状态
   const [formData, setFormData] = useState({

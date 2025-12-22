@@ -9,6 +9,8 @@ import { CartProvider } from "@/context/CartContext";
 import CartDrawer from "@/components/CartDrawer";
 import FloatingCartButton from "@/components/FloatingCartButton";
 import GlobalOverlay from "@/components/GlobalOverlay"; // ✅ 使用 GlobalOverlay 统一管理全局弹窗组件
+import { checkSessionValidity } from "@/lib/session"; // ✅ 引入 Session 检查
+import SessionGuard from "@/components/SessionGuard"; // ✅ 引入客户端处理组件
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,17 +19,23 @@ export const metadata: Metadata = {
   description: "Premium Vapes & E-Liquids",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // 🛡️ 全局检查 Session 有效性
+  const { valid, reason } = await checkSessionValidity();
+
   return (
     <html lang="en">
       <body className={`${inter.className} bg-black text-white antialiased`}>
         {/* CartProvider 包裹整个应用状态 */}
         <CartProvider>
           
+          {/* 0. Session 守卫 (如果无效，会自动登出并跳转) */}
+          <SessionGuard isValid={valid} reason={reason} />
+
           {/* 1. 全局拦截与弹窗层 (使用 GlobalOverlay 统一管理，自动在后台页面隐藏) */}
           <GlobalOverlay /> {/* ✅ 包含 AgeGate、CouponPopup、ContactWidget，并在后台页面自动隐藏 */}
 
