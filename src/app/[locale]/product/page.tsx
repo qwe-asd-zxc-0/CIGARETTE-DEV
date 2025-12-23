@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Globe, Sparkles, MapPin, Package, Search } from "lucide-react";
 import SearchInput from "@/components/SearchInput";
 import Pagination from "@/components/Pagination";
+import { getTranslations } from 'next-intl/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +20,7 @@ export default async function ProductPage({
   const category = params?.category;
   const inStock = params?.inStock;
   const currentPage = Number(params?.page) || 1;
+  const t = await getTranslations('ProductPage');
 
   // 1. 构造查询条件
   const where: any = { 
@@ -107,10 +109,10 @@ export default async function ProductPage({
           {/* 页面标题 & 搜索 */}
           <div className="mb-8 text-center">
              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] text-zinc-300 uppercase tracking-widest mb-3 backdrop-blur-sm">
-                <Sparkles className="w-3 h-3 text-red-500" /> 甄选系列
+                <Sparkles className="w-3 h-3 text-red-500" /> {t('selectionSeries')}
              </div>
              <h1 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 tracking-tight mb-6">
-               全球精选
+               {t('globalSelection')}
              </h1>
              <div className="mb-8 w-full max-w-lg mx-auto">
                <SearchInput />
@@ -129,7 +131,7 @@ export default async function ProductPage({
                 }`}
               >
                 <Globe className="w-4 h-4" />
-                全部地区
+                {t('allRegions')}
               </Link>
 
               {origins.map((o) => (
@@ -163,7 +165,7 @@ export default async function ProductPage({
                   }`}
                 >
                   <Package className="w-4 h-4" />
-                  全部库存
+                  {t('allStock')}
                 </Link>
 
                 <Link 
@@ -175,7 +177,7 @@ export default async function ProductPage({
                   }`}
                 >
                   <div className={`w-2 h-2 rounded-full ${inStock === 'true' ? "bg-white animate-pulse" : "bg-green-500"}`} />
-                  有货
+                  {t('inStock')}
                 </Link>
 
                 <Link 
@@ -187,7 +189,7 @@ export default async function ProductPage({
                   }`}
                 >
                   <div className="w-2 h-2 rounded-full bg-red-500" />
-                  缺货
+                  {t('outOfStock')}
                 </Link>
               </div>
             </div>
@@ -201,32 +203,32 @@ export default async function ProductPage({
                     {query ? (
                         <>
                             <Search className="w-6 h-6 text-purple-500 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
-                            "{query}" 的搜索结果
+                            "{query}" {t('searchResultsFor')}
                         </>
                     ) : origin ? (
                         <>
                             <MapPin className="w-6 h-6 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" /> 
-                            {origin} 精选系列
+                            {origin} {t('selectionSeriesSuffix')}
                         </>
                     ) : (
                         <>
                             <Globe className="w-6 h-6 text-zinc-400" />
-                            所有地区
+                            {t('allRegionsTitle')}
                         </>
                     )}
                  </h2>
                  {(origin && query) && (
-                   <span className="text-xs text-zinc-500 ml-8">位于 {origin}</span>
+                   <span className="text-xs text-zinc-500 ml-8">{t('locatedIn')} {origin}</span>
                  )}
                </div>
 
                <span className="text-zinc-500 text-sm font-mono">
                  {filteredTotalCount > 0 ? (
                     <>
-                      显示 {(currentPage - 1) * PAGE_SIZE + 1}-{Math.min(currentPage * PAGE_SIZE, filteredTotalCount)} 共 {filteredTotalCount} 件商品
+                      {t('showing')} {(currentPage - 1) * PAGE_SIZE + 1}-{Math.min(currentPage * PAGE_SIZE, filteredTotalCount)} {t('itemsTotal')} {filteredTotalCount}
                     </>
                  ) : (
-                   "0 件商品"
+                   t('zeroItems')
                  )}
                </span>
             </div>
@@ -235,10 +237,10 @@ export default async function ProductPage({
               <div className="py-24 text-center border border-dashed border-white/10 rounded-3xl bg-white/5 backdrop-blur-sm">
                 <Search className="w-12 h-12 text-zinc-600 mx-auto mb-3 opacity-50" />
                 <p className="text-zinc-400 text-sm">
-                  {query ? `未找到与 "${query}" 匹配的商品` : "暂无商品。"}
+                  {query ? `${t('noMatches')} "${query}"` : t('noItems')}
                 </p>
                 <Link href="/product" className="text-white text-xs underline mt-2 inline-block hover:text-red-400 transition-colors">
-                    清除筛选并查看全部
+                    {t('clearFilters')}
                 </Link>
               </div>
             ) : (
@@ -267,7 +269,7 @@ export default async function ProductPage({
                               ) : (
                                   <div className="w-full h-full flex flex-col items-center justify-center text-zinc-600 bg-zinc-900">
                                     <Package className="w-8 h-8 opacity-20 mb-2" />
-                                    <span className="text-[10px]">暂无图片</span>
+                                    <span className="text-[10px]">{t('noImage')}</span>
                                   </div>
                               )}
                               
@@ -280,7 +282,7 @@ export default async function ProductPage({
                                   : "bg-black/60 border-white/10 text-green-400"
                               }`}>
                                  <div className={`w-1.5 h-1.5 rounded-full ${isOutOfStock ? "bg-white" : "bg-green-500 animate-pulse"}`} />
-                                 {isOutOfStock ? "已售罄" : `库存: ${totalStock}`}
+                                 {isOutOfStock ? t('soldOut') : `${t('stock')}: ${totalStock}`}
                               </div>
 
                               {/* 产地标签 */}
@@ -305,7 +307,7 @@ export default async function ProductPage({
                                     {product.brand ? (
                                       <span className="text-zinc-400 font-semibold">{product.brand.name}</span>
                                     ) : (
-                                      <span>{product.origin || "国际版"}</span>
+                                      <span>{product.origin || t('internationalVersion')}</span>
                                     )}
                                 </p>
                                 <div className="flex gap-1">

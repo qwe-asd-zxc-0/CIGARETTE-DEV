@@ -7,8 +7,10 @@ import Image from "next/image";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
+import { useTranslations } from 'next-intl';
 
 export default function CartPage() {
+  const t = useTranslations('CartPage');
   const router = useRouter();
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -37,13 +39,13 @@ export default function CartPage() {
         <div className="w-24 h-24 bg-zinc-900 rounded-full flex items-center justify-center mb-6">
           <ShoppingBag className="w-10 h-10 text-zinc-500" />
         </div>
-        <h1 className="text-2xl font-bold mb-4">您的购物车是空的</h1>
-        <p className="text-zinc-400 mb-8">看起来您还没有添加任何商品。</p>
+        <h1 className="text-2xl font-bold mb-4">{t('emptyTitle')}</h1>
+        <p className="text-zinc-400 mb-8">{t('emptyDesc')}</p>
         <Link 
           href="/product" 
           className="px-8 py-3 bg-red-600 hover:bg-red-700 text-white rounded-full font-bold transition flex items-center gap-2"
         >
-          去逛逛 <ArrowRight className="w-4 h-4" />
+          {t('goShopping')} <ArrowRight className="w-4 h-4" />
         </Link>
       </div>
     );
@@ -52,7 +54,7 @@ export default function CartPage() {
   return (
     <div className="min-h-screen bg-black text-white pt-32 pb-20 px-4 md:px-8">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold mb-10 border-b border-zinc-800 pb-4">我的购物车</h1>
+        <h1 className="text-3xl font-bold mb-10 border-b border-zinc-800 pb-4">{t('title')}</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           {/* 左侧：商品列表 */}
@@ -78,7 +80,7 @@ export default function CartPage() {
                     </p>
                     {/* 库存提示 */}
                     <p className="text-xs text-zinc-500 mt-2">
-                      当前库存: {item.stock}
+                      {t('currentStock')}: {item.stock}
                     </p>
                   </div>
 
@@ -108,7 +110,7 @@ export default function CartPage() {
                       onClick={() => removeFromCart(item.id)}
                       className="text-sm text-zinc-500 hover:text-red-500 flex items-center gap-1 transition"
                     >
-                      <Trash2 className="w-4 h-4" /> 删除
+                      <Trash2 className="w-4 h-4" /> {t('remove')}
                     </button>
                   </div>
                 </div>
@@ -119,20 +121,20 @@ export default function CartPage() {
           {/* 右侧：汇总 */}
           <div className="lg:col-span-1">
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 sticky top-32">
-              <h2 className="text-xl font-bold mb-6">订单汇总</h2>
+              <h2 className="text-xl font-bold mb-6">{t('orderSummary')}</h2>
               
               <div className="space-y-4 mb-8">
                 <div className="flex justify-between text-zinc-400">
-                  <span>小计</span>
+                  <span>{t('subtotal')}</span>
                   <span className="text-white font-mono">${subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-zinc-400">
-                  <span>运费</span>
-                  <span className="text-xs bg-zinc-800 px-2 py-1 rounded">下一步计算</span>
+                  <span>{t('shipping')}</span>
+                  <span className="text-xs bg-zinc-800 px-2 py-1 rounded">{t('calculatedNextStep')}</span>
                 </div>
                 <div className="h-px bg-zinc-800 my-4" />
                 <div className="flex justify-between text-lg font-bold">
-                  <span>总计</span>
+                  <span>{t('total')}</span>
                   <span className="text-red-500 font-mono">${subtotal.toFixed(2)}</span>
                 </div>
               </div>
@@ -141,7 +143,7 @@ export default function CartPage() {
                 href="/checkout"
                 className="block w-full py-4 bg-red-600 hover:bg-red-700 text-white text-center font-bold rounded-xl transition shadow-lg shadow-red-900/20"
               >
-                前往结算 (Checkout)
+                {t('checkout')}
               </Link>
             </div>
           </div>

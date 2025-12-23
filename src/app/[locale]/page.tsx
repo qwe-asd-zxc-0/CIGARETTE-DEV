@@ -71,7 +71,7 @@ export default async function Home({
           <p className="text-lg md:text-2xl text-zinc-300 max-w-2xl mx-auto font-light mb-10 leading-relaxed text-center opacity-90">
             {t('description')}
             <span className="block text-zinc-500 text-sm mt-3 font-normal">
-              全球正品购货 · 国际极速发货 · 100% 正品保障
+              {t('brandSlogan')}
             </span>
           </p>
           
@@ -89,7 +89,7 @@ export default async function Home({
               href="/product" 
               className="relative z-30 group inline-flex items-center justify-center px-8 py-4 text-sm font-bold text-zinc-400 transition-all duration-300 bg-black/40 border border-white/10 rounded-full hover:bg-white/10 hover:text-white hover:border-white/20 backdrop-blur-sm w-full sm:w-auto"
             >
-              <span className="tracking-widest">VIEW ALL</span>
+              <span className="tracking-widest">{t('viewAll')}</span>
             </Link>
           </div>
         </section>
@@ -105,15 +105,15 @@ export default async function Home({
             <div>
               <h2 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
                 <span className="w-1.5 h-8 bg-linear-to-b from-red-500 to-orange-600 rounded-full inline-block shadow-[0_0_15px_rgba(239,68,68,0.5)]" />
-                Latest Arrivals
+                {t('latestArrivals')}
               </h2>
               <p className="text-zinc-400 font-light text-sm ml-5 tracking-wide">
-                本周精选上架 / New in Stock
+                {t('newInStock')}
               </p>
             </div>
             
             <Link href="/product" className="relative z-30 group text-zinc-500 hover:text-white text-sm font-bold flex items-center gap-2 transition-colors py-2">
-              VIEW ALL 
+              {t('viewAll')} 
               <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-red-600 transition-colors">
                 <ArrowRight className="w-3 h-3" />
               </div>

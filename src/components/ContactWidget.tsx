@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 // 定义支持的社交平台类型
 type SocialType = 'wechat' | 'whatsapp' | 'telegram';
 
 export default function ContactWidget() {
+  const t = useTranslations('ContactWidget');
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<SocialType>('wechat');
 
@@ -13,13 +15,13 @@ export default function ContactWidget() {
   const socialData = {
     wechat: {
       name: 'WeChat',
-      label: '微信',
+      label: t('weChat'),
       bgColor: 'bg-[#07c160]/10',
       qrCode: '/20251208233100_91_173.jpg'
     },
     whatsapp: {
       name: 'WhatsApp',
-      label: 'WhatsApp',
+      label: t('whatsApp'),
       bgColor: 'bg-[#25d366]/10',
       qrCode: '/20251208233100_91_173.jpg' // 帮您补全了路径
     },
@@ -77,7 +79,7 @@ export default function ContactWidget() {
           </div>
           <div className="text-center">
             <p className="text-sm font-bold text-zinc-800 mb-1">
-              扫码添加 {socialData[activeTab].label}
+              {t('scanQRCode')} {socialData[activeTab].label}
             </p>
             <p className="text-xs text-zinc-400">
               Scan to chat with us
@@ -93,7 +95,7 @@ export default function ContactWidget() {
         className={`group w-14 h-14 rounded-full shadow-lg shadow-red-900/20 flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 pointer-events-auto ${
           isOpen ? 'bg-zinc-900' : 'bg-gradient-to-br from-red-600 to-red-700'
         }`}
-        aria-label="Contact Us"
+        aria-label={t('contactUs')}
       >
         <div className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : 'rotate-0'}`}>
           {isOpen ? (

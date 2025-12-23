@@ -5,8 +5,10 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { ArrowLeft, ShoppingBag } from "lucide-react";
 import OrderCard from "@/components/OrderCard";
+import { getTranslations } from 'next-intl/server';
 
 export default async function OrderHistoryPage() {
+  const t = await getTranslations('Profile');
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -70,7 +72,7 @@ export default async function OrderHistoryPage() {
           <Link href="/profile" className="p-2 bg-zinc-900 rounded-full hover:bg-zinc-800 transition text-zinc-400 hover:text-white">
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <h1 className="text-3xl font-bold text-white">我的订单</h1>
+          <h1 className="text-3xl font-bold text-white">{t('myOrders')}</h1>
         </div>
 
         {/* 订单列表 */}
@@ -79,10 +81,10 @@ export default async function OrderHistoryPage() {
             <div className="w-20 h-20 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-6 text-zinc-600">
               <ShoppingBag className="w-10 h-10" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">暂无订单记录</h3>
-            <p className="text-zinc-500 mb-8">您还没有购买过任何商品，快去选购吧！</p>
+            <h3 className="text-xl font-bold text-white mb-2">{t('noOrders')}</h3>
+            <p className="text-zinc-500 mb-8">{t('noOrdersDesc')}</p>
             <Link href="/product" className="px-8 py-3 bg-white text-black font-bold rounded-full hover:bg-zinc-200 transition">
-              去购物
+              {t('goShopping')}
             </Link>
           </div>
         ) : (

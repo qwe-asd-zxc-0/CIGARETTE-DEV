@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
+import { useTranslations } from 'next-intl';
 
 type Product = {
   id: string | number;
@@ -51,6 +52,7 @@ const settings = {
 };
 
 export default function ProductSlider({ products }: { products: Product[] }) {
+  const t = useTranslations('ProductPage');
   if (!products || products.length === 0) return null;
 
   return (
@@ -72,18 +74,18 @@ export default function ProductSlider({ products }: { products: Product[] }) {
                   ) : (
                     <div className="flex flex-col items-center gap-2 text-zinc-600">
                       <span className="text-4xl">📷</span>
-                      <span className="text-xs">No Preview</span>
+                      <span className="text-xs">{t('noPreview')}</span>
                     </div>
                   )}
                   <div className="absolute top-3 left-3 bg-red-600/90 text-white text-[10px] font-bold px-2 py-1 rounded shadow">
-                    HOT
+                    {t('hot')}
                   </div>
                 </div>
                 
                 {/* 信息区域 */}
                 <div className="p-4 flex-1 flex flex-col">
                   <div className="text-xs text-red-500 font-bold mb-1 uppercase tracking-wider">
-                    {product.brand?.name || 'Brand'}
+                    {product.brand?.name || t('brand')}
                   </div>
                   <h3 className="text-sm font-bold text-zinc-200 mb-2 line-clamp-2 group-hover:text-white">
                     {product.title}

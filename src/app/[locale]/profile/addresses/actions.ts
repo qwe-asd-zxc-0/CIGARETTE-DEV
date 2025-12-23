@@ -20,7 +20,7 @@ async function getUser() {
 // === 新增地址 ===
 export async function addAddress(formData: FormData) {
   const user = await getUser();
-  if (!user) return { success: false, message: "请先登录" };
+  if (!user) return { success: false, message: "errorNotLoggedIn" };
 
   const rawData = {
     firstName: formData.get("firstName") as string,
@@ -37,14 +37,14 @@ export async function addAddress(formData: FormData) {
 
   // 简单校验
   if (!rawData.firstName || !rawData.lastName || !rawData.addressLine1 || !rawData.city) {
-    return { success: false, message: "请填写完整信息" };
+    return { success: false, message: "errorFillAllFields" };
   }
 
   try {
     // 检查地址数量限制 (例如最多 10 个)
     const count = await prisma.userAddress.count({ where: { userId: user.id } });
     if (count >= 10) {
-      return { success: false, message: "地址数量已达上限 (10个)" };
+      return { success: false, message: "errorAddressLimitReached" };
     }
 
     // 如果设为默认，先取消其他的默认
@@ -72,10 +72,10 @@ export async function addAddress(formData: FormData) {
     });
 
     revalidatePath("/profile/addresses");
-    return { success: true, message: "地址添加成功" };
+    return { success: true, message: "errorAddressAdded" };
   } catch (error) {
     console.error("Add address error:", error);
-    return { success: false, message: "添加失败，请重试" };
+    return { success: false, message: "errorAddressAddFailed" };
   }
 }
 

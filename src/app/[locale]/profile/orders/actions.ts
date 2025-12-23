@@ -27,20 +27,20 @@ export async function updateOrderAddress(orderId: string, newAddress: ShippingAd
 
   // 1. 验证用户登录
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, message: "请先登录" };
+  if (!user) return { success: false, message: "errorNotLoggedIn" };
 
   // 2. 查询订单状态
   const order = await prisma.order.findUnique({
     where: { id: orderId },
   });
 
-  if (!order) return { success: false, message: "订单不存在" };
-  if (order.userId !== user.id) return { success: false, message: "无权操作此订单" };
+  if (!order) return { success: false, message: "errorOrderNotFound" };
+  if (order.userId !== user.id) return { success: false, message: "errorUnauthorized" };
 
   // 3. 🛡️ 关键检查：只有“待支付”或“已支付(未发货)”状态可以修改地址
   // 如果已经发货(shipped)、完成(completed)或取消(cancelled)，则禁止修改
   if (["shipped", "completed", "cancelled"].includes(order.status || "")) {
-    return { success: false, message: "当前订单状态无法修改地址" };
+    return { success: false, message: "errorCannotEditAddress" };
   }
 
   // 4. 更新数据库
@@ -54,9 +54,9 @@ export async function updateOrderAddress(orderId: string, newAddress: ShippingAd
     
     // 刷新页面数据
     revalidatePath("/profile/orders");
-    return { success: true, message: "地址已更新" };
+    return { success: true, message: "errorAddressUpdated" };
   } catch (error) {
     console.error("Update address error:", error);
-    return { success: false, message: "更新失败，请重试" };
+    return { success: false, message: "errorAddressUpdateFailed" };
   }
 }

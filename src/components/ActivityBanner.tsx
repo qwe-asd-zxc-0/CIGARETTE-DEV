@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { ArrowRight, Sparkles, Flame } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { getTranslations } from 'next-intl/server';
 
 export default async function ActivityBanner() {
+  const t = await getTranslations('HomePage');
   const setting = await prisma.systemSetting.findUnique({
     where: { key: "promo_activity" }
   });
@@ -41,7 +43,7 @@ export default async function ActivityBanner() {
           {/* ⬇️ 调整4：标签改为中文，字号极小 (text-[10px]) */}
           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 border border-white/20 backdrop-blur-md text-red-400 text-[10px] font-bold uppercase tracking-wider mb-4 animate-bounce-slow shadow-lg shadow-red-900/20">
             <Flame className="w-3 h-3" />
-            限时特惠
+            {t('limitedOffer')}
           </div>
           
           {/* ⬇️ 调整5：标题字号缩小 (text-3xl md:text-4xl) */}

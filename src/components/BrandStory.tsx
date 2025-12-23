@@ -2,37 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ShieldCheck, Plane, HeartHandshake, Globe, Sparkles } from "lucide-react";
-
-// 品牌故事数据
-const storyData = {
-  title: "全球甄选，醇正体验",
-  subtitle: "GLOBAL TOBACCO",
-  introduction:
-    "作为领先的国际烟草供应链平台，GLOBAL TOBACCO 致力于打破地域限制，将世界各地的优质烟草产品呈现在您面前。无论是古巴的醇厚、欧洲的精致，还是美洲的经典，我们坚持为您甄选全球地道好烟。",
-  promises: [
-    {
-      title: "百分百原装正品",
-      description:
-        "拒绝假冒伪劣，直连品牌源头，确保您品尝到的每一口都是纯正风味。",
-      // store component reference, not JSX
-      icon: ShieldCheck,
-    },
-    {
-      title: "合规跨境直邮",
-      description:
-        "依托专业的国际物流网络与清关能力，解决烟草跨境运输难、通关慢的痛点。",
-      icon: Plane,
-    },
-    {
-      title: "尊享无忧服务",
-      description:
-        "无论是个人海淘收藏还是批量商业采购，我们提供专业的税务指引与风险管理。",
-      icon: HeartHandshake,
-    },
-  ],
-  closing:
-    "GLOBAL TOBACCO，不仅是您的烟草采购平台，更是您连接全球烟草文化的桥梁。我们以专业和诚信，守护您的每一次品鉴之旅。",
-};
+import { useTranslations } from 'next-intl';
 
 // 动画配置
 const containerVariants = {
@@ -53,6 +23,33 @@ const itemVariants = {
 };
 
 export default function BrandStory() {
+  const t = useTranslations('BrandStory');
+
+  // 品牌故事数据
+  const storyData = {
+    title: t('title'),
+    subtitle: t('subtitle'),
+    introduction: t('introduction'),
+    promises: [
+      {
+        title: t('promise1Title'),
+        description: t('promise1Desc'),
+        icon: ShieldCheck,
+      },
+      {
+        title: t('promise2Title'),
+        description: t('promise2Desc'),
+        icon: Plane,
+      },
+      {
+        title: t('promise3Title'),
+        description: t('promise3Desc'),
+        icon: HeartHandshake,
+      },
+    ],
+    closing: t('closing'),
+  };
+
   return (
     <section className="relative w-full py-24 md:py-32 overflow-hidden bg-zinc-950">
       
@@ -74,7 +71,7 @@ export default function BrandStory() {
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-500/10 border border-red-500/20 mb-8 backdrop-blur-sm">
             <Globe className="w-4 h-4 text-red-500" />
             <span className="text-xs font-bold text-red-400 tracking-widest uppercase">
-              Premium Selection
+              {t('premiumSelection')}
             </span>
           </div>
           

@@ -4,8 +4,10 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { User, Mail, ShieldCheck, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { getTranslations } from 'next-intl/server';
 
 export default async function SettingsPage() {
+  const t = await getTranslations('Profile');
   const cookieStore = await cookies();
   
   const supabase = createServerClient(
@@ -31,29 +33,29 @@ export default async function SettingsPage() {
           className="inline-flex items-center gap-2 text-zinc-400 hover:text-white transition-colors mb-8"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm font-medium">返回账户</span>
+          <span className="text-sm font-medium">{t('backToProfile')}</span>
         </Link>
 
-        <h1 className="text-3xl font-bold text-white mb-8">账户设置</h1>
+        <h1 className="text-3xl font-bold text-white mb-8">{t('accountSettings')}</h1>
 
         <div className="space-y-6">
           {/* 个人信息卡片 */}
           <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
             <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
               <User className="w-5 h-5" />
-              个人信息
+              {t('personalInfo')}
             </h2>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-2">姓名</label>
+                <label className="block text-sm font-medium text-zinc-400 mb-2">{t('name')}</label>
                 <div className="bg-zinc-950 border border-white/10 rounded-lg px-4 py-3 text-white">
-                  {profile?.fullName || "未设置"}
+                  {profile?.fullName || t('notSet')}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-2">邮箱</label>
+                <label className="block text-sm font-medium text-zinc-400 mb-2">{t('email')}</label>
                 <div className="bg-zinc-950 border border-white/10 rounded-lg px-4 py-3 text-white flex items-center gap-2">
                   <Mail className="w-4 h-4 text-zinc-500" />
                   {user.email}
@@ -61,7 +63,7 @@ export default async function SettingsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-2">用户 ID</label>
+                <label className="block text-sm font-medium text-zinc-400 mb-2">{t('userId')}</label>
                 <div className="bg-zinc-950 border border-white/10 rounded-lg px-4 py-3 text-zinc-500 font-mono text-sm">
                   {user.id}
                 </div>
@@ -73,30 +75,30 @@ export default async function SettingsPage() {
           <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
             <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
               <ShieldCheck className="w-5 h-5" />
-              账户状态
+              {t('accountStatus')}
             </h2>
             
             <div className="space-y-4">
               <div className="flex items-center justify-between p-4 bg-zinc-950 rounded-lg border border-white/5">
                 <div>
-                  <p className="text-white font-medium">年龄验证</p>
-                  <p className="text-sm text-zinc-500 mt-1">确认您已年满 18 岁</p>
+                  <p className="text-white font-medium">{t('ageVerification')}</p>
+                  <p className="text-sm text-zinc-500 mt-1">{t('ageConfirm')}</p>
                 </div>
                 {profile?.isAgeVerified ? (
                   <span className="px-3 py-1 bg-green-900/30 text-green-400 rounded-full text-xs font-bold border border-green-500/20">
-                    已验证
+                    {t('verified')}
                   </span>
                 ) : (
                   <span className="px-3 py-1 bg-zinc-800 text-zinc-500 rounded-full text-xs font-bold">
-                    未验证
+                    {t('unverified')}
                   </span>
                 )}
               </div>
 
               <div className="flex items-center justify-between p-4 bg-zinc-950 rounded-lg border border-white/5">
                 <div>
-                  <p className="text-white font-medium">注册时间</p>
-                  <p className="text-sm text-zinc-500 mt-1">账户创建日期</p>
+                  <p className="text-white font-medium">{t('registrationDate')}</p>
+                  <p className="text-sm text-zinc-500 mt-1">{t('accountCreationDate')}</p>
                 </div>
                 <span className="text-zinc-400 text-sm font-mono">
                   {new Date(user.created_at).toLocaleDateString('zh-CN')}

@@ -4,8 +4,10 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { ArrowLeft, ArrowDownLeft, ArrowUpRight, History, Wallet, RefreshCcw, ShoppingCart } from "lucide-react";
+import { getTranslations } from 'next-intl/server';
 
 export default async function TransactionsPage() {
+  const t = await getTranslations('Profile');
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -26,7 +28,7 @@ export default async function TransactionsPage() {
     switch (type) {
       case 'deposit':
         return {
-          label: '账户充值',
+          label: t('deposit'),
           icon: ArrowDownLeft,
           colorClass: 'text-green-500',
           bgClass: 'bg-green-500/10',
@@ -35,7 +37,7 @@ export default async function TransactionsPage() {
         };
       case 'payment':
         return {
-          label: '订单支付',
+          label: t('payment'),
           icon: ShoppingCart,
           colorClass: 'text-white',
           bgClass: 'bg-zinc-800',
@@ -44,7 +46,7 @@ export default async function TransactionsPage() {
         };
       case 'refund':
         return {
-          label: '订单退款',
+          label: t('refund'),
           icon: RefreshCcw,
           colorClass: 'text-blue-400',
           bgClass: 'bg-blue-500/10',
@@ -53,7 +55,7 @@ export default async function TransactionsPage() {
         };
       default:
         return {
-          label: '其他交易',
+          label: t('otherTransaction'),
           icon: History,
           colorClass: 'text-zinc-400',
           bgClass: 'bg-zinc-800',
@@ -72,27 +74,27 @@ export default async function TransactionsPage() {
             className="inline-flex items-center gap-2 text-zinc-400 hover:text-white transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm font-medium">返回账户</span>
+            <span className="text-sm font-medium">{t('backToProfile')}</span>
           </Link>
-          <h1 className="text-2xl font-bold text-white">资金流水</h1>
+          <h1 className="text-2xl font-bold text-white">{t('transactionHistory')}</h1>
         </div>
 
         {/* 汇总卡片 (可选) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
            <div className="bg-zinc-900 border border-white/10 p-6 rounded-xl">
-              <p className="text-zinc-500 text-xs font-bold uppercase mb-2">总支出</p>
+              <p className="text-zinc-500 text-xs font-bold uppercase mb-2">{t('totalExpenditure')}</p>
               <p className="text-2xl font-bold text-white">
                 ${transactions.filter(t => t.type === 'payment').reduce((acc, t) => acc + Number(t.amount), 0).toFixed(2)}
               </p>
            </div>
            <div className="bg-zinc-900 border border-white/10 p-6 rounded-xl">
-              <p className="text-zinc-500 text-xs font-bold uppercase mb-2">总充值</p>
+              <p className="text-zinc-500 text-xs font-bold uppercase mb-2">{t('totalDeposit')}</p>
               <p className="text-2xl font-bold text-green-500">
                 ${transactions.filter(t => t.type === 'deposit').reduce((acc, t) => acc + Number(t.amount), 0).toFixed(2)}
               </p>
            </div>
            <div className="bg-zinc-900 border border-white/10 p-6 rounded-xl">
-              <p className="text-zinc-500 text-xs font-bold uppercase mb-2">总退款</p>
+              <p className="text-zinc-500 text-xs font-bold uppercase mb-2">{t('totalRefund')}</p>
               <p className="text-2xl font-bold text-blue-400">
                 ${transactions.filter(t => t.type === 'refund').reduce((acc, t) => acc + Number(t.amount), 0).toFixed(2)}
               </p>

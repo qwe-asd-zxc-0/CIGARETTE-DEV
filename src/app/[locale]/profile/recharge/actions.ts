@@ -15,9 +15,9 @@ export async function rechargeBalance(amount: number) {
   );
 
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { success: false, message: "未登录" };
+  if (!user) return { success: false, message: "errorNotLoggedIn" };
 
-  if (amount <= 0) return { success: false, message: "充值金额必须大于 0" };
+  if (amount <= 0) return { success: false, message: "errorInvalidAmount" };
 
   try {
     // 1. 创建交易记录
@@ -40,9 +40,9 @@ export async function rechargeBalance(amount: number) {
     });
 
     revalidatePath("/profile");
-    return { success: true, message: "充值成功" };
+    return { success: true, message: "errorRechargeSuccess" };
   } catch (error) {
     console.error("Recharge error:", error);
-    return { success: false, message: "充值失败，请稍后重试" };
+    return { success: false, message: "errorRechargeFailed" };
   }
 }

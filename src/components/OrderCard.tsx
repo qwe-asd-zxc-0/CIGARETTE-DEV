@@ -4,16 +4,10 @@ import { useState } from "react";
 import Image from "next/image";
 import { Clock, Truck, ChevronRight, ChevronUp, Package, MapPin, Edit2, Check, X, History } from "lucide-react";
 import { updateOrderAddress, ShippingAddress } from "@/app/[locale]/profile/orders/actions"; // 引入 Server Action
-
-const STATUS_MAP: Record<string, { label: string; color: string }> = {
-  pending_payment: { label: "待支付", color: "text-yellow-500 bg-yellow-500/10" },
-  paid: { label: "已支付 (待发货)", color: "text-green-500 bg-green-500/10" },
-  shipped: { label: "已发货", color: "text-blue-500 bg-blue-500/10" },
-  completed: { label: "已完成", color: "text-zinc-400 bg-zinc-500/10" },
-  cancelled: { label: "已取消", color: "text-red-500 bg-red-500/10" },
-};
+import { useTranslations } from 'next-intl';
 
 export default function OrderCard({ order }: { order: any }) {
+  const t = useTranslations('Profile');
   const [isExpanded, setIsExpanded] = useState(false);
   
   // === 编辑地址相关状态 ===
@@ -21,6 +15,14 @@ export default function OrderCard({ order }: { order: any }) {
   const [isSaving, setIsSaving] = useState(false);
   // 初始化表单数据 (从 order.shippingAddress 读取)
   const [addressForm, setAddressForm] = useState<ShippingAddress>(order.shippingAddress as ShippingAddress);
+
+  const STATUS_MAP: Record<string, { label: string; color: string }> = {
+    pending_payment: { label: t('statusPendingPayment'), color: "text-yellow-500 bg-yellow-500/10" },
+    paid: { label: t('statusPaid'), color: "text-green-500 bg-green-500/10" },
+    shipped: { label: t('statusShipped'), color: "text-blue-500 bg-blue-500/10" },
+    completed: { label: t('statusCompleted'), color: "text-zinc-400 bg-zinc-500/10" },
+    cancelled: { label: t('statusCancelled'), color: "text-red-500 bg-red-500/10" },
+  };
 
   const status = STATUS_MAP[order.status || "pending_payment"] || STATUS_MAP["pending_payment"];
   
@@ -34,10 +36,10 @@ export default function OrderCard({ order }: { order: any }) {
     setIsSaving(false);
     
     if (res.success) {
-      alert("✅ 地址修改成功！");
+      alert("✅ " + t('addressUpdateSuccess'));
       setIsEditingAddress(false);
     } else {
-      alert(`❌ 修改失败: ${res.message}`);
+      alert(`❌ ${t('addressUpdateFailed')}: ${t(res.message)}`);
     }
   };
 
@@ -52,7 +54,7 @@ export default function OrderCard({ order }: { order: any }) {
         <div className="space-y-1">
           <div className="flex items-center gap-3">
             <span className="text-sm font-bold text-white">
-              订单号: <span className="font-mono text-zinc-400">#{order.id.slice(0, 8).toUpperCase()}</span>
+              {t('orderNo')}: <span className="font-mono text-zinc-400">#{order.id.slice(0, 8).toUpperCase()}</span>
             </span>
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded border border-white/5 ${status.color}`}>
               {status.label}
@@ -60,11 +62,11 @@ export default function OrderCard({ order }: { order: any }) {
           </div>
           <p className="text-xs text-zinc-500 flex items-center gap-1">
             <Clock className="w-3 h-3" />
-            下单时间: {new Date(order.createdAt).toLocaleString()}
+            {t('orderTime')}: {new Date(order.createdAt).toLocaleString()}
           </p>
         </div>
         <div className="text-right">
-          <p className="text-xs text-zinc-500">订单金额</p>
+          <p className="text-xs text-zinc-500">{t('orderAmount')}</p>
           <p className="text-lg font-bold text-white font-mono">${Number(order.totalAmount).toFixed(2)}</p>
         </div>
       </div>
@@ -77,7 +79,7 @@ export default function OrderCard({ order }: { order: any }) {
           {order.status === 'cancelled' && order.cancelReason && (
             <div className="bg-red-500/10 border border-red-500/20 p-3 rounded-lg">
               <h4 className="text-xs font-bold text-red-400 uppercase tracking-wider mb-1">
-                取消原因 (Cancellation Reason)
+                {t('cancellationReason')}
               </h4>
               <p className="text-sm text-red-200">
                 {order.cancelReason}
@@ -88,7 +90,7 @@ export default function OrderCard({ order }: { order: any }) {
           {/* 1. 商品列表 */}
           <div className="space-y-3">
             <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
-              <Package className="w-3 h-3" /> 商品清单
+              <Package className="w-3 h-3" /> {t('itemsList')}
             </h4>
             {order.items.map((item: any) => (
               <div key={item.id} className="flex gap-4 items-center bg-zinc-800/30 p-3 rounded-lg border border-white/5">
@@ -120,7 +122,7 @@ export default function OrderCard({ order }: { order: any }) {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
-                  <MapPin className="w-3 h-3" /> 收货地址
+                  <MapPin className="w-3 h-3" /> {t('shippingAddress')}
                 </h4>
                 {/* 只有允许修改且当前不在编辑模式时，显示编辑按钮 */}
                 {canEditAddress && !isEditingAddress && (
@@ -128,7 +130,7 @@ export default function OrderCard({ order }: { order: any }) {
                     onClick={(e) => { e.stopPropagation(); setIsEditingAddress(true); }}
                     className="text-[10px] text-blue-400 hover:text-blue-300 flex items-center gap-1 bg-blue-500/10 px-2 py-1 rounded"
                   >
-                    <Edit2 className="w-3 h-3" /> 修改
+                    <Edit2 className="w-3 h-3" /> {t('edit')}
                   </button>
                 )}
               </div>
@@ -138,39 +140,39 @@ export default function OrderCard({ order }: { order: any }) {
                 <div className="bg-zinc-800/50 p-4 rounded-xl border border-blue-500/30 space-y-3">
                   <div className="grid grid-cols-2 gap-2">
                     <input 
-                      placeholder="姓名"
+                      placeholder={t('namePlaceholder')}
                       value={addressForm.fullName || ""}
                       onChange={e => setAddressForm({...addressForm, fullName: e.target.value})}
                       className="bg-black/50 border border-white/10 rounded px-3 py-2 text-xs text-white w-full"
                     />
                     <input 
-                      placeholder="电话"
+                      placeholder={t('phonePlaceholder')}
                       value={addressForm.phone || ""}
                       onChange={e => setAddressForm({...addressForm, phone: e.target.value})}
                       className="bg-black/50 border border-white/10 rounded px-3 py-2 text-xs text-white w-full"
                     />
                   </div>
                   <input 
-                    placeholder="地址行 1"
+                    placeholder={t('addressLine1Placeholder')}
                     value={addressForm.addressLine1 || ""}
                     onChange={e => setAddressForm({...addressForm, addressLine1: e.target.value})}
                     className="bg-black/50 border border-white/10 rounded px-3 py-2 text-xs text-white w-full"
                   />
                   <div className="grid grid-cols-3 gap-2">
                     <input 
-                      placeholder="城市"
+                      placeholder={t('cityPlaceholder')}
                       value={addressForm.city || ""}
                       onChange={e => setAddressForm({...addressForm, city: e.target.value})}
                       className="bg-black/50 border border-white/10 rounded px-3 py-2 text-xs text-white w-full"
                     />
                     <input 
-                      placeholder="省/州"
+                      placeholder={t('statePlaceholder')}
                       value={addressForm.state || ""}
                       onChange={e => setAddressForm({...addressForm, state: e.target.value})}
                       className="bg-black/50 border border-white/10 rounded px-3 py-2 text-xs text-white w-full"
                     />
                     <input 
-                      placeholder="邮编"
+                      placeholder={t('zipCodePlaceholder')}
                       value={addressForm.postalCode || ""}
                       onChange={e => setAddressForm({...addressForm, postalCode: e.target.value})}
                       className="bg-black/50 border border-white/10 rounded px-3 py-2 text-xs text-white w-full"
@@ -183,7 +185,7 @@ export default function OrderCard({ order }: { order: any }) {
                       disabled={isSaving}
                       className="flex-1 bg-green-600 hover:bg-green-500 text-white text-xs py-2 rounded flex items-center justify-center gap-1"
                     >
-                      {isSaving ? "保存中..." : <><Check className="w-3 h-3" /> 保存</>}
+                      {isSaving ? t('saving') : <><Check className="w-3 h-3" /> {t('save')}</>}
                     </button>
                     <button 
                       onClick={() => {
@@ -192,7 +194,7 @@ export default function OrderCard({ order }: { order: any }) {
                       }}
                       className="flex-1 bg-zinc-700 hover:bg-zinc-600 text-zinc-300 text-xs py-2 rounded flex items-center justify-center gap-1"
                     >
-                      <X className="w-3 h-3" /> 取消
+                      <X className="w-3 h-3" /> {t('cancel')}
                     </button>
                   </div>
                 </div>
@@ -211,17 +213,17 @@ export default function OrderCard({ order }: { order: any }) {
             {/* 右侧：状态变更时间 */}
             <div className="space-y-3">
               <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
-                <History className="w-3 h-3" /> 状态追踪
+                <History className="w-3 h-3" /> {t('statusTracking')}
               </h4>
               <div className="bg-zinc-800/30 p-3 rounded-lg border border-white/5 space-y-3">
                 <div className="flex items-start gap-3">
                   <div className="w-2 h-2 mt-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"></div>
                   <div>
-                    <p className="text-sm font-bold text-blue-400">当前状态: {status.label}</p>
+                    <p className="text-sm font-bold text-blue-400">{t('currentStatus')}: {status.label}</p>
                     {order.updatedAt ? (
-                      <p className="text-xs text-zinc-400">更新于: {new Date(order.updatedAt).toLocaleString()}</p>
+                      <p className="text-xs text-zinc-400">{t('updatedAt')}: {new Date(order.updatedAt).toLocaleString()}</p>
                     ) : (
-                      <p className="text-xs text-zinc-500">更新于: {new Date(order.createdAt).toLocaleString()}</p>
+                      <p className="text-xs text-zinc-500">{t('updatedAt')}: {new Date(order.createdAt).toLocaleString()}</p>
                     )}
                   </div>
                 </div>
@@ -230,7 +232,7 @@ export default function OrderCard({ order }: { order: any }) {
                   <div className="flex items-start gap-3 pt-2 border-t border-white/5">
                     <Truck className="w-4 h-4 text-zinc-400" />
                     <div>
-                      <p className="text-xs text-zinc-400">物流单号</p>
+                      <p className="text-xs text-zinc-400">{t('trackingNumber')}</p>
                       <p className="text-sm font-mono text-white select-all">{order.trackingNumber}</p>
                     </div>
                   </div>
@@ -246,13 +248,13 @@ export default function OrderCard({ order }: { order: any }) {
       <div className="px-6 py-4 bg-black/20 border-t border-zinc-800 flex justify-between items-center">
         <div className="flex items-center gap-2 text-xs text-zinc-500">
           <Truck className="w-4 h-4" />
-          {order.trackingNumber ? `运单号: ${order.trackingNumber}` : "等待发货"}
+          {order.trackingNumber ? `${t('trackingNo')}: ${order.trackingNumber}` : t('awaitingShipment')}
         </div>
         <button 
           onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}
           className="text-sm font-bold text-white hover:text-red-500 transition flex items-center gap-1 select-none"
         >
-          {isExpanded ? "收起详情" : "查看详情"} 
+          {isExpanded ? t('collapseDetails') : t('viewDetails')} 
           {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
         </button>
       </div>

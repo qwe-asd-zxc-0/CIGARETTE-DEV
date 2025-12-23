@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { getTranslations } from 'next-intl/server';
 
 // === 获取用户地址 ===
 export async function getUserAddresses() {
@@ -46,6 +47,7 @@ import { sendOrderConfirmationEmail } from "@/lib/email";
 
 // === 🔥 创建订单 Action (最终修复版) ===
 export async function createOrder(formData: FormData) {
+  const t = await getTranslations('Checkout');
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -56,7 +58,7 @@ export async function createOrder(formData: FormData) {
   // 1. 验证用户
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    return { success: false, message: "请先登录" };
+    return { success: false, message: t('loginRequired') };
   }
 
   // 1.5 验证年龄 (新增)
@@ -66,14 +68,14 @@ export async function createOrder(formData: FormData) {
   });
 
   if (!profile?.isAgeVerified) {
-    return { success: false, message: "您的账户尚未通过年龄验证，无法购买商品。" };
+    return { success: false, message: t('ageVerificationRequired') };
   }
 
   // 2. 解析商品数据
   const itemsJson = formData.get("items") as string;
   const clientItems = itemsJson ? JSON.parse(itemsJson) : [];
   if (clientItems.length === 0) {
-    return { success: false, message: "购物车为空" };
+    return { success: false, message: t('cartEmptyAlert') };
   }
 
   // 3. 准备地址数据
@@ -103,12 +105,12 @@ export async function createOrder(formData: FormData) {
       where: { id: item.productId || item.productVariantId }, // 兼容性处理
     });
 
-    if (!product) return { success: false, message: `商品失效 ID: ${item.productId}` };
+    if (!product) return { success: false, message: t('productInvalid', { id: item.productId }) };
     
     // ✅ 检查库存
     const currentStock = product.stockQuantity ?? 0;
     if (currentStock < item.quantity) {
-        return { success: false, message: `${product.title} 库存不足` };
+        return { success: false, message: t('stockInsufficient', { title: product.title }) };
     }
 
     const unitPrice = Number(product.basePrice);
@@ -137,12 +139,12 @@ export async function createOrder(formData: FormData) {
     });
 
     if (!userProfile) {
-      return { success: false, message: "用户信息不存在" };
+      return { success: false, message: t('userNotFound') };
     }
 
     const currentBalance = Number(userProfile.balance) || 0;
     if (currentBalance < totalAmount) {
-      return { success: false, message: `余额不足，需要 $${totalAmount.toFixed(2)}，当前余额 $${currentBalance.toFixed(2)}` };
+      return { success: false, message: t('balanceInsufficient', { amount: totalAmount.toFixed(2), balance: currentBalance.toFixed(2) }) };
     }
 
     // 5. 自动保存地址逻辑
@@ -264,10 +266,10 @@ export async function createOrder(formData: FormData) {
       console.error("Failed to send confirmation email:", emailErr);
     }
 
-    return { success: true, message: "订单创建成功", orderId: order.id };
+    return { success: true, message: t('orderSuccess'), orderId: order.id };
 
   } catch (error: any) {
     console.error("Create order error:", error);
-    return { success: false, message: "订单创建失败: " + error.message };
+    return { success: false, message: t('orderFailed', { error: error.message }) };
   }
 }

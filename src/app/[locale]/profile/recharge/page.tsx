@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Wallet, CreditCard, CheckCircle } from "lucide-react";
+import { ArrowLeft, Wallet, CreditCard, CheckCircle, ShieldCheck as ShieldCheckIcon } from "lucide-react";
 import Link from "next/link";
 import { rechargeBalance } from "./actions";
+import { useTranslations } from 'next-intl';
 
 export default function RechargePage() {
+  const t = useTranslations('Profile');
   const router = useRouter();
   const [amount, setAmount] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -15,7 +17,7 @@ export default function RechargePage() {
     e.preventDefault();
     const val = parseFloat(amount);
     if (!val || val <= 0) {
-      alert("请输入有效的金额");
+      alert(t('enterValidAmount'));
       return;
     }
 
@@ -24,11 +26,11 @@ export default function RechargePage() {
     setLoading(false);
 
     if (res.success) {
-      alert("✅ 充值成功！");
+      alert("✅ " + t(res.message));
       router.push("/profile");
       router.refresh();
     } else {
-      alert("❌ " + res.message);
+      alert("❌ " + t(res.message));
     }
   };
 
@@ -42,7 +44,7 @@ export default function RechargePage() {
           className="inline-flex items-center gap-2 text-zinc-400 hover:text-white transition-colors mb-8"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm font-medium">返回账户</span>
+          <span className="text-sm font-medium">{t('backToProfile')}</span>
         </Link>
 
         <div className="bg-zinc-900 border border-white/10 rounded-2xl p-8">
@@ -50,13 +52,13 @@ export default function RechargePage() {
             <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4">
               <Wallet className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-white">余额充值</h1>
-            <p className="text-zinc-500 text-sm mt-2">充值金额将立即存入您的账户余额</p>
+            <h1 className="text-2xl font-bold text-white">{t('balanceRecharge')}</h1>
+            <p className="text-zinc-500 text-sm mt-2">{t('rechargeDesc')}</p>
           </div>
 
           <form onSubmit={handleRecharge} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-zinc-400 mb-2">充值金额 (USD)</label>
+              <label className="block text-sm font-medium text-zinc-400 mb-2">{t('rechargeAmount')}</label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white font-bold">$</span>
                 <input
@@ -89,15 +91,16 @@ export default function RechargePage() {
               disabled={loading}
               className="w-full py-4 bg-white text-black font-bold rounded-xl hover:bg-zinc-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {loading ? "处理中..." : "立即充值"}
+              {loading ? t('processing') : t('rechargeNow')}
             </button>
           </form>
 
           <div className="mt-6 pt-6 border-t border-white/5 text-center">
             <p className="text-xs text-zinc-500 flex items-center justify-center gap-2">
-              <ShieldCheckIcon className="w-3 h-3" /> 安全支付保障
+              <ShieldCheckIcon className="w-3 h-3" /> {t('securePayment')}
             </p>
           </div>
+
         </div>
       </div>
     </div>

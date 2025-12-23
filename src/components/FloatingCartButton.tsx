@@ -5,8 +5,10 @@ import { useCartDrawer } from '@/context/CartContext';
 import { ShoppingBag } from 'lucide-react'; 
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 export default function FloatingCartButton() {
+  const t = useTranslations('FloatingCart');
   const { toggleCart, isOpen } = useCartDrawer();
   const [cartCount, setCartCount] = useState(0);
   const pathname = usePathname();
@@ -44,7 +46,7 @@ export default function FloatingCartButton() {
       
       {/* 悬浮提示文字 (鼠标放上去时显示中文“购物车”) */}
       <span className="absolute right-full mr-3 bg-zinc-900 text-white text-xs font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-        购物车
+        {t('viewCart')}
       </span>
     </button>
   );
