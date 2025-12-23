@@ -207,12 +207,8 @@ export async function getUserDetails(userId: string) {
           include: {
             items: {
               include: {
-                productVariant: {
-                  include: {
-                    product: {
-                      select: { title: true, images: true }
-                    }
-                  }
+                product: {
+                  select: { title: true, images: true }
                 }
               }
             }
@@ -244,10 +240,7 @@ export async function getUserDetails(userId: string) {
         items: order.items.map(item => ({
           ...item,
           unitPrice: Number(item.unitPrice),
-          productVariant: item.productVariant ? {
-            ...item.productVariant,
-            price: item.productVariant.price ? Number(item.productVariant.price) : 0
-          } : null
+          product: item.product
         }))
       }))
     };

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getTrans } from "@/lib/i18n-utils";
 import Link from "next/link";
 import { Plus, Edit, Eye, Search } from "lucide-react";
 import DeleteProductButton from "@/components/admin/products/DeleteProductButton";
@@ -17,7 +18,7 @@ export default async function ProductsPage({
   const where: any = {};
   if (q) {
     where.OR = [
-      { title: { contains: q, mode: 'insensitive' } },
+      { title: { path: ['en'], string_contains: q } },
       { slug: { contains: q, mode: 'insensitive' } },
     ];
   }
@@ -121,17 +122,17 @@ export default async function ProductsPage({
                       {product.coverImageUrl && (
                         <img 
                           src={product.coverImageUrl} 
-                          alt={product.title} 
+                          alt={getTrans(product.title, 'en')} 
                           className="w-10 h-10 rounded object-cover bg-white/10" 
                         />
                       )}
                       <div>
-                        <p className="font-bold text-white">{product.title}</p>
+                        <p className="font-bold text-white">{getTrans(product.title, 'en')}</p>
                         <p className="text-xs">{product.slug}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="p-4 text-white">{product.brand?.name || '-'}</td>
+                  <td className="p-4 text-white">{getTrans(product.brand?.name, 'en') || '-'}</td>
                   <td className="p-4 font-mono text-white">${product.basePrice.toString()}</td>
                   <td className="p-4">
                     <span className={`font-mono font-bold ${

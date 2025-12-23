@@ -12,16 +12,11 @@ if (!databaseUrl) {
 
 export default defineConfig({
   datasource: {
-    provider: 'postgresql', // 必须添加：与 schema.prisma 中的数据库类型一致
+    // provider: 'postgresql', // 必须添加：与 schema.prisma 中的数据库类型一致
     url: databaseUrl, // 保留你的 Supabase 连接地址
   },
   migrations: {
     seed: 'npx ts-node prisma/seed.ts', // 保留原种子脚本配置
   },
-  // 可选：确保 Prisma Client 正常生成（避免后续调用报错）
-  generator: {
-    client: {
-      provider: 'prisma-client-js',
-    },
-  },
+
 });

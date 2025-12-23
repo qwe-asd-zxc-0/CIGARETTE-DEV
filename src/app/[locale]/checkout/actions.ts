@@ -4,7 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, getLocale } from 'next-intl/server';
+import { getTrans } from '@/lib/i18n-utils';
 
 // === 获取用户地址 ===
 export async function getUserAddresses() {
@@ -48,6 +49,7 @@ import { sendOrderConfirmationEmail } from "@/lib/email";
 // === 🔥 创建订单 Action (最终修复版) ===
 export async function createOrder(formData: FormData) {
   const t = await getTranslations('Checkout');
+  const locale = await getLocale();
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -110,7 +112,7 @@ export async function createOrder(formData: FormData) {
     // ✅ 检查库存
     const currentStock = product.stockQuantity ?? 0;
     if (currentStock < item.quantity) {
-        return { success: false, message: t('stockInsufficient', { title: product.title }) };
+        return { success: false, message: t('stockInsufficient', { title: getTrans(product.title, locale) }) };
     }
 
     const unitPrice = Number(product.basePrice);
@@ -123,7 +125,7 @@ export async function createOrder(formData: FormData) {
       },
       quantity: item.quantity,
       unitPrice: unitPrice,
-      productTitleSnapshot: product.title,
+      productTitleSnapshot: product.title as any,
       flavorSnapshot: product.flavor || "Default",
     });
   }

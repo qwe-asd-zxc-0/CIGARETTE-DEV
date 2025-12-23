@@ -7,10 +7,12 @@ import Image from "next/image";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { getTrans } from '@/lib/i18n-utils';
 
 export default function CartPage() {
   const t = useTranslations('CartPage');
+  const locale = useLocale();
   const router = useRouter();
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -64,7 +66,7 @@ export default function CartPage() {
                 {/* 图片 */}
                 <div className="relative w-24 h-24 md:w-32 md:h-32 bg-zinc-800 rounded-lg overflow-hidden flex-shrink-0">
                   {item.image && (
-                    <Image src={item.image} alt={item.title} fill className="object-cover" />
+                    <Image src={item.image} alt={getTrans(item.titleJson, locale) || item.title} fill className="object-cover" />
                   )}
                 </div>
 
@@ -72,11 +74,11 @@ export default function CartPage() {
                 <div className="flex-1 flex flex-col justify-between">
                   <div>
                     <div className="flex justify-between items-start">
-                      <h3 className="text-lg font-bold text-white line-clamp-2 pr-4">{item.title}</h3>
+                      <h3 className="text-lg font-bold text-white line-clamp-2 pr-4">{getTrans(item.titleJson, locale) || item.title}</h3>
                       <p className="text-lg font-mono text-red-500 font-bold">${(item.price * item.quantity).toFixed(2)}</p>
                     </div>
                     <p className="text-sm text-zinc-400 mt-1">
-                      {item.flavor} | {item.strength}
+                      {getTrans(item.flavorJson, locale) || item.flavor} | {item.strength}
                     </p>
                     {/* 库存提示 */}
                     <p className="text-xs text-zinc-500 mt-2">

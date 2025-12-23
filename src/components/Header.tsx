@@ -76,9 +76,10 @@ export default function Header() {
   );
 
   const navLinks = [
-    { name: t('products'), href: "/product" },
+    { name: t('traditional'), href: "/product?category=Traditional" },
     { name: t('disposable'), href: "/product?category=Disposable" },
     { name: t('eliquid'), href: "/product?category=E-Liquid" },
+    { name: t('accessories'), href: "/product?category=Accessories" },
   ];
 
   return (
@@ -90,30 +91,30 @@ export default function Header() {
             : "bg-transparent border-white/5 h-24"
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 md:px-6 h-full flex items-center justify-between relative">
+        <div className="w-full max-w-[1600px] mx-auto px-4 md:px-8 h-full flex items-center justify-between relative">
           
           {/* === 1. 移动端菜单按钮 (左侧) === */}
           <button 
-            className="md:hidden p-2 text-white"
+            className="lg:hidden p-2 text-white"
             onClick={() => setIsMobileMenuOpen(true)}
           >
             <Menu className="w-6 h-6" />
           </button>
 
           {/* === 2. Logo (居中或左侧) === */}
-          <Link href="/" className="flex items-center gap-2 z-20">
+          <Link href="/" className="flex items-center gap-2 z-20 flex-shrink-0">
             <span className="text-2xl font-black text-white tracking-tighter">
               GLOBAL <span className="text-red-600">TOBACCO</span>
             </span>
           </Link>
 
           {/* === 3. 桌面端导航 (居中) === */}
-          <nav className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
+          <nav className="hidden lg:flex items-center gap-6 xl:gap-8 absolute left-1/2 -translate-x-1/2 w-max max-w-[50%] justify-center">
             {navLinks.map((link) => (
               <Link
                 key={link.name}
                 href={link.href}
-                className={`text-sm font-bold tracking-widest uppercase transition-colors ${
+                className={`text-xs xl:text-sm font-bold tracking-widest uppercase transition-colors whitespace-nowrap ${
                   pathname === link.href ? "text-white" : "text-zinc-400 hover:text-white"
                 }`}
               >
@@ -123,12 +124,7 @@ export default function Header() {
           </nav>
 
           {/* === 4. 右侧功能区 === */}
-          <div className="flex items-center gap-4 z-20 ml-auto">
-            {/* 🌍 语言切换器 */}
-            <div className="hidden sm:block">
-              <LanguageSwitcher />
-            </div>
-
+          <div className="flex items-center gap-4 z-20 ml-auto flex-shrink-0">
             {/* 🛒 购物车按钮 (触发抽屉) */}
             <button 
               onClick={openCart} 
@@ -148,7 +144,7 @@ export default function Header() {
                     <User className="w-4 h-4 text-zinc-200" />
                   </div>
                   <span className="text-xs font-bold text-white max-w-[80px] truncate">
-                    {profileName || user.user_metadata?.full_name || "账户"}
+                    {profileName || user.user_metadata?.full_name || tCommon('profile')}
                   </span>
                 </Link>
                 
@@ -156,13 +152,13 @@ export default function Header() {
                 <div className="absolute right-0 top-full mt-2 w-48 bg-zinc-950 border border-white/10 rounded-xl shadow-2xl overflow-hidden hidden group-hover:block pt-2">
                   <div className="p-1 space-y-1 bg-zinc-950">
                     <Link href="/profile" className="flex items-center gap-3 px-3 py-2 text-sm text-zinc-300 hover:bg-white/10 rounded-lg">
-                      <UserCircle className="w-4 h-4" /> 账户设置
+                      <UserCircle className="w-4 h-4" /> {tCommon('profile')}
                     </Link>
                     <Link href="/profile/orders" className="flex items-center gap-3 px-3 py-2 text-sm text-zinc-300 hover:bg-white/10 rounded-lg">
-                      <Package className="w-4 h-4" /> 我的订单
+                      <Package className="w-4 h-4" /> {tCommon('orders')}
                     </Link>
                     <button onClick={handleSignOut} className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg">
-                      <LogOut className="w-4 h-4" /> 退出登录
+                      <LogOut className="w-4 h-4" /> {tCommon('logout')}
                     </button>
                   </div>
                 </div>
@@ -170,28 +166,33 @@ export default function Header() {
             ) : (
               <div className="hidden sm:flex items-center gap-3">
                 <Link href="/login" className="text-xs font-bold text-white hover:text-zinc-300 uppercase tracking-wide px-2">
-                  登录
+                  {tCommon('login')}
                 </Link>
                 <Link
                   href="/sign-up"
                   className="px-5 py-2.5 text-xs font-bold bg-white text-black rounded-full hover:bg-zinc-200 uppercase tracking-wide transition-transform hover:scale-105"
                 >
-                  注册
+                  {tCommon('signup')}
                 </Link>
               </div>
             )}
+
+            {/* 🌍 语言切换器 */}
+            <div className="hidden sm:block">
+              <LanguageSwitcher />
+            </div>
           </div>
         </div>
       </header>
 
       {/* === 📱 移动端全屏菜单 === */}
       <div 
-        className={`fixed inset-0 z-[60] bg-zinc-950 transition-transform duration-300 md:hidden flex flex-col ${
+        className={`fixed inset-0 z-[60] bg-zinc-950 transition-transform duration-300 lg:hidden flex flex-col ${
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="flex items-center justify-between p-6 border-b border-white/10">
-          <span className="text-xl font-black text-white">菜单</span>
+          <span className="text-xl font-black text-white">{t('menu')}</span>
           <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-zinc-400 hover:text-white">
             <X className="w-8 h-8" />
           </button>
@@ -219,22 +220,22 @@ export default function Header() {
           {user ? (
             <>
               <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)} className="text-lg text-zinc-300 flex items-center gap-3">
-                <UserCircle className="w-5 h-5" /> 账户设置
+                <UserCircle className="w-5 h-5" /> {tCommon('profile')}
               </Link>
               <Link href="/profile/orders" onClick={() => setIsMobileMenuOpen(false)} className="text-lg text-zinc-300 flex items-center gap-3">
-                <Package className="w-5 h-5" /> 我的订单
+                <Package className="w-5 h-5" /> {tCommon('orders')}
               </Link>
               <button onClick={() => { handleSignOut(); setIsMobileMenuOpen(false); }} className="text-lg text-red-400 flex items-center gap-3 text-left">
-                <LogOut className="w-5 h-5" /> 退出登录
+                <LogOut className="w-5 h-5" /> {tCommon('logout')}
               </button>
             </>
           ) : (
             <div className="flex flex-col gap-4 mt-4">
               <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="w-full py-4 text-center border border-white/20 rounded-lg text-white font-bold uppercase">
-                登录
+                {tCommon('login')}
               </Link>
               <Link href="/sign-up" onClick={() => setIsMobileMenuOpen(false)} className="w-full py-4 text-center bg-white text-black rounded-lg font-bold uppercase">
-                注册
+                {tCommon('signup')}
               </Link>
             </div>
           )}

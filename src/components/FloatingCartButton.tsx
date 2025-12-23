@@ -4,7 +4,7 @@ import { useCartDrawer } from '@/context/CartContext';
 // 确保您安装了 lucide-react (npm install lucide-react)
 import { ShoppingBag } from 'lucide-react'; 
 import { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 
 export default function FloatingCartButton() {

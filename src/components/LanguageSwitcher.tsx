@@ -9,8 +9,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 const languages = [
   { code: 'en', label: 'English', flagCode: 'us' },
   { code: 'zh', label: '中文', flagCode: 'cn' },
-  { code: 'ms', label: 'Malay', flagCode: 'my' },
-  { code: 'th', label: 'Thai', flagCode: 'th' },
 ];
 
 export default function LanguageSwitcher() {

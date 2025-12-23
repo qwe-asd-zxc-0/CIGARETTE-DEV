@@ -25,7 +25,7 @@ export async function POST(request: Request) {
 
       if (recentRegistrations >= MAX_REGISTRATIONS) {
         return NextResponse.json(
-          { error: "当前 IP 注册过于频繁，请稍后再试。" },
+          { error: "errorRateLimit" },
           { status: 429 }
         );
       }
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
 
     if (existingEmail) {
       console.log(`[Register Fail] Email already exists: ${email}`);
-      return NextResponse.json({ error: '该邮箱已被注册，请直接登录。' }, { status: 409 });
+      return NextResponse.json({ error: 'errorEmailExists' }, { status: 409 });
     }
 
     const existingName = await prisma.profile.findUnique({

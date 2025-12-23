@@ -20,9 +20,14 @@ function generateAutoSKU(title: string) {
 function parseJsonField(jsonStr: string | null, defaultValue: any) {
   if (!jsonStr) return defaultValue;
   try {
-    return JSON.parse(jsonStr);
+    const parsed = JSON.parse(jsonStr);
+    // 如果解析出来是字符串（例如 JSON.stringify("foo")），则尝试再次解析或直接返回
+    if (typeof parsed === 'string') {
+        try { return JSON.parse(parsed); } catch { return parsed; }
+    }
+    return parsed;
   } catch (error) {
-    console.error("JSON parse error:", error);
+    // console.error("JSON parse error:", error); // 可能是普通字符串，不报错
     return defaultValue;
   }
 }
@@ -30,11 +35,27 @@ function parseJsonField(jsonStr: string | null, defaultValue: any) {
 export async function upsertProduct(formData: FormData, productId?: string) {
   try {
     // 1. 获取基本字段
-    const title = formData.get("title") as string;
+    const titleRaw = formData.get("title") as string;
+    const descriptionRaw = formData.get("description") as string;
+    
+    // 解析多语言字段
+    // 如果是 JSON 字符串，解析为对象；如果是普通字符串，封装为 { en: ... }
+    let titleObj = parseJsonField(titleRaw, null);
+    if (!titleObj || typeof titleObj === 'string') {
+        titleObj = { en: titleRaw || "Untitled" };
+    }
+
+    let descriptionObj = parseJsonField(descriptionRaw, null);
+    if (!descriptionObj || typeof descriptionObj === 'string') {
+        descriptionObj = { en: descriptionRaw || "" };
+    }
+
+    // 提取用于生成 Slug 和 SKU 的主标题 (优先英文)
+    const mainTitle = titleObj.en || titleObj.zh || "Product";
+
     const priceRaw = formData.get("price") as string;
     const origin = formData.get("origin") as string;
     const category = formData.get("category") as string; // ✅ 新增：分类字段
-    const description = formData.get("description") as string;
     const status = formData.get("status") as string;
     const brandIdRaw = formData.get("brandId");
     const brandId = brandIdRaw ? Number(brandIdRaw) : null;
@@ -42,6 +63,17 @@ export async function upsertProduct(formData: FormData, productId?: string) {
     // ✅ 新增：获取库存数量
     const stockRaw = formData.get("stock");
     const stock = stockRaw ? parseInt(stockRaw.toString()) : 0;
+
+    // ✅ 新增：获取 SKU, Slug, Flavor, Nicotine
+    const skuCodeRaw = formData.get("skuCode") as string;
+    const slugRaw = formData.get("slug") as string;
+    const flavorRaw = formData.get("flavor") as string;
+    const nicotineStrength = formData.get("nicotineStrength") as string;
+
+    let flavorObj = parseJsonField(flavorRaw, null);
+    if (!flavorObj || typeof flavorObj === 'string') {
+        flavorObj = { en: flavorRaw || "" };
+    }
 
     console.log(`📦 [UpsertProduct] Stock received: ${stock}, Raw: ${stockRaw}`);
 
@@ -59,11 +91,11 @@ export async function upsertProduct(formData: FormData, productId?: string) {
 
     // Product 表基础数据
     const dataPayload: any = {
-      title,
+      title: titleObj, // ✅ 存入 JSON 对象
       basePrice,
       origin,
       category: category || null,
-      description,
+      description: descriptionObj, // ✅ 存入 JSON 对象
       coverImageUrl,
       images,
       specifications,
@@ -71,9 +103,10 @@ export async function upsertProduct(formData: FormData, productId?: string) {
       status: status || 'active',
       stockQuantity: stock,
       // ✅ 扁平化新增字段
-      skuCode: generateAutoSKU(title), // 默认生成一个 SKU
-      flavor: "Default",
-      nicotineStrength: "N/A"
+      skuCode: skuCodeRaw || generateAutoSKU(mainTitle), 
+      flavor: flavorObj,
+      nicotineStrength: nicotineStrength || null,
+      slug: slugRaw || generateSlug(mainTitle)
     };
 
     // ✅ 处理品牌关联
@@ -89,8 +122,10 @@ export async function upsertProduct(formData: FormData, productId?: string) {
       // === 更新模式 ===
       console.log(`🔄 Updating product: ${productId}`);
       
-      // 移除 skuCode 更新，避免覆盖已有 SKU
-      delete dataPayload.skuCode;
+      // 如果用户没有提供 SKU/Slug，我们尽量保持原样，或者如果前端传回了原值，就更新为原值
+      // 这里 dataPayload 已经包含了 skuCodeRaw || generateAutoSKU
+      // 如果前端传回了空字符串，这里会生成新的。
+      // 所以前端必须回填 defaultValue。ProductForm 已经做了 defaultValue={product?.skuCode}
 
       await prisma.product.update({
         where: { id: productId },
@@ -103,11 +138,10 @@ export async function upsertProduct(formData: FormData, productId?: string) {
 
     } else {
       // === 创建模式 ===
-      const slug = generateSlug(title);
-      console.log(`✨ Creating product with slug: ${slug}`);
+      console.log(`✨ Creating product with slug: ${dataPayload.slug}`);
       
       await prisma.product.create({
-        data: { ...dataPayload, slug },
+        data: dataPayload,
       });
     }
 

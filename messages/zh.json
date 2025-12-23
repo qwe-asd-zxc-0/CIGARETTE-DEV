@@ -28,8 +28,11 @@
     "home": "首页",
     "products": "全部商品",
     "cart": "购物车",
+    "traditional": "传统烟草",
     "disposable": "一次性电子烟",
-    "eliquid": "电子烟油"
+    "eliquid": "电子烟油",
+    "accessories": "配件",
+    "menu": "菜单"
   },
   "Common": {
     "login": "登录",
@@ -136,6 +139,9 @@
     "errorPassword": "至少8位字符，需包含字母和数字",
     "errorConfirm": "两次输入的密码不一致",
     "errorCode": "验证码错误，请重试",
+    "errorRateLimit": "当前 IP 注册过于频繁，请稍后再试。",
+    "errorEmailExists": "该邮箱已被注册，请直接登录。",
+    "errorGeneral": "注册失败，请重试。",
     "success": "账户创建成功！",
     "backToHome": "返回商城",
     "emailHint": "邮箱是你在本网站的唯一凭证， 找回密码的关键。",
@@ -210,9 +216,6 @@
   },
   "FloatingCart": {
     "viewCart": "购物车"
-  },
-  "Login": {
-    "checkout": "去结算"
   },
   "Checkout": {
     "cartEmptyAlert": "购物车为空",
@@ -375,5 +378,15 @@
     "errorAddressAddFailed": "添加失败，请重试",
     "errorAddressUpdated": "地址已更新",
     "errorAddressUpdateFailed": "更新失败，请重试"
+  },
+  "NotFound": {
+    "title": "页面未找到",
+    "description": "抱歉，您访问的页面似乎已经消失在烟雾中了。",
+    "backHome": "返回首页",
+    "backPrevious": "返回上一页"
+  },
+  "Error": {
+    "title": "出了一点小问题",
+    "description": "系统遇到了一些意外情况。我们已经自动记录了这个问题，技术团队正在排查。"
   }
 }

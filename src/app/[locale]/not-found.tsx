@@ -3,8 +3,11 @@
 import Link from 'next/link';
 import { Home, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 
 export default function NotFound() {
+  const t = useTranslations('NotFound');
+
   return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center text-center px-4 relative overflow-hidden">
       {/* 背景光晕效果 */}
@@ -32,11 +35,9 @@ export default function NotFound() {
         </motion.h1>
         
         <div className="relative -top-4 space-y-4">
-          <h2 className="text-3xl font-bold text-white">页面未找到</h2>
+          <h2 className="text-3xl font-bold text-white">{t('title')}</h2>
           <p className="text-zinc-400 text-lg leading-relaxed">
-            抱歉，您访问的页面似乎已经消失在烟雾中了。
-            <br />
-            <span className="text-sm opacity-60 font-mono">(The page you are looking for has vanished into smoke.)</span>
+            {t('description')}
           </p>
         </div>
 
@@ -51,7 +52,7 @@ export default function NotFound() {
             className="group inline-flex items-center justify-center gap-2 px-8 py-3 bg-white text-black font-bold rounded-full hover:bg-zinc-200 transition-all hover:scale-105 active:scale-95"
           >
             <Home className="w-4 h-4 transition-transform group-hover:-translate-y-0.5" />
-            返回首页
+            {t('backHome')}
           </Link>
           
           <button 
@@ -59,7 +60,7 @@ export default function NotFound() {
             className="group inline-flex items-center justify-center gap-2 px-8 py-3 border border-zinc-700 text-zinc-300 font-medium rounded-full hover:bg-zinc-900 hover:border-zinc-500 transition-all hover:scale-105 active:scale-95"
           >
             <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-            返回上一页
+            {t('backPrevious')}
           </button>
         </motion.div>
       </motion.div>

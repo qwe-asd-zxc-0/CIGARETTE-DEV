@@ -10,7 +10,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { getTrans } from '@/lib/i18n-utils';
 // ⚠️ 确保您的 actions.ts 中已经按照上一步添加了 getUserAddresses
 import { getUserAddresses, createOrder } from "./actions";
 
@@ -68,6 +69,7 @@ function QuantityInput({
 
 export default function CheckoutPage() {
   const t = useTranslations('Checkout');
+  const locale = useLocale();
   const { cartItems, updateQuantity, removeFromCart, clearCart } = useCartDrawer();
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -299,11 +301,11 @@ export default function CheckoutPage() {
               {cartItems.map(item => (
                 <div key={item.id} className="flex gap-4 items-center group bg-black/20 p-3 rounded-xl border border-white/5">
                   <div className="relative w-16 h-16 bg-zinc-800 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
-                    {item.image && <Image src={item.image} alt={item.title} fill className="object-cover" />}
+                    {item.image && <Image src={item.image} alt={getTrans(item.titleJson, locale) || item.title} fill className="object-cover" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-sm text-zinc-200 line-clamp-1">{item.title}</p>
-                    <p className="text-xs text-zinc-500 truncate">{item.flavor} / {item.strength}</p>
+                    <p className="font-bold text-sm text-zinc-200 line-clamp-1">{getTrans(item.titleJson, locale) || item.title}</p>
+                    <p className="text-xs text-zinc-500 truncate">{getTrans(item.flavorJson, locale) || item.flavor} / {item.strength}</p>
                     {item.quantity >= item.stock && <p className="text-[10px] text-red-500 mt-0.5">{t('stockLimitReached')}</p>}
                   </div>
                   <div className="flex flex-col items-end gap-1">

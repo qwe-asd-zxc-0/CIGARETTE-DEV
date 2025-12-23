@@ -4,7 +4,7 @@ import AgeGate from '@/components/AgeGate';
 // 这是一个“服务端组件”，它直接运行在服务器上，拥有直接访问数据库的权限
 export default async function Home() {
   let dbStatus = "正在检测连接...";
-  let products = [];
+  let products: any[] = [];
   let errorMsg = "";
 
   try {

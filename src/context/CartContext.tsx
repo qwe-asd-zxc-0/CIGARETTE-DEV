@@ -7,9 +7,11 @@ export interface CartItem {
   id: string;        // SKU ID
   productId: string; // 商品 ID
   title: string;
+  titleJson?: any;   // ✅ 支持多语言
   price: number;
   image: string;
   flavor: string;
+  flavorJson?: any;  // ✅ 支持多语言
   strength: string;
   quantity: number;
   stock: number;     // 🔥 关键：必须把库存存进去，用于校验

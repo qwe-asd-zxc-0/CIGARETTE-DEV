@@ -2,17 +2,23 @@
 
 import { useCartDrawer } from "@/context/CartContext";
 import { X, Minus, Plus, Trash2, User, LogIn, Loader2 } from "lucide-react";
-import { Link } from "@/i18n/routing"; // ✅ 使用国际化 Link
+import { Link, usePathname } from "@/i18n/routing"; // ✅ 使用国际化 Link
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
-import { useTranslations } from 'next-intl'; // ✅ 引入翻译钩子
+import { useTranslations, useLocale } from 'next-intl'; // ✅ 引入翻译钩子
+import { getTrans } from '@/lib/i18n-utils';
 
 export default function CartDrawer() {
   const t = useTranslations('Cart'); // ✅ 获取 Cart 翻译
+  const locale = useLocale();
+  const pathname = usePathname();
   const { isOpen, closeCart, cartItems, removeFromCart, updateQuantity } = useCartDrawer();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
+
+  // 如果是后台页面，不渲染购物车抽屉
+  if (pathname?.startsWith('/admin')) return null;
 
   useEffect(() => {
     if (isOpen) {
@@ -107,16 +113,16 @@ export default function CartDrawer() {
                   {/* 图片 */}
                   <div className="relative w-20 h-20 bg-zinc-800 rounded-md overflow-hidden flex-shrink-0 border border-zinc-700">
                     {item.image && (
-                      <Image src={item.image} alt={item.title} fill className="object-cover" />
+                      <Image src={item.image} alt={getTrans(item.titleJson, locale) || item.title} fill className="object-cover" />
                     )}
                   </div>
 
                   {/* 信息 */}
                   <div className="flex-1 flex flex-col justify-between">
                     <div>
-                      <h3 className="text-white font-medium line-clamp-1">{item.title}</h3>
+                      <h3 className="text-white font-medium line-clamp-1">{getTrans(item.titleJson, locale) || item.title}</h3>
                       <p className="text-sm text-zinc-400">
-                        {item.flavor} <span className="mx-1">|</span> {item.strength}
+                        {getTrans(item.flavorJson, locale) || item.flavor} <span className="mx-1">|</span> {item.strength}
                       </p>
                     </div>
                     

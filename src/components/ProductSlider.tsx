@@ -5,14 +5,15 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { getTrans } from '@/lib/i18n-utils';
 
 type Product = {
   id: string | number;
   coverImageUrl?: string | null;
-  title: string;
+  title: any; // Changed to any to support Json
   basePrice: number | string;
-  brand?: { name?: string | null } | null;
+  brand?: { name?: any | null } | null; // Changed to any
 };
 
 const Slider = dynamic(() => import('react-slick'), {
@@ -53,6 +54,7 @@ const settings = {
 
 export default function ProductSlider({ products }: { products: Product[] }) {
   const t = useTranslations('ProductPage');
+  const locale = useLocale();
   if (!products || products.length === 0) return null;
 
   return (
@@ -68,7 +70,7 @@ export default function ProductSlider({ products }: { products: Product[] }) {
                   {product.coverImageUrl ? (
                     <img 
                       src={product.coverImageUrl} 
-                      alt={product.title} 
+                      alt={getTrans(product.title, locale)} 
                       className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500 opacity-90 group-hover:opacity-100" 
                     />
                   ) : (
@@ -85,10 +87,10 @@ export default function ProductSlider({ products }: { products: Product[] }) {
                 {/* 信息区域 */}
                 <div className="p-4 flex-1 flex flex-col">
                   <div className="text-xs text-red-500 font-bold mb-1 uppercase tracking-wider">
-                    {product.brand?.name || t('brand')}
+                    {getTrans(product.brand?.name, locale) || t('brand')}
                   </div>
                   <h3 className="text-sm font-bold text-zinc-200 mb-2 line-clamp-2 group-hover:text-white">
-                    {product.title}
+                    {getTrans(product.title, locale)}
                   </h3>
                   <div className="mt-auto pt-2 border-t border-white/5 flex justify-between items-center">
                     <span className="text-lg font-mono text-zinc-100">

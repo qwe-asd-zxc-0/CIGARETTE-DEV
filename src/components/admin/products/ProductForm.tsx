@@ -11,7 +11,7 @@ import Link from "next/link";
 interface ProductFormProps {
   product?: any;
   isCreate: boolean;
-  brands: { id: number; name: string }[];
+  brands: { id: number; name: any }[];
 }
 
 export default function ProductForm({ product, isCreate, brands }: ProductFormProps) {
@@ -22,8 +22,22 @@ export default function ProductForm({ product, isCreate, brands }: ProductFormPr
   const [galleryImages, setGalleryImages] = useState<string[]>(product?.images || []);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // ✅ 多语言标题和描述状态
+  const getInitialLangVal = (val: any, lang: string) => {
+    if (!val) return "";
+    if (typeof val === 'string') return lang === 'en' ? val : ""; // 旧数据默认视为英文
+    return val[lang] || "";
+  };
+
+  const [titleEn, setTitleEn] = useState(getInitialLangVal(product?.title, 'en'));
+  const [titleZh, setTitleZh] = useState(getInitialLangVal(product?.title, 'zh'));
+  const [descEn, setDescEn] = useState(getInitialLangVal(product?.description, 'en'));
+  const [descZh, setDescZh] = useState(getInitialLangVal(product?.description, 'zh'));
+  const [flavorEn, setFlavorEn] = useState(getInitialLangVal(product?.flavor, 'en'));
+  const [flavorZh, setFlavorZh] = useState(getInitialLangVal(product?.flavor, 'zh'));
+
   // ✅ 新增：库存状态 (优先读取 Product 表库存)
-  const initialStock = product?.stockQuantity || 0;
+  const initialStock = product?.stockQuantity || 0
   const [stock, setStock] = useState(initialStock);
 
   // === 2. 高级配置状态 ===
@@ -71,6 +85,15 @@ export default function ProductForm({ product, isCreate, brands }: ProductFormPr
     formData.set("images", JSON.stringify(galleryImages));
     // ✅ 注入库存
     formData.set("stock", stock.toString());
+
+    // ✅ 注入多语言标题和描述 (构建 JSON)
+    const titleObj = { en: titleEn, zh: titleZh };
+    const descObj = { en: descEn, zh: descZh };
+    const flavorObj = { en: flavorEn, zh: flavorZh };
+    
+    formData.set("title", JSON.stringify(titleObj));
+    formData.set("description", JSON.stringify(descObj));
+    formData.set("flavor", JSON.stringify(flavorObj));
 
     // 转换规格和阶梯价
     const specsObject = specs.reduce((acc, item) => {
@@ -125,17 +148,49 @@ export default function ProductForm({ product, isCreate, brands }: ProductFormPr
             <div>
               <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">品牌 *</label>
               <select name="brandId" required defaultValue={product?.brandId || ""} className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none">
-                <option value="" disabled>-- 请选择品牌 --</option>
-                {brands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                <option value="" disabled>Select Brand</option>
+                {brands.map((b: any) => (
+                  <option key={b.id} value={b.id}>
+                    {typeof b.name === 'object' ? b.name.en || b.name.zh : b.name}
+                  </option>
+                ))}
               </select>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-               <div className="col-span-2">
-                 <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">商品名称 *</label>
-                 <input name="title" required defaultValue={product?.title || ""} className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none" />
+                 <div>
+                   <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">商品名称 (EN) *</label>
+                   <input 
+                      value={titleEn}
+                      onChange={(e) => setTitleEn(e.target.value)}
+                      required 
+                      className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none" 
+                      placeholder="Product Name"
+                   />
+                 </div>
+                 <div>
+                   <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">商品名称 (中文)</label>
+                   <input 
+                      value={titleZh}
+                      onChange={(e) => setTitleZh(e.target.value)}
+                      className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none" 
+                      placeholder="商品名称"
+                   />
+                 </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+               <div>
+                 <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">SKU 编码</label>
+                 <input name="skuCode" defaultValue={product?.skuCode || ""} className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none" placeholder="SKU-001" />
                </div>
-               
+               <div>
+                 <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">URL Slug (唯一标识)</label>
+                 <input name="slug" defaultValue={product?.slug || ""} className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none" placeholder="product-name-slug" />
+               </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
                <div>
                  <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">基础价格 ($) *</label>
                  <input name="price" type="number" step="0.01" required defaultValue={product?.price || ""} className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none" />
@@ -156,33 +211,97 @@ export default function ProductForm({ product, isCreate, brands }: ProductFormPr
                     placeholder="0"
                  />
                </div>
+            </div>
 
+            <div className="grid grid-cols-2 gap-4">
+                 <div>
+                   <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">口味 (EN)</label>
+                   <input 
+                      value={flavorEn}
+                      onChange={(e) => setFlavorEn(e.target.value)}
+                      className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none" 
+                      placeholder="Mint, Grape..."
+                   />
+                 </div>
+                 <div>
+                   <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">口味 (中文)</label>
+                   <input 
+                      value={flavorZh}
+                      onChange={(e) => setFlavorZh(e.target.value)}
+                      className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none" 
+                      placeholder="薄荷, 葡萄..."
+                   />
+                 </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
                <div>
+                 <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">尼古丁含量</label>
+                 <input name="nicotineStrength" defaultValue={product?.nicotineStrength || ""} className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none" placeholder="2%, 50mg" />
+               </div>
+               <div>
+                 <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">产地</label>
+                 <input name="origin" defaultValue={product?.origin || ""} className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none" placeholder="China, USA" />
+               </div>
+            </div>
+
+            <div>
                  <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">分类</label>
-                 <select name="category" defaultValue={product?.category || ""} className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none">
+                 <select 
+                    name="category" 
+                    defaultValue={(() => {
+                      const c = product?.category;
+                      if (!c) return "";
+                      // 如果是对象 (旧数据或 Prisma Json 类型)
+                      if (typeof c === 'object' && c.en) return c.en;
+                      // 如果是字符串但包含 JSON 结构 (Prisma String 类型读取到了 JSON 字符串)
+                      if (typeof c === 'string' && c.startsWith('{')) {
+                        try {
+                           const parsed = JSON.parse(c);
+                           return parsed.en || c;
+                        } catch { return c; }
+                      }
+                      return c;
+                    })()} 
+                    className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none"
+                 >
                    <option value="">-- 请选择分类 --</option>
                    <option value="Disposable">一次性电子烟 (Disposable)</option>
                    <option value="E-Liquid">烟油 (E-Liquid)</option>
                    <option value="Traditional">传统烟草 (Traditional)</option>
                    <option value="Accessories">配件 (Accessories)</option>
                  </select>
-               </div>
-
-               <div>
-                 <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">产地</label>
-                 <input name="origin" defaultValue={product?.origin || ""} className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none" />
-               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">商品描述</label>
-              <textarea name="description" rows={4} defaultValue={product?.description || ""} className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none" />
+                 <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">商品描述 (EN)</label>
+              <textarea 
+                rows={3} 
+                value={descEn}
+                onChange={(e) => setDescEn(e.target.value)}
+                className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none mb-4" 
+                placeholder="Description in English"
+              />
+              
+              <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">商品描述 (中文)</label>
+              <textarea 
+                rows={3} 
+                value={descZh}
+                onChange={(e) => setDescZh(e.target.value)}
+                className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none" 
+                placeholder="中文描述"
+              />
             </div>
           </div>
 
           {/* 高级配置区域 (保持不变) */}
           <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 space-y-8">
-            <h2 className="text-lg font-bold text-white border-b border-white/5 pb-4">高级配置</h2>
+            <div>
+              <h2 className="text-lg font-bold text-white border-b border-white/5 pb-4 mb-2">高级配置</h2>
+              <p className="text-sm text-zinc-400">
+                在此处配置商品的详细规格参数（如尺寸、重量、材质等）以及阶梯批发价格规则。阶梯价格将根据用户购买的数量自动应用优惠。
+              </p>
+            </div>
             {/* 规格参数部分... */}
             <div className="space-y-3">
               <div className="flex justify-between items-center">

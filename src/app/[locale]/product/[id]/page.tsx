@@ -2,15 +2,39 @@ import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import ProductDetailClient from '@/components/product/ProductDetailClient';
+import { getTrans } from '@/lib/i18n-utils';
+import { getTranslations } from 'next-intl/server';
 
 export const dynamic = 'force-dynamic';
 
 interface ProductDetailProps {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string; locale: string }>;
+}
+
+export async function generateMetadata({ params }: ProductDetailProps) {
+  const { id, locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'ProductPage' });
+  
+  const product = await prisma.product.findUnique({
+    where: { id },
+    select: { title: true, description: true }
+  });
+
+  if (!product) {
+    return {
+      title: 'Product Not Found',
+    };
+  }
+
+  return {
+    title: `${getTrans(product.title, locale)} - Global Tobacco`,
+    description: getTrans(product.description, locale) || t('globalSelection') 
+  };
 }
 
 export default async function ProductDetail({ params }: ProductDetailProps) {
-  const { id } = await params;
+  const { id, locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'ProductPage' });
 
   // 1. 查询数据库
   const rawProduct = await prisma.product.findUnique({
@@ -59,7 +83,7 @@ export default async function ProductDetail({ params }: ProductDetailProps) {
         {/* 底部推荐 */}
         {relatedProducts.length > 0 && (
           <div className="mt-24 border-t border-white/5 pt-12">
-            <h3 className="text-xl font-bold text-white mb-8">相关推荐</h3>
+            <h3 className="text-xl font-bold text-white mb-8">{t('relatedProducts') || '相关推荐'}</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {relatedProducts.map(rp => (
                 <Link key={rp.id} href={`/product/${rp.id}`} className="block group">
@@ -67,12 +91,12 @@ export default async function ProductDetail({ params }: ProductDetailProps) {
                     {rp.coverImageUrl && (
                       <img 
                         src={rp.coverImageUrl} 
-                        alt={rp.title}
+                        alt={getTrans(rp.title, locale)}
                         className="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-80 group-hover:opacity-100" 
                       />
                     )}
                   </div>
-                  <h4 className="text-sm font-bold text-zinc-300 group-hover:text-white truncate">{rp.title}</h4>
+                  <h4 className="text-sm font-bold text-zinc-300 group-hover:text-white truncate">{getTrans(rp.title, locale)}</h4>
                   <p className="text-xs text-zinc-500">${rp.basePrice.toFixed(2)}</p>
                 </Link>
               ))}

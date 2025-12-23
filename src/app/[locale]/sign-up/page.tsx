@@ -104,7 +104,7 @@ export default function SignUpPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "创建账户失败");
+        throw new Error(data.error || "errorGeneral");
       }
 
       // 注册成功后，自动执行登录
@@ -115,8 +115,8 @@ export default function SignUpPage() {
 
       if (loginError) {
         console.error("自动登录失败:", loginError);
-        alert("账户创建成功，但自动登录失败，请手动登录。");
-        router.push("/sign-in");
+        alert(t('success') + " " + t('login')); // 简单拼接提示
+        router.push("/login");
       } else {
         // 使用 window.location.href 强制跳转，确保 Auth 状态正确更新且页面刷新
         window.location.href = "/"; 
@@ -124,7 +124,14 @@ export default function SignUpPage() {
 
     } catch (err: any) {
       console.error(err);
-      alert(err.message || "注册失败，请重试。");
+      // ✅ 翻译错误信息
+      const msg = err.message;
+      // 如果是预定义的错误代码，则翻译；否则显示默认错误
+      if (msg && (msg.startsWith('error') || msg === 'errorGeneral')) {
+        alert(t(msg));
+      } else {
+        alert(t('errorGeneral'));
+      }
     } finally {
       setIsLoading(false);
     }

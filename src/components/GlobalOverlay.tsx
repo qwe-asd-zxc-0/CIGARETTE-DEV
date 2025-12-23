@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname } from "@/i18n/routing";
 import AgeGate from "@/components/AgeGate";
 import ContactWidget from "@/components/ContactWidget";
 

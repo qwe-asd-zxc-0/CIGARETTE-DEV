@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 // ✅ 1. 引入 Context Hook
 import { useCartDrawer } from "@/context/CartContext";
+import { useLocale } from "next-intl";
+import { getTrans } from "@/lib/i18n-utils";
 
 interface ProductDetailClientProps {
   product: any;
@@ -13,6 +15,7 @@ interface ProductDetailClientProps {
 
 export default function ProductDetailClient({ product }: ProductDetailClientProps) {
   const router = useRouter();
+  const locale = useLocale();
   const [isCheckingAuth, setIsCheckingAuth] = useState(false);
   const [loginTip, setLoginTip] = useState(""); // 提示信息状态
   
@@ -60,10 +63,12 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
     const cartItem = {
       id: product.id,                 // ✅ 使用 Product ID
       productId: product.id,          // 商品 ID
-      title: product.title,
+      title: getTrans(product.title, locale),
+      titleJson: product.title,       // ✅ 存入原始 Json
       price: product.basePrice,       // ✅ 使用基础价格
       image: selectedImage,
-      flavor: product.flavor || "默认口味", // ✅ 使用 Product 字段
+      flavor: getTrans(product.flavor, locale) || "默认口味", // ✅ 使用 Product 字段
+      flavorJson: product.flavor,     // ✅ 存入原始 Json
       strength: product.nicotineStrength || "默认浓度", // ✅ 使用 Product 字段
       quantity: quantity,
       stock: currentStock             // 🔥 关键：必须传入库存，Context 会帮我们做校验
@@ -84,7 +89,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
       {/* === 左侧：图片区域 === */}
       <div className="space-y-4">
         <div className="aspect-[4/5] w-full bg-zinc-900 rounded-2xl overflow-hidden border border-white/5 relative group">
-           <img src={selectedImage} alt={product.title} className="w-full h-full object-cover" />
+           <img src={selectedImage} alt={getTrans(product.title, locale)} className="w-full h-full object-cover" />
         </div>
         {allImages.length > 1 && (
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
@@ -99,8 +104,8 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
 
       {/* === 右侧：信息与操作 === */}
       <div className="flex flex-col h-full">
-        <span className="text-red-500 font-bold tracking-wider text-sm uppercase mb-2">{product.brand?.name}</span>
-        <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">{product.title}</h1>
+        <span className="text-red-500 font-bold tracking-wider text-sm uppercase mb-2">{getTrans(product.brand?.name, locale)}</span>
+        <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">{getTrans(product.title, locale)}</h1>
         
         <div className="flex items-center gap-4 mb-6 border-b border-white/5 pb-6">
           <span className="text-3xl font-mono text-white">${Number(product.basePrice).toFixed(2)}</span>
@@ -114,11 +119,11 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
 
         {/* 规格展示 (只读) */}
         <div className="space-y-6 mb-8">
-          {product.flavor && (
+          {getTrans(product.flavor, locale) && (
             <div>
               <label className="text-xs text-zinc-500 font-bold uppercase mb-3 block">口味 (Flavor)</label>
               <div className="px-4 py-2 text-sm rounded-lg border bg-white text-black border-white font-bold inline-block">
-                {product.flavor}
+                {getTrans(product.flavor, locale)}
               </div>
             </div>
           )}

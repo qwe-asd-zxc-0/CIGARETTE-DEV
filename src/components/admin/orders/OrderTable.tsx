@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, Search, Filter } from "lucide-react";
+import { Eye, Search, Filter, Calendar } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import OrderDrawer from "./OrderDrawer";
 
@@ -19,10 +19,18 @@ export default function OrderTable({ orders }: { orders: any[] }) {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
 
   const filteredOrders = orders.filter(order => {
     // 状态筛选
     if (statusFilter !== "all" && order.status !== statusFilter) return false;
+    
+    // 日期筛选
+    if (dateFilter) {
+      const orderDate = new Date(order.createdAt).toISOString().split('T')[0];
+      if (orderDate !== dateFilter) return false;
+    }
+
     // 搜索 (ID 或 Email)
     const query = search.toLowerCase();
     const matchId = order.id.toLowerCase().includes(query);
@@ -62,18 +70,48 @@ export default function OrderTable({ orders }: { orders: any[] }) {
           ))}
         </div>
 
-        {/* 搜索框 */}
-        <div className="relative group w-full md:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 group-focus-within:text-white transition-colors" />
-          <input
-            type="text"
-            placeholder="搜索订单号 / 客户邮箱..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-zinc-900 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-blue-500 transition-all placeholder:text-zinc-600"
-          />
+        {/* 搜索框和日期筛选 */}
+        <div className="flex gap-4 w-full md:w-auto">
+          {/* 日期筛选 */}
+          <div className="relative group">
+            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 group-focus-within:text-white transition-colors" />
+            <input
+              type="date"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="bg-zinc-900 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-blue-500 transition-all placeholder:text-zinc-600 [&::-webkit-calendar-picker-indicator]:invert cursor-pointer"
+            />
+          </div>
+
+          {/* 搜索框 */}
+          <div className="relative group w-full md:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 group-focus-within:text-white transition-colors" />
+            <input
+              type="text"
+              placeholder="搜索订单号 / 客户邮箱..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-zinc-900 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-blue-500 transition-all placeholder:text-zinc-600"
+            />
+          </div>
         </div>
       </div>
+
+      {/* 每日订单统计摘要 */}
+      {dateFilter && (
+        <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 flex flex-wrap items-center gap-6 text-blue-200 text-sm animate-in fade-in slide-in-from-top-2">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4" />
+            <span className="font-bold">{dateFilter} 统计:</span>
+          </div>
+          <div>
+            总订单数: <span className="font-mono font-bold text-white ml-2">{filteredOrders.length}</span>
+          </div>
+          <div>
+            总金额: <span className="font-mono font-bold text-white ml-2">${filteredOrders.reduce((sum, order) => sum + Number(order.totalAmount), 0).toFixed(2)}</span>
+          </div>
+        </div>
+      )}
 
       {/* 表格 */}
       <div className="bg-zinc-900/50 border border-white/10 rounded-2xl overflow-hidden backdrop-blur-sm">

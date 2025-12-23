@@ -49,7 +49,7 @@ export default function SearchInput() {
           value={term}
           onChange={(e) => setTerm(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-          placeholder={t('searchPlaceholder')}
+          placeholder=""
           className="w-full bg-transparent border-none px-6 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-0"
         />
         

@@ -76,18 +76,39 @@ export async function POST(request: Request) {
     for (const row of rows) {
       // 1. 读取基础字段
       const brandName = (row['品牌 (Brand)'] || row['Brand'] || '').toString().trim();
-      const title = (row['商品名称 (Product Title)'] || row['Product Title'] || '').toString().trim();
-      const flavor = (row['口味 (Flavor)'] || row['Flavor'] || 'Default').toString().trim();
+      
+      // ✅ 支持多语言标题
+      const titleEn = (row['商品名称 (Product Title)'] || row['Product Title'] || row['Product Title (EN)'] || '').toString().trim();
+      const titleZh = (row['商品名称 (中文) (Product Title ZH)'] || row['商品名称 (中文)'] || row['Product Title (ZH)'] || '').toString().trim();
+      
+      // 构造 Title JSON
+      const titleObj: any = {};
+      if (titleEn) titleObj.en = titleEn;
+      if (titleZh) titleObj.zh = titleZh;
+      // 如果都没有，跳过
+      if (Object.keys(titleObj).length === 0) continue;
+
+      // ✅ 兼容旧代码：定义主标题
+      const title = titleObj.en || titleObj.zh || "Product";
+
+      const flavorEn = (row['口味 (Flavor)'] || row['Flavor'] || 'Default').toString().trim();
+      const flavorZh = (row['口味 (中文) (Flavor ZH)'] || row['口味 (中文)'] || row['Flavor (ZH)'] || '').toString().trim();
+      const flavorObj = { en: flavorEn, zh: flavorZh };
+
       const strength = (row['尼古丁浓度 (Strength)'] || row['Strength'] || 'N/A').toString().trim();
       
       // 如果关键信息缺失，跳过
-      if (!brandName || !title) continue;
+      if (!brandName) continue;
 
       const price = parseFloat(row['基础零售价 (Price)'] || row['Price'] || 0);
       const stock = parseInt(row['库存 (Stock)'] || row['Stock'] || 0);
       const origin = (row['产地 (Origin)'] || row['Origin'] || '').toString();
       const coverImageUrl = (row['封面图URL (Cover Image)'] || row['Cover Image'] || '').toString();
-      const description = (row['描述 (Description)'] || row['Description'] || '').toString();
+      
+      // ✅ 支持多语言描述
+      const descEn = (row['描述 (Description)'] || row['Description'] || row['Description (EN)'] || '').toString();
+      const descZh = (row['描述 (中文) (Description ZH)'] || row['描述 (中文)'] || row['Description (ZH)'] || '').toString();
+      const descObj = { en: descEn, zh: descZh };
 
       // 2. 🔥 智能组装: 规格参数
       const specifications: Record<string, string> = {};
@@ -108,7 +129,7 @@ export async function POST(request: Request) {
       // 4. 🔥 智能生成: SKU
       let skuCode = (row['自定义SKU (选填)'] || row['SKU Code'] || '').toString().trim();
       if (!skuCode) {
-        skuCode = generateAutoSKU(brandName, title, flavor, strength);
+        skuCode = generateAutoSKU(brandName, title, flavorEn, strength);
       }
 
       // --- 数据库操作 ---
@@ -123,30 +144,37 @@ export async function POST(request: Request) {
 
       // B. 商品 (SPU)
       const productSlugCandidate = generateSlug(title);
+      
+      // 查找现有商品 (仅匹配英文标题)
       let product = await prisma.product.findFirst({
         where: { 
-            title: { equals: title, mode: 'insensitive' },
+            title: { path: ['en'], equals: titleObj.en || title },
             brandId: brand.id 
         }
       });
 
       // ✅ 从 Excel 中读取分类（如果有 Category 列）
-      const category = (row['Category'] || row['分类'] || '').toString().trim() || null;
+      const category = (row['分类 (Category)'] || row['Category'] || row['分类'] || '').toString().trim() || null;
 
       if (!product) {
         product = await prisma.product.create({
           data: {
-            title,
+            title: titleObj, // ✅ 使用 JSON
             slug: productSlugCandidate,
             basePrice: price,
-            description,
+            description: descObj, // ✅ 使用 JSON
             origin,
             category, // ✅ 新增：分类字段
             coverImageUrl,
             tieredPricingRules,
             specifications,
             brandId: brand.id,
-            status: 'active'
+            status: 'active',
+            // 默认 SKU 信息 (如果是单品)
+            skuCode,
+            flavor: flavorObj,
+            nicotineStrength: strength,
+            stockQuantity: stock
           }
         });
       } else {
@@ -174,7 +202,7 @@ export async function POST(request: Request) {
             stockQuantity: stock, 
             basePrice: price, 
             nicotineStrength: strength,
-            flavor: flavor
+            flavor: flavorObj
           }
         });
       } else {
@@ -185,14 +213,14 @@ export async function POST(request: Request) {
         if (product && product.skuCode !== skuCode) {
              // 这是一个新的变体，需要创建新的 Product 记录
              // 为了避免 Slug 冲突，我们需要重新生成 Slug
-             const newSlug = generateSlug(`${title}-${flavor}-${strength}`);
+             const newSlug = generateSlug(`${title}-${flavorEn}-${strength}`);
              
              await prisma.product.create({
                 data: {
-                    title,
+                    title: titleObj, // ✅ JSON
                     slug: newSlug,
                     basePrice: price,
-                    description,
+                    description: descObj, // ✅ JSON
                     origin,
                     category,
                     coverImageUrl,
@@ -202,7 +230,7 @@ export async function POST(request: Request) {
                     status: 'active',
                     // SKU 字段
                     skuCode,
-                    flavor,
+                    flavor: flavorObj, // ✅ JSON
                     nicotineStrength: strength,
                     stockQuantity: stock
                 }
@@ -214,7 +242,7 @@ export async function POST(request: Request) {
                 where: { id: product.id },
                 data: {
                     skuCode,
-                    flavor,
+                    flavor: flavorObj,
                     nicotineStrength: strength,
                     stockQuantity: stock
                 }

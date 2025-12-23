@@ -8,11 +8,14 @@ export async function GET() {
     const headers = [
       '品牌 (Brand)', 
       '商品名称 (Product Title)', 
+      '商品名称 (中文) (Product Title ZH)', // ✅ 新增
       '口味 (Flavor)', 
+      '口味 (中文) (Flavor ZH)', // ✅ 新增
       '尼古丁浓度 (Strength)', 
       '库存 (Stock)',
       '基础零售价 (Price)', 
       '产地 (Origin)', 
+      '分类 (Category)', // ✅ 新增
       '封面图URL (Cover Image)', 
       
       // --- 常用规格拆分 (后台自动组装) ---
@@ -26,6 +29,7 @@ export async function GET() {
       '批发:数量3 (Qty 3)', '批发:单价3 (Price 3)',
 
       '描述 (Description)',
+      '描述 (中文) (Description ZH)', // ✅ 新增
       '自定义SKU (选填)' // 放在最后，不填则自动生成
     ];
 
@@ -33,11 +37,14 @@ export async function GET() {
       {
         '品牌 (Brand)': 'ELFBAR',
         '商品名称 (Product Title)': 'BC5000',
+        '商品名称 (中文) (Product Title ZH)': 'BC5000 电子烟',
         '口味 (Flavor)': 'Watermelon Ice',
+        '口味 (中文) (Flavor ZH)': '西瓜冰',
         '尼古丁浓度 (Strength)': '5%',
         '库存 (Stock)': 500,
         '基础零售价 (Price)': 18.99,
         '产地 (Origin)': 'China',
+        '分类 (Category)': 'Disposable',
         '封面图URL (Cover Image)': 'https://example.com/img.jpg',
         
         // 规格示例
@@ -50,7 +57,8 @@ export async function GET() {
         '批发:数量2 (Qty 2)': 50, '批发:单价2 (Price 2)': 13.50,
         '批发:数量3 (Qty 3)': 100, '批发:单价3 (Price 3)': 12.00,
 
-        '描述 (Description)': '热销一次性电子烟',
+        '描述 (Description)': 'Best selling disposable vape.',
+        '描述 (中文) (Description ZH)': '热销一次性电子烟。',
         '自定义SKU (选填)': '' // 留空演示自动生成
       }
     ];
@@ -62,11 +70,14 @@ export async function GET() {
     worksheet['!cols'] = [
       { wch: 15 }, // Brand
       { wch: 25 }, // Title
+      { wch: 25 }, // Title ZH
       { wch: 20 }, // Flavor
+      { wch: 20 }, // Flavor ZH
       { wch: 10 }, // Strength
       { wch: 10 }, // Stock
       { wch: 12 }, // Price
       { wch: 10 }, // Origin
+      { wch: 15 }, // Category
       { wch: 25 }, // Image
       
       { wch: 15 }, // Puffs
@@ -78,6 +89,7 @@ export async function GET() {
       { wch: 8 }, { wch: 8 }, // Tier 3
       
       { wch: 30 }, // Desc
+      { wch: 30 }, // Desc ZH
       { wch: 20 }, // SKU
     ];
 

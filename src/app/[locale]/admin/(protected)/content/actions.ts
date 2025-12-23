@@ -52,10 +52,10 @@ export async function createFaq(data: { question: string; answer: string; catego
 }
 
 // 更新 FAQ
-export async function updateFaq(id: string, data: { question: string; answer: string; category: string }) {
+export async function updateFaq(id: string | number, data: { question: string; answer: string; category: string }) {
   try {
     await prisma.faq.update({
-      where: { id },
+      where: { id: Number(id) },
       data,
     });
     revalidatePath("/admin/content");
@@ -66,10 +66,10 @@ export async function updateFaq(id: string, data: { question: string; answer: st
 }
 
 // 删除 FAQ
-export async function deleteFaq(id: string) {
+export async function deleteFaq(id: string | number) {
   try {
     await prisma.faq.delete({
-      where: { id },
+      where: { id: Number(id) },
     });
     revalidatePath("/admin/content");
     return { success: true, message: "FAQ deleted" };

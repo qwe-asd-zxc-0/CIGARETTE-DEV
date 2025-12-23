@@ -4,23 +4,27 @@ import { Globe, Sparkles, MapPin, Package, Search } from "lucide-react";
 import SearchInput from "@/components/SearchInput";
 import Pagination from "@/components/Pagination";
 import { getTranslations } from 'next-intl/server';
+import { getTrans } from "@/lib/i18n-utils";
 
 export const dynamic = 'force-dynamic';
 
 const PAGE_SIZE = 20;
 
 export default async function ProductPage({
+  params,
   searchParams,
 }: {
+  params: Promise<{ locale: string }>;
   searchParams: Promise<{ origin?: string; q?: string; page?: string; category?: string; inStock?: string }>;
 }) {
-  const params = await searchParams;
-  const origin = params?.origin;
-  const query = params?.q || "";
-  const category = params?.category;
-  const inStock = params?.inStock;
-  const currentPage = Number(params?.page) || 1;
-  const t = await getTranslations('ProductPage');
+  const { locale } = await params;
+  const searchParamsValue = await searchParams;
+  const origin = searchParamsValue?.origin;
+  const query = searchParamsValue?.q || "";
+  const category = searchParamsValue?.category;
+  const inStockParam = searchParamsValue?.inStock; // 保持原始字符串，用于判断是否未定义
+  const currentPage = Number(searchParamsValue?.page) || 1;
+  const t = await getTranslations({ locale, namespace: 'ProductPage' });
 
   // 1. 构造查询条件
   const where: any = { 
@@ -31,15 +35,19 @@ export default async function ProductPage({
     where.origin = origin;
   }
 
-  // ✅ 分类筛选：使用 category 字段进行精确匹配
+  // ✅ 修复：针对 JSON 字段的精确匹配
   if (category) {
-    where.category = category;
+    where.category = {
+      path: ['en'],     // 告诉 Prisma 去 JSON 的 "en" 键里找
+      equals: category  // 匹配的值
+    };
   }
 
   if (query) {
-    const searchConditions = [
-      { title: { contains: query, mode: 'insensitive' } },
-      { description: { contains: query, mode: 'insensitive' } },
+    const searchConditions: any[] = [
+      // { title: { contains: query, mode: 'insensitive' } }, // ❌ JSON 字段不支持直接 contains
+      // 暂时仅支持英文标题搜索，或者回退到仅搜索产地和品牌
+      { title: { path: ['en'], string_contains: query } }, 
       { origin: { contains: query, mode: 'insensitive' } },
       { brand: { name: { contains: query, mode: 'insensitive' } } }
     ];
@@ -75,8 +83,8 @@ export default async function ProductPage({
   ]);
 
   // 3. 库存过滤逻辑（在内存中执行）
-  if (inStock !== undefined) {
-    const hasStock = inStock === 'true';
+  if (inStockParam !== undefined) {
+    const hasStock = inStockParam === 'true';
     products = products.filter((product) => {
       const totalStock = product.stockQuantity || 0;
       return hasStock ? totalStock > 0 : totalStock <= 0;
@@ -138,7 +146,7 @@ export default async function ProductPage({
                 o.origin && (
                   <Link
                     key={o.origin}
-                    href={`/product?origin=${o.origin}${query ? `&q=${query}` : ''}${inStock ? `&inStock=${inStock}` : ''}`}
+                    href={`/product?origin=${o.origin}${query ? `&q=${query}` : ''}${inStockParam ? `&inStock=${inStockParam}` : ''}`}
                     className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all border flex items-center gap-2 ${
                       origin === o.origin
                         ? "bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.2)] scale-105"
@@ -159,7 +167,7 @@ export default async function ProductPage({
                 <Link 
                   href={`/product${origin ? `?origin=${origin}` : ''}${query ? `${origin ? '&' : '?'}q=${query}` : ''}`}
                   className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all border flex items-center gap-2 ${
-                    !inStock 
+                    !inStockParam 
                       ? "bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.2)] scale-105" 
                       : "bg-zinc-900/50 text-zinc-400 border-white/10 hover:bg-white/10 hover:text-white hover:border-white/30 backdrop-blur-md"
                   }`}
@@ -171,19 +179,19 @@ export default async function ProductPage({
                 <Link 
                   href={`/product?inStock=true${origin ? `&origin=${origin}` : ''}${query ? `&q=${query}` : ''}`}
                   className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all border flex items-center gap-2 ${
-                    inStock === 'true'
+                    inStockParam === 'true'
                       ? "bg-green-600/90 text-white border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.3)] scale-105"
                       : "bg-zinc-900/50 text-zinc-400 border-white/10 hover:bg-white/10 hover:text-white hover:border-white/30 backdrop-blur-md"
                   }`}
                 >
-                  <div className={`w-2 h-2 rounded-full ${inStock === 'true' ? "bg-white animate-pulse" : "bg-green-500"}`} />
+                  <div className={`w-2 h-2 rounded-full ${inStockParam === 'true' ? "bg-white animate-pulse" : "bg-green-500"}`} />
                   {t('inStock')}
                 </Link>
 
                 <Link 
                   href={`/product?inStock=false${origin ? `&origin=${origin}` : ''}${query ? `&q=${query}` : ''}`}
                   className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all border flex items-center gap-2 ${
-                    inStock === 'false'
+                    inStockParam === 'false'
                       ? "bg-red-600/90 text-white border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.3)] scale-105"
                       : "bg-zinc-900/50 text-zinc-400 border-white/10 hover:bg-white/10 hover:text-white hover:border-white/30 backdrop-blur-md"
                   }`}
@@ -263,7 +271,7 @@ export default async function ProductPage({
                               {displayImage ? (
                                   <img 
                                     src={displayImage} 
-                                    alt={product.title} 
+                                    alt={getTrans(product.title, locale)} 
                                     className="w-full h-full object-cover group-hover:scale-110 group-hover:brightness-110 transition-all duration-700 ease-in-out" 
                                   />
                               ) : (
@@ -300,12 +308,12 @@ export default async function ProductPage({
 
                           <div className="p-4 border-t border-white/5 bg-white/[0.02]">
                               <h3 className="text-zinc-100 font-bold text-sm truncate mb-1 group-hover:text-red-400 transition-colors">
-                                  {product.title}
+                                  {getTrans(product.title, locale)}
                               </h3>
                               <div className="flex items-center justify-between">
                                 <p className="text-zinc-500 text-[10px] truncate max-w-[70%] tracking-wide uppercase flex items-center gap-1">
                                     {product.brand ? (
-                                      <span className="text-zinc-400 font-semibold">{product.brand.name}</span>
+                                      <span className="text-zinc-400 font-semibold">{getTrans(product.brand.name, locale)}</span>
                                     ) : (
                                       <span>{product.origin || t('internationalVersion')}</span>
                                     )}
@@ -325,7 +333,7 @@ export default async function ProductPage({
                 <Pagination 
                   currentPage={currentPage} 
                   totalPages={totalPages} 
-                  searchParams={params}
+                  searchParams={searchParamsValue}
                 />
               </>
             )}

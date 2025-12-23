@@ -91,7 +91,7 @@ export async function cancelOrder(orderId: string, reason?: string) {
       // 注意：Prisma Decimal 需要转为 Number 进行比较
       const orderTotal = Number(order.totalAmount.toString());
       
-      if (order.status !== 'pending_payment' && orderTotal > 0) {
+      if (order.status !== 'pending_payment' && orderTotal > 0 && order.userId) {
         // 退还余额
         await tx.profile.update({
           where: { id: order.userId },

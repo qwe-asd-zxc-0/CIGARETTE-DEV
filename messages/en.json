@@ -28,8 +28,11 @@
     "home": "Home",
     "products": "All Products",
     "cart": "Cart",
+    "traditional": "Traditional Tobacco",
     "disposable": "Disposable Vapes",
-    "eliquid": "E-Liquids"
+    "eliquid": "E-Liquids",
+    "accessories": "Accessories",
+    "menu": "Menu"
   },
   "Common": {
     "login": "Login",
@@ -136,6 +139,9 @@
     "errorPassword": "At least 8 chars, must include letters and numbers",
     "errorConfirm": "Passwords do not match",
     "errorCode": "Invalid verification code",
+    "errorRateLimit": "Registration limit exceeded, please try again later.",
+    "errorEmailExists": "Email already registered, please login directly.",
+    "errorGeneral": "Registration failed, please try again.",
     "success": "Account created successfully!",
     "backToHome": "Back to Home",
     "emailHint": "Email is your unique credential and key to password recovery.",
@@ -210,9 +216,6 @@
   },
   "FloatingCart": {
     "viewCart": "View Cart"
-  },
-  "Login": {
-    "checkout": "Checkout"
   },
   "Checkout": {
     "cartEmptyAlert": "Cart is empty",
@@ -375,5 +378,15 @@
     "errorAddressAddFailed": "Failed to add address, please try again",
     "errorAddressUpdated": "Address updated",
     "errorAddressUpdateFailed": "Update failed, please try again"
+  },
+  "NotFound": {
+    "title": "Page Not Found",
+    "description": "Sorry, the page you are looking for has vanished into smoke.",
+    "backHome": "Back to Home",
+    "backPrevious": "Back to Previous Page"
+  },
+  "Error": {
+    "title": "Something went wrong",
+    "description": "The system encountered an unexpected error. We have logged this issue and our technical team is looking into it."
   }
 }

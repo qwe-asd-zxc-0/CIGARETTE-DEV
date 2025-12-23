@@ -4,10 +4,12 @@ import { useState } from "react";
 import Image from "next/image";
 import { Clock, Truck, ChevronRight, ChevronUp, Package, MapPin, Edit2, Check, X, History } from "lucide-react";
 import { updateOrderAddress, ShippingAddress } from "@/app/[locale]/profile/orders/actions"; // 引入 Server Action
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { getTrans } from '@/lib/i18n-utils';
 
 export default function OrderCard({ order }: { order: any }) {
   const t = useTranslations('Profile');
+  const locale = useLocale();
   const [isExpanded, setIsExpanded] = useState(false);
   
   // === 编辑地址相关状态 ===
@@ -102,8 +104,8 @@ export default function OrderCard({ order }: { order: any }) {
                   )}
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-bold text-zinc-200 line-clamp-1">{item.productTitleSnapshot}</p>
-                  <p className="text-[10px] text-zinc-500">{item.flavorSnapshot}</p>
+                  <p className="text-sm font-bold text-zinc-200 line-clamp-1">{getTrans(item.productTitleSnapshot, locale)}</p>
+                  <p className="text-[10px] text-zinc-500">{getTrans(item.flavorSnapshot, locale)}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-zinc-300 font-mono">x{item.quantity}</p>

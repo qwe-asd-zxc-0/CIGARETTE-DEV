@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { AlertTriangle, RefreshCcw, Home } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 export default function Error({
   error,
@@ -12,6 +13,8 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations('Error');
+
   useEffect(() => {
     // 这里可以将错误日志发送到你的日志服务 (如 Sentry)
     console.error('Application Error:', error);
@@ -40,9 +43,9 @@ export default function Error({
           <AlertTriangle className="w-10 h-10 text-red-500" />
         </motion.div>
         
-        <h2 className="text-2xl font-bold text-white mb-3">出了一点小问题</h2>
+        <h2 className="text-2xl font-bold text-white mb-3">{t('title')}</h2>
         <p className="text-zinc-400 mb-8 text-sm leading-relaxed">
-          系统遇到了一些意外情况。我们已经自动记录了这个问题，技术团队正在排查。
+          {t('description')}
           <br />
           <span className="inline-block mt-3 px-3 py-1 bg-black/30 rounded text-xs font-mono text-red-400/80 border border-red-900/20">
             Error: {error.message || "Unknown error occurred"}
