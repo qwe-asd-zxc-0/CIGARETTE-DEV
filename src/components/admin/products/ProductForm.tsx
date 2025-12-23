@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import ImageUploader from "@/components/ImageUploader";
 import ExcelUploader from "@/components/ExcelUploader";
-import { upsertProduct } from "@/app/admin/(protected)/products/actions";
+import { upsertProduct } from "@/app/[locale]/admin/(protected)/products/actions";
 import { Loader2, Save, ArrowLeft, Plus, Trash2, GripVertical } from "lucide-react";
 import Link from "next/link";
 

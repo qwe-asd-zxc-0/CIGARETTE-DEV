@@ -1,0 +1,23 @@
+{
+  "HomePage": {
+    "title": "Selamat Datang ke Kedai Rokok Elektronik",
+    "subtitle": "Tembakau & Logistik Premium",
+    "description": "Alami pilihan rokok elektronik dan aksesori premium terbaik, dihantar dengan pantas dan tepat ke seluruh dunia.",
+    "shopNow": "Beli Sekarang",
+    "exploreDisposable": "Terokai Pakai Buang"
+  },
+  "Navigation": {
+    "home": "Laman Utama",
+    "products": "Semua Produk",
+    "cart": "Troli",
+    "disposable": "Vape Pakai Buang",
+    "eliquid": "Cecair E-Rokok"
+  },
+  "Common": {
+    "login": "Log Masuk",
+    "logout": "Log Keluar",
+    "signup": "Daftar",
+    "profile": "Profil",
+    "orders": "Pesanan Saya"
+  }
+}

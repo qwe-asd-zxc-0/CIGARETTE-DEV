@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { updateProductStatus } from "@/app/admin/(protected)/products/actions";
+import { updateProductStatus } from "@/app/[locale]/admin/(protected)/products/actions";
 import { Loader2 } from "lucide-react";
 
 export default function ProductStatusBadge({ productId, status }: { productId: string, status: string }) {

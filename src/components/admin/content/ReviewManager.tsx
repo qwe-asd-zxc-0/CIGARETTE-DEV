@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Star, CheckCircle, XCircle, Trash2, Filter } from "lucide-react";
-import { toggleReviewStatus, deleteReview } from "@/app/admin/(protected)/content/actions";
+import { toggleReviewStatus, deleteReview } from "@/app/[locale]/admin/(protected)/content/actions";
 
 export default function ReviewManager({ reviews }: { reviews: any[] }) {
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved'>('all');

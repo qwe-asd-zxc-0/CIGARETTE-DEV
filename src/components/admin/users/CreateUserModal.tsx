@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { X, UserPlus, Loader2 } from "lucide-react";
-import { createUser } from "@/app/admin/(protected)/users/actions";
+import { createUser } from "@/app/[locale]/admin/(protected)/users/actions";
 
 export default function CreateUserModal({ onClose }: { onClose: () => void }) {
   const [loading, setLoading] = useState(false);

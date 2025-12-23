@@ -1,16 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
+import { Link, useRouter } from "@/i18n/routing"; // ✅ 使用国际化路由
 import { motion } from "framer-motion";
 import { 
   Mail, Lock, User, ArrowRight, Loader2, Sparkles, 
   Eye, EyeOff, ShieldCheck, KeyRound, ArrowLeft // ✅ 新增 ArrowLeft 图标
 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
+import { useTranslations } from 'next-intl'; // ✅ 引入翻译钩子
 
 export default function SignUpPage() {
+  const t = useTranslations('SignUp'); // ✅ 获取 SignUp 翻译
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   
@@ -57,13 +58,13 @@ export default function SignUpPage() {
   useEffect(() => {
     const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$/;
     if (formData.password && !passwordRegex.test(formData.password)) {
-      setErrors(prev => ({ ...prev, password: "至少8位字符，需包含字母和数字" }));
+      setErrors(prev => ({ ...prev, password: t('errorPassword') }));
     } else {
       setErrors(prev => ({ ...prev, password: "" }));
     }
 
     if (formData.confirmPassword && formData.password !== formData.confirmPassword) {
-      setErrors(prev => ({ ...prev, confirm: "两次输入的密码不一致" }));
+      setErrors(prev => ({ ...prev, confirm: t('errorConfirm') }));
     } else {
       setErrors(prev => ({ ...prev, confirm: "" }));
     }
@@ -75,7 +76,7 @@ export default function SignUpPage() {
     
     if (errors.password || errors.confirm) return;
     if (formData.code !== generatedCode) { 
-       setErrors(prev => ({...prev, code: "验证码错误，请重试"}));
+       setErrors(prev => ({...prev, code: t('errorCode')}));
        generateCode(); // 输错刷新验证码
        setFormData(prev => ({...prev, code: ""}));
        return;
@@ -142,7 +143,7 @@ export default function SignUpPage() {
             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
           </div>
           <span className="text-sm font-bold tracking-widest opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 hidden sm:block">
-            返回商城
+            {t('backToHome')}
           </span>
         </Link>
       </div>
@@ -167,14 +168,14 @@ export default function SignUpPage() {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-6">
               <Sparkles className="w-4 h-4 text-orange-500" />
               <span className="text-xs font-bold text-zinc-300 tracking-widest uppercase">
-                加入 Global Tobacco
+                {t('joinCommunity')}
               </span>
             </div>
             <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">
-              创建账户
+              {t('title')}
             </h1>
             <p className="text-zinc-400 text-sm">
-              注册以解锁独家优惠和订单追踪
+              {t('joinDesc')}
             </p>
           </div>
 
@@ -182,7 +183,7 @@ export default function SignUpPage() {
             
             {/* Full Name */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider ml-1">全名</label>
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider ml-1">{t('nameLabel')}</label>
               <div className="relative group">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-red-500 transition-colors">
                   <User className="w-5 h-5" />
@@ -190,7 +191,7 @@ export default function SignUpPage() {
                 <input
                   type="text"
                   required
-                  placeholder="请输入您的全名"
+                  placeholder="John Doe"
                   className="w-full bg-black/40 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-white placeholder:text-zinc-600 focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 transition-all"
                   value={formData.fullName}
                   onChange={(e) => setFormData({...formData, fullName: e.target.value})}
@@ -200,7 +201,7 @@ export default function SignUpPage() {
 
             {/* Email */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider ml-1">电子邮箱</label>
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider ml-1">{t('emailLabel')}</label>
               <div className="relative group">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-red-500 transition-colors">
                   <Mail className="w-5 h-5" />
@@ -215,13 +216,13 @@ export default function SignUpPage() {
                 />
               </div>
               <p className="text-xs text-zinc-500 ml-1">
-                邮箱是你在本网站的唯一凭证， 找回密码的关键。
+                {t('emailHint')}
               </p>
             </div>
 
             {/* Verification Code */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider ml-1">验证码</label>
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider ml-1">{t('codeLabel')}</label>
               <div className="flex gap-3">
                 <div className="relative group flex-1">
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-red-500 transition-colors">
@@ -230,7 +231,7 @@ export default function SignUpPage() {
                   <input
                     type="text"
                     required
-                    placeholder="请输入验证码"
+                    placeholder="0000"
                     maxLength={4}
                     className={`w-full bg-black/40 border ${errors.code ? 'border-red-500' : 'border-white/10'} rounded-xl py-3.5 pl-12 pr-4 text-white placeholder:text-zinc-600 focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 transition-all`}
                     value={formData.code}
@@ -243,7 +244,7 @@ export default function SignUpPage() {
                 <div 
                   onClick={generateCode}
                   className="px-4 min-w-[120px] bg-white/5 border border-white/10 rounded-xl flex items-center justify-center cursor-pointer hover:bg-white/10 transition-all select-none"
-                  title="点击刷新验证码"
+                  title={t('clickToRefresh')}
                 >
                   <span className="text-2xl font-mono font-bold text-white tracking-widest italic" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>
                     {generatedCode}
@@ -255,7 +256,7 @@ export default function SignUpPage() {
 
             {/* Password */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider ml-1">密码</label>
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider ml-1">{t('passwordLabel')}</label>
               <div className="relative group">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-red-500 transition-colors">
                   <Lock className="w-5 h-5" />
@@ -263,7 +264,7 @@ export default function SignUpPage() {
                 <input
                   type={showPassword ? "text" : "password"}
                   required
-                  placeholder="至少8位字符 (包含字母和数字)"
+                  placeholder="••••••••"
                   className={`w-full bg-black/40 border ${errors.password ? 'border-red-500' : 'border-white/10'} rounded-xl py-3.5 pl-12 pr-12 text-white placeholder:text-zinc-600 focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 transition-all`}
                   value={formData.password}
                   onChange={(e) => setFormData({...formData, password: e.target.value})}
@@ -281,7 +282,7 @@ export default function SignUpPage() {
 
             {/* Confirm Password */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider ml-1">确认密码</label>
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider ml-1">{t('confirmPasswordLabel')}</label>
               <div className="relative group">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-red-500 transition-colors">
                   <KeyRound className="w-5 h-5" />
@@ -289,7 +290,7 @@ export default function SignUpPage() {
                 <input
                   type={showConfirmPassword ? "text" : "password"}
                   required
-                  placeholder="请再次输入密码"
+                  placeholder="••••••••"
                   className={`w-full bg-black/40 border ${errors.confirm ? 'border-red-500' : 'border-white/10'} rounded-xl py-3.5 pl-12 pr-12 text-white placeholder:text-zinc-600 focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 transition-all`}
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
@@ -305,40 +306,31 @@ export default function SignUpPage() {
               {errors.confirm && <p className="text-xs text-red-500 ml-1 mt-1">{errors.confirm}</p>}
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
-              disabled={isLoading || !!errors.password || !!errors.confirm}
-              className="w-full relative group overflow-hidden bg-gradient-to-r from-red-700 to-red-600 text-white font-bold rounded-xl py-4 mt-6 transition-all hover:shadow-[0_0_40px_-10px_rgba(220,38,38,0.5)] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isLoading}
+              className="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-zinc-200 transition-all flex items-center justify-center gap-2 mt-8 disabled:opacity-50 disabled:cursor-not-allowed group"
             >
-              <div className="relative z-10 flex items-center justify-center gap-2">
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>正在创建账户...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>立即注册</span>
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </>
-                )}
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  {t('submitting')}
+                </>
+              ) : (
+                <>
+                  {t('submit')}
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
             </button>
           </form>
 
-          <div className="mt-8 text-center">
-            <p className="text-zinc-500 text-sm">
-              已有账户？{" "}
-              <Link 
-                href="/sign-in" 
-                className="text-white font-bold hover:text-red-500 transition-colors underline decoration-zinc-700 underline-offset-4 hover:decoration-red-500"
-              >
-                立即登录
-              </Link>
-            </p>
-          </div>
+          <p className="text-center text-sm text-zinc-500 mt-6">
+            {t('hasAccount')}{" "}
+            <Link href="/login" className="text-white font-bold hover:underline underline-offset-4">
+              {t('login')}
+            </Link>
+          </p>
         </div>
       </motion.div>
     </div>

@@ -1,4 +1,7 @@
+import createNextIntlPlugin from 'next-intl/plugin';
 import type { NextConfig } from "next";
+
+const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 const nextConfig: NextConfig = {
   // 1. React Compiler 配置 (Next.js 16+ 已稳定，直接写在顶层)
@@ -17,4 +20,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

@@ -6,10 +6,20 @@ import BrandStory from '@/components/BrandStory';
 import Link from 'next/link';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import ActivityBanner from "@/components/ActivityBanner"; 
+import { setRequestLocale, getTranslations } from 'next-intl/server';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Home() {
+export default async function Home({
+  params
+}: {
+  params: Promise<{locale: string}>;
+}) {
+  const { locale } = await params;
+  // 启用静态渲染
+  setRequestLocale(locale);
+
+  const t = await getTranslations('HomePage'); // ✅ 获取 HomePage 命名空间的翻译
   const products = await prisma.product.findMany({
     where: { status: 'active' },
     include: { 
@@ -47,7 +57,7 @@ export default async function Home() {
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md mb-8 animate-fade-in-up shadow-2xl shadow-black/50">
             <Sparkles className="w-3.5 h-3.5 text-orange-500" />
             <span className="text-[10px] md:text-xs font-bold text-zinc-300 tracking-[0.2em] uppercase">
-              Premium Tobacco & Logistics
+              {t('subtitle')}
             </span>
           </div>
 
@@ -59,7 +69,7 @@ export default async function Home() {
           </h1>
           
           <p className="text-lg md:text-2xl text-zinc-300 max-w-2xl mx-auto font-light mb-10 leading-relaxed text-center opacity-90">
-            Connecting the world's finest flavors.
+            {t('description')}
             <span className="block text-zinc-500 text-sm mt-3 font-normal">
               全球正品购货 · 国际极速发货 · 100% 正品保障
             </span>
@@ -71,7 +81,7 @@ export default async function Home() {
               href="/product" 
               className="relative z-30 group inline-flex items-center justify-center px-8 py-4 text-sm font-bold text-white transition-all duration-300 bg-red-700/90 backdrop-blur-sm rounded-full hover:bg-red-600 hover:shadow-[0_0_30px_-5px_rgba(220,38,38,0.6)] hover:-translate-y-1 w-full sm:w-auto"
             >
-              <span className="tracking-widest">EXPLORE NOW</span>
+              <span className="tracking-widest">{t('shopNow')}</span>
               <ArrowRight className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
             

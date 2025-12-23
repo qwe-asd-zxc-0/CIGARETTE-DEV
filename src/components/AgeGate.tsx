@@ -1,8 +1,10 @@
 'use client'; // 标记为客户端组件
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 
 export default function AgeGate() {
+  const t = useTranslations('AgeGate');
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
@@ -27,18 +29,18 @@ export default function AgeGate() {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-95 backdrop-blur-sm">
       <div className="border border-red-900/50 bg-zinc-900 p-8 rounded-lg max-w-md text-center shadow-2xl">
-        <h2 className="text-2xl font-bold text-white mb-4">年龄验证 (Age Verification)</h2>
+        <h2 className="text-2xl font-bold text-white mb-4">{t('title')}</h2>
         <p className="text-gray-400 mb-8">
-          本网站产品含有尼古丁。根据法律规定，您必须年满 21 岁才能访问本网站。
+          {t('description')}
           <br/>
-          <span className="text-xs opacity-70 mt-2 block">Products contain nicotine. You must be 21+ to enter.</span>
+          <span className="text-xs opacity-70 mt-2 block">{t('subDescription')}</span>
         </p>
         <div className="flex flex-col gap-4">
           <button onClick={handleVerify} className="w-full bg-red-700 hover:bg-red-600 text-white font-bold py-3 rounded transition">
-            我已年满 21 岁 / 进入
+            {t('yesButton')}
           </button>
           <button onClick={handleReject} className="w-full border border-zinc-600 text-zinc-400 py-3 rounded hover:bg-zinc-800 transition">
-            我未满 21 岁 / 离开
+            {t('noButton')}
           </button>
         </div>
       </div>

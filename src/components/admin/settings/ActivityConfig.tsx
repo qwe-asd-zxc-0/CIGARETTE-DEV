@@ -5,7 +5,7 @@ import {
   Save, Image as ImageIcon, Link as LinkIcon, Type, Eye, EyeOff, 
   Loader2, UploadCloud, History, Trash2, ArrowUpCircle, X 
 } from "lucide-react";
-import { saveSystemSetting, saveCampaignToHistory, deleteCampaign } from "@/app/admin/(protected)/settings/actions";
+import { saveSystemSetting, saveCampaignToHistory, deleteCampaign } from "@/app/[locale]/admin/(protected)/settings/actions";
 import ImageUploader from "@/components/ImageUploader";
 import Image from "next/image";
 

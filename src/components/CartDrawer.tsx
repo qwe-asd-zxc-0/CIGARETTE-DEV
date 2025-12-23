@@ -2,12 +2,14 @@
 
 import { useCartDrawer } from "@/context/CartContext";
 import { X, Minus, Plus, Trash2, User, LogIn, Loader2 } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing"; // ✅ 使用国际化 Link
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
+import { useTranslations } from 'next-intl'; // ✅ 引入翻译钩子
 
 export default function CartDrawer() {
+  const t = useTranslations('Cart'); // ✅ 获取 Cart 翻译
   const { isOpen, closeCart, cartItems, removeFromCart, updateQuantity } = useCartDrawer();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -51,7 +53,7 @@ export default function CartDrawer() {
         <div className="flex flex-col h-full">
           {/* 1. 头部 */}
           <div className="flex items-center justify-between p-6 border-b border-zinc-800">
-            <h2 className="text-xl font-bold text-white">我的购物车 ({isLoggedIn ? cartItems.length : 0})</h2>
+            <h2 className="text-xl font-bold text-white">{t('title')} ({isLoggedIn ? cartItems.length : 0})</h2>
             <button onClick={closeCart} className="p-2 text-zinc-400 hover:text-white transition">
               <X className="w-6 h-6" />
             </button>
@@ -69,9 +71,9 @@ export default function CartDrawer() {
                   <User className="w-10 h-10 text-zinc-400" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white mb-2">请先登录</h3>
+                  <h3 className="text-xl font-bold text-white mb-2">{t('loginTitle')}</h3>
                   <p className="text-zinc-400 text-sm max-w-[220px] mx-auto leading-relaxed">
-                    登录后即可查看购物车商品并进行结算
+                    {t('loginDesc')}
                   </p>
                 </div>
                 <div className="flex flex-col gap-3 w-full max-w-[240px]">
@@ -81,22 +83,22 @@ export default function CartDrawer() {
                     className="w-full bg-white text-black font-bold py-3.5 rounded-xl hover:bg-zinc-200 transition flex items-center justify-center gap-2 shadow-lg shadow-white/5"
                   >
                     <LogIn className="w-4 h-4" />
-                    立即登录
+                    {t('loginBtn')}
                   </Link>
                   <Link 
                     href="/sign-up" 
                     onClick={closeCart}
                     className="w-full bg-zinc-800 text-white font-bold py-3.5 rounded-xl hover:bg-zinc-700 transition border border-zinc-700"
                   >
-                    注册账户
+                    {t('registerBtn')}
                   </Link>
                 </div>
               </div>
             ) : cartItems.length === 0 ? (
               <div className="text-center py-20">
-                <p className="text-zinc-500 mb-4">您的购物车是空的</p>
+                <p className="text-zinc-500 mb-4">{t('empty')}</p>
                 <Link href="/product" onClick={closeCart} className="text-red-500 hover:text-red-400 font-medium">
-                  去选购商品 &gt;
+                  {t('shopNow')} &gt;
                 </Link>
               </div>
             ) : (
@@ -159,17 +161,17 @@ export default function CartDrawer() {
           {isLoggedIn && cartItems.length > 0 && (
             <div className="p-6 border-t border-zinc-800 bg-zinc-950">
               <div className="flex justify-between mb-4 text-zinc-300">
-                <span>Subtotal</span>
+                <span>{t('subtotal')}</span>
                 <span className="text-xl font-bold text-white">${subtotal.toFixed(2)}</span>
               </div>
-              <p className="text-xs text-zinc-500 mb-6">Tax included. Shipping calculated at checkout.</p>
+              <p className="text-xs text-zinc-500 mb-6">{t('taxIncluded')}</p>
 
               <Link
                 href="/checkout"
                 onClick={closeCart}
                 className="block w-full bg-red-600 hover:bg-red-700 text-white text-center font-bold py-4 rounded-lg transition-colors shadow-lg shadow-red-900/20"
               >
-                立即结算 (Checkout)
+                {t('checkout')}
               </Link>
             </div>
           )}

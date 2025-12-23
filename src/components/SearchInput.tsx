@@ -4,8 +4,10 @@
 import { Search, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
+import { useTranslations } from 'next-intl';
 
 export default function SearchInput() {
+  const t = useTranslations('Common');
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -47,7 +49,7 @@ export default function SearchInput() {
           value={term}
           onChange={(e) => setTerm(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-          placeholder="Search collections..."
+          placeholder={t('searchPlaceholder')}
           className="w-full bg-transparent border-none px-6 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-0"
         />
         

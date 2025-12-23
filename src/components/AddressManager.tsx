@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ArrowLeft, MapPin, Plus, Star, Trash2, Home, X, Loader2, Check } from "lucide-react";
 import Link from "next/link";
-import { addAddress, deleteAddress, setDefaultAddress } from "@/app/profile/addresses/actions";
+import { addAddress, deleteAddress, setDefaultAddress } from "@/app/[locale]/profile/addresses/actions";
 
 export default function AddressManager({ addresses }: { addresses: any[] }) {
   const [isModalOpen, setIsModalOpen] = useState(false);

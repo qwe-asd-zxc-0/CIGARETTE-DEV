@@ -1,11 +1,14 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname } from "@/i18n/routing"; // ✅ 使用国际化路由
 import Link from "next/link";
 import { Facebook, Instagram, Twitter, Mail, MapPin, Phone } from "lucide-react";
+import { useTranslations } from 'next-intl'; // ✅ 引入翻译钩子
 
 export default function Footer() {
   const pathname = usePathname();
+  const t = useTranslations('Footer'); // ✅ 获取 Footer 翻译
+  const tNav = useTranslations('Navigation'); // ✅ 获取 Navigation 翻译
 
   // 1. 定义不需要显示 Footer 的路径特征
   // - 所有以 /admin 开头的路径
@@ -27,8 +30,8 @@ export default function Footer() {
           <div className="space-y-4">
             <h3 className="text-xl font-bold text-white tracking-tight">Global Tobacco</h3>
             <div className="text-zinc-400 text-sm leading-relaxed space-y-1">
-              <p className="font-medium text-zinc-300">Connecting the world&apos;s finest flavors.</p>
-              <p>全球正品购货 · 国际极速发货 · 100% 正品保障</p>
+              <p className="font-medium text-zinc-300">{t('brandDesc')}</p>
+              <p>{t('brandSlogan')}</p>
             </div>
             <div className="flex gap-4">
               <Link href="#" className="text-zinc-400 hover:text-white transition-colors">
@@ -45,29 +48,29 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-white font-bold mb-6">快速链接</h4>
+            <h4 className="text-white font-bold mb-6">{t('quickLinks')}</h4>
             <ul className="space-y-3 text-sm text-zinc-400">
-              <li><Link href="/" className="hover:text-white transition-colors">首页</Link></li>
-              <li><Link href="/category" className="hover:text-white transition-colors">全部商品</Link></li>
-              <li><Link href="/profile" className="hover:text-white transition-colors">我的账户</Link></li>
-              <li><Link href="/cart" className="hover:text-white transition-colors">购物车</Link></li>
+              <li><Link href="/" className="hover:text-white transition-colors">{tNav('home')}</Link></li>
+              <li><Link href="/product" className="hover:text-white transition-colors">{tNav('products')}</Link></li>
+              <li><Link href="/profile" className="hover:text-white transition-colors">{tNav('cart')}</Link></li>
+              <li><Link href="/cart" className="hover:text-white transition-colors">{tNav('cart')}</Link></li>
             </ul>
           </div>
 
           {/* Legal */}
           <div>
-            <h4 className="text-white font-bold mb-6">法律与支持</h4>
+            <h4 className="text-white font-bold mb-6">{t('legal')}</h4>
             <ul className="space-y-3 text-sm text-zinc-400">
-              <li><Link href="/terms" className="hover:text-white transition-colors">服务条款 (Terms)</Link></li>
-              <li><Link href="/privacy" className="hover:text-white transition-colors">隐私政策 (Privacy)</Link></li>
-              <li><Link href="/refund-policy" className="hover:text-white transition-colors">退款政策 (Refund)</Link></li>
-              <li><Link href="/shipping-policy" className="hover:text-white transition-colors">运输政策 (Shipping)</Link></li>
+              <li><Link href="/terms" className="hover:text-white transition-colors">{t('terms')}</Link></li>
+              <li><Link href="/privacy" className="hover:text-white transition-colors">{t('privacy')}</Link></li>
+              <li><Link href="/refund-policy" className="hover:text-white transition-colors">{t('refund')}</Link></li>
+              <li><Link href="/shipping-policy" className="hover:text-white transition-colors">{t('shipping')}</Link></li>
             </ul>
           </div>
 
           {/* Contact */}
           <div>
-            <h4 className="text-white font-bold mb-6">联系我们</h4>
+            <h4 className="text-white font-bold mb-6">{t('contact')}</h4>
             <ul className="space-y-4 text-sm text-zinc-400">
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-zinc-500 shrink-0" />
@@ -86,8 +89,8 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-zinc-500">
-          <p>&copy; {new Date().getFullYear()} Global Tobacco. 保留所有权利。</p>
-          <p>警告：本产品含有尼古丁。尼古丁是一种成瘾性化学物质。</p>
+          <p>&copy; {new Date().getFullYear()} Global Tobacco. {t('rights')}</p>
+          <p>{t('warning')}</p>
         </div>
       </div>
     </footer>

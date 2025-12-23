@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getOrderConfirmationHtml, getShippingUpdateHtml, getOrderCancellationHtml } from '@/lib/email-templates';
-import { getEmailLogs } from '@/app/admin/(protected)/settings/actions';
+import { getEmailLogs } from '@/app/[locale]/admin/(protected)/settings/actions';
 import { Mail, RefreshCw, Eye, FileCode } from 'lucide-react';
 
 // Mock Data for Preview

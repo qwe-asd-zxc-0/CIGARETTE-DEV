@@ -6,7 +6,7 @@ import { MapPin, Shield, ShieldCheck, ShieldAlert, Key, Loader2, Trash2 } from "
 import { AnimatePresence } from "framer-motion";
 import UserDrawer from "./UserDrawer";
 // ✅ 关键点：只引用，不定义
-import { toggleAgeVerified, toggleAdminStatus, sendPasswordResetEmail, deleteUser } from "@/app/admin/(protected)/users/actions";
+import { toggleAgeVerified, toggleAdminStatus, sendPasswordResetEmail, deleteUser } from "@/app/[locale]/admin/(protected)/users/actions";
 
 export default function UserTable({ users, onUserDeleted }: { users: any[], onUserDeleted?: () => void }) {
   const [selectedUser, setSelectedUser] = useState<any>(null);

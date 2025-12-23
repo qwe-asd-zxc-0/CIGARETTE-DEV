@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Clock, Truck, ChevronRight, ChevronUp, Package, MapPin, Edit2, Check, X, History } from "lucide-react";
-import { updateOrderAddress, ShippingAddress } from "@/app/profile/orders/actions"; // 引入 Server Action
+import { updateOrderAddress, ShippingAddress } from "@/app/[locale]/profile/orders/actions"; // 引入 Server Action
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
   pending_payment: { label: "待支付", color: "text-yellow-500 bg-yellow-500/10" },

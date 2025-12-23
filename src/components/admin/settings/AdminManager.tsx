@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Search, Shield, ShieldOff, UserPlus, Loader2, Trash2 } from "lucide-react";
-import { searchUserByEmail, toggleAdminPermission } from "@/app/admin/(protected)/settings/actions";
+import { searchUserByEmail, toggleAdminPermission } from "@/app/[locale]/admin/(protected)/settings/actions";
 
 export default function AdminManager({ admins }: { admins: any[] }) {
   const [email, setEmail] = useState("");

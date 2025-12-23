@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { X, Save, Trash2, Key, Shield, User, Wallet, Mail, MapPin, ShoppingBag, Star, Package } from "lucide-react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { updateUserProfile, resetUserPassword, deleteUser, sendPasswordResetEmail, getUserDetails } from "@/app/admin/(protected)/users/actions";
+import { updateUserProfile, resetUserPassword, deleteUser, sendPasswordResetEmail, getUserDetails } from "@/app/[locale]/admin/(protected)/users/actions";
 
 interface UserDrawerProps {
   user: any;

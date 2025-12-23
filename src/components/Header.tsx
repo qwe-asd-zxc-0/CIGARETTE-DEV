@@ -1,14 +1,17 @@
 "use client";
 
-import Link from "next/link";
+import { Link, useRouter, usePathname } from "@/i18n/routing"; // ✅ 使用国际化路由组件
 import { useState, useEffect } from "react";
 import { ShoppingCart, User, LogOut, Package, UserCircle, Menu, X } from "lucide-react";
 import { createBrowserClient } from "@supabase/ssr";
-import { useRouter, usePathname } from "next/navigation";
 import { useCartDrawer } from "@/context/CartContext"; // ✅ 引入购物车 Context
 import { getHeaderProfile } from "@/app/actions";
+import LanguageSwitcher from "./LanguageSwitcher"; // ✅ 引入语言切换器
+import { useTranslations } from 'next-intl'; // ✅ 引入翻译钩子
 
 export default function Header() {
+  const t = useTranslations('Navigation'); // ✅ 获取 Navigation 命名空间的翻译
+  const tCommon = useTranslations('Common'); // ✅ 获取 Common 命名空间的翻译
   const [user, setUser] = useState<any>(null);
   const [profileName, setProfileName] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
@@ -73,9 +76,9 @@ export default function Header() {
   );
 
   const navLinks = [
-    { name: "全部商品", href: "/product" },
-    { name: "一次性电子烟", href: "/product?category=Disposable" },
-    { name: "电子烟油", href: "/product?category=E-Liquid" },
+    { name: t('products'), href: "/product" },
+    { name: t('disposable'), href: "/product?category=Disposable" },
+    { name: t('eliquid'), href: "/product?category=E-Liquid" },
   ];
 
   return (
@@ -121,6 +124,11 @@ export default function Header() {
 
           {/* === 4. 右侧功能区 === */}
           <div className="flex items-center gap-4 z-20 ml-auto">
+            {/* 🌍 语言切换器 */}
+            <div className="hidden sm:block">
+              <LanguageSwitcher />
+            </div>
+
             {/* 🛒 购物车按钮 (触发抽屉) */}
             <button 
               onClick={openCart} 
@@ -190,6 +198,11 @@ export default function Header() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
+          {/* 移动端语言切换 */}
+          <div className="mb-4">
+            <LanguageSwitcher />
+          </div>
+
           {navLinks.map((link) => (
             <Link
               key={link.name}
