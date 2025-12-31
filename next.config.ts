@@ -4,17 +4,24 @@ import type { NextConfig } from "next";
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 const nextConfig: NextConfig = {
-  // 1. React Compiler 配置 (Next.js 16+ 已稳定，直接写在顶层)
+  // 1. React Compiler 配置
   reactCompiler: true,
 
-  // 2. 图片域名配置 (解决 Invalid src prop 报错)
+  // ✅ 新增：把这段配置加到这里
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '100mb', // 设置为你需要的大小，比如 50mb
+    },
+  },
+
+  // 2. 图片域名配置
   images: {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'ukfchupiviprnschjpyf.supabase.co', // 您的 Supabase 项目域名
+        hostname: 'ukfchupiviprnschjpyf.supabase.co',
         port: '',
-        pathname: '/storage/v1/object/public/**', // 允许访问公共存储桶下的所有路径
+        pathname: '/storage/v1/object/public/**',
       },
     ],
   },

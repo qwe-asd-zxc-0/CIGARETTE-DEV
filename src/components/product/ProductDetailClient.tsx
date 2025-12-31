@@ -89,13 +89,13 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
       {/* === 左侧：图片区域 === */}
       <div className="space-y-4">
         <div className="aspect-[4/5] w-full bg-zinc-900 rounded-2xl overflow-hidden border border-white/5 relative group">
-           <img src={selectedImage} alt={getTrans(product.title, locale)} className="w-full h-full object-cover" />
+           <img src={selectedImage} alt={getTrans(product.title, locale)} className="w-full h-full object-contain p-4" />
         </div>
         {allImages.length > 1 && (
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
             {allImages.map((img, idx) => (
               <button key={idx} onClick={() => setSelectedImage(img)} className={`w-16 h-16 rounded-lg overflow-hidden border flex-shrink-0 ${selectedImage === img ? "border-red-500" : "border-white/10"}`}>
-                <img src={img} className="w-full h-full object-cover" />
+                <img src={img} className="w-full h-full object-contain p-1 bg-zinc-800" />
               </button>
             ))}
           </div>

@@ -116,14 +116,14 @@ export default function AddressManager({ addresses }: { addresses: any[] }) {
         </div>
       )}
 
-      {/* === 🔥 新增地址弹窗 (z-100 解决遮挡) === */}
+      {/* === 🔥 新增地址弹窗 (优化：位于导航栏之下) === */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-200">
+        <div className="fixed top-24 inset-x-0 bottom-0 z-40 flex items-center justify-center px-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-200">
           
           {/* 点击背景关闭 */}
           <div className="absolute inset-0 cursor-pointer" onClick={() => setIsModalOpen(false)}></div>
 
-          <div className="bg-zinc-950 border border-zinc-800 w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-200 z-[101] flex flex-col max-h-[90vh]">
+          <div className="bg-zinc-950 border border-zinc-800 w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-200 z-50 flex flex-col max-h-[80vh]">
             
             {/* 弹窗头部 */}
             <div className="p-5 border-b border-zinc-800 flex justify-between items-center bg-zinc-900">
@@ -181,7 +181,7 @@ export default function AddressManager({ addresses }: { addresses: any[] }) {
 
               <div className="space-y-1.5">
                 <label className="text-[10px] uppercase text-zinc-500 font-bold ml-1 tracking-wider">{t('countryLabel')}</label>
-                <input name="country" required defaultValue="USA" placeholder="Country" className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white focus:border-red-600 focus:ring-1 focus:ring-red-600 focus:outline-none placeholder:text-zinc-700 transition-colors" />
+                <input name="country" required defaultValue="Singapore" placeholder="Country" className="w-full bg-black border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white focus:border-red-600 focus:ring-1 focus:ring-red-600 focus:outline-none placeholder:text-zinc-700 transition-colors" />
               </div>
 
               <div className="flex items-center gap-3 pt-2 pb-2">

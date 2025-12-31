@@ -48,8 +48,10 @@ export default async function ProductPage({
       // { title: { contains: query, mode: 'insensitive' } }, // ❌ JSON 字段不支持直接 contains
       // 暂时仅支持英文标题搜索，或者回退到仅搜索产地和品牌
       { title: { path: ['en'], string_contains: query } }, 
+      { title: { path: ['zh'], string_contains: query } }, // ✅ 增加中文标题搜索
       { origin: { contains: query, mode: 'insensitive' } },
-      { brand: { name: { contains: query, mode: 'insensitive' } } }
+      { brand: { name: { path: ['en'], string_contains: query } } }, // ✅ 修复：JSON 字段搜索
+      { brand: { name: { path: ['zh'], string_contains: query } } }  // ✅ 修复：JSON 字段搜索
     ];
     
     if (category) {
@@ -272,7 +274,7 @@ export default async function ProductPage({
                                   <img 
                                     src={displayImage} 
                                     alt={getTrans(product.title, locale)} 
-                                    className="w-full h-full object-cover group-hover:scale-110 group-hover:brightness-110 transition-all duration-700 ease-in-out" 
+                                    className="w-full h-full object-contain p-2 group-hover:scale-105 group-hover:brightness-110 transition-all duration-700 ease-in-out" 
                                   />
                               ) : (
                                   <div className="w-full h-full flex flex-col items-center justify-center text-zinc-600 bg-zinc-900">

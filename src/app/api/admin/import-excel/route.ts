@@ -154,7 +154,9 @@ export async function POST(request: Request) {
       });
 
       // ✅ 从 Excel 中读取分类（如果有 Category 列）
-      const category = (row['分类 (Category)'] || row['Category'] || row['分类'] || '').toString().trim() || null;
+      const categoryRaw = (row['分类 (Category)'] || row['Category'] || row['分类'] || '').toString().trim();
+      // 自动包装为 JSON 格式 { en: "..." } 以匹配数据库结构
+      const category = categoryRaw ? { en: categoryRaw } : null;
 
       if (!product) {
         product = await prisma.product.create({

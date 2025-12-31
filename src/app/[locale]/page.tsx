@@ -132,7 +132,6 @@ export default async function Home({
           {products.length === 0 ? (
             <div className="py-32 text-center border border-dashed border-white/10 rounded-2xl bg-white/5 backdrop-blur-sm">
               <p className="text-zinc-500 font-mono text-lg">暂无商品数据</p>
-              <p className="text-zinc-600 text-sm mt-2">请运行 Seed 脚本或在后台添加商品</p>
             </div>
           ) : (
             <div className="relative">
