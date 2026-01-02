@@ -65,9 +65,13 @@ export default async function Home() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {products.map((p) => (
             <div key={p.id} className="border border-zinc-800 p-4 rounded bg-zinc-900/50">
-              <h3 className="text-lg font-bold text-white">{p.title}</h3>
+              <h3 className="text-lg font-bold text-white">
+                {typeof p.title === 'object' ? (p.title?.en || JSON.stringify(p.title)) : p.title}
+              </h3>
               <p className="text-red-500">${Number(p.basePrice)}</p>
-              <p className="text-xs text-zinc-500 mt-2">所属品牌: {p.brand?.name}</p>
+              <p className="text-xs text-zinc-500 mt-2">
+                所属品牌: {typeof p.brand?.name === 'object' ? (p.brand?.name?.en || JSON.stringify(p.brand?.name)) : p.brand?.name}
+              </p>
               <p className="text-xs text-zinc-500">ID: {p.id}</p>
             </div>
           ))}

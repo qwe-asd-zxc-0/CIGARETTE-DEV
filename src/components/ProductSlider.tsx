@@ -66,7 +66,7 @@ export default function ProductSlider({ products }: { products: Product[] }) {
               <div className="bg-zinc-900/40 rounded-xl overflow-hidden hover:bg-zinc-900 transition-all duration-300 h-full flex flex-col ring-1 ring-white/5 hover:ring-white/10 hover:shadow-2xl">
                 
                 {/* 图片区域 */}
-                <div className="aspect-[4/5] bg-zinc-800 relative flex items-center justify-center overflow-hidden">
+                <div className="aspect-[3/4] bg-zinc-800 relative flex items-center justify-center overflow-hidden">
                   {product.coverImageUrl ? (
                     <img 
                       src={product.coverImageUrl} 

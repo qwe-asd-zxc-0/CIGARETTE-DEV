@@ -87,7 +87,7 @@ export default async function ProductDetail({ params }: ProductDetailProps) {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {relatedProducts.map(rp => (
                 <Link key={rp.id} href={`/product/${rp.id}`} className="block group">
-                  <div className="aspect-[4/5] bg-zinc-900 rounded-lg mb-3 overflow-hidden border border-white/5">
+                  <div className="aspect-[3/4] bg-zinc-900 rounded-lg mb-3 overflow-hidden border border-white/5">
                     {rp.coverImageUrl && (
                       <img 
                         src={rp.coverImageUrl} 

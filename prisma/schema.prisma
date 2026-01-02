@@ -121,6 +121,7 @@ model Product {
   skuCode            String?  @unique @map("sku_code")
   flavor             Json?
   nicotineStrength   String?  @map("nicotine_strength")
+  isFeatured         Boolean  @default(false) @map("is_featured")
   
   createdAt          DateTime? @default(now()) @db.Timestamptz(6) @map("created_at")
   updatedAt          DateTime? @updatedAt @map("updated_at")
@@ -134,8 +135,6 @@ model Product {
   @@map("products")
   @@schema("public")
 }
-
-// ❌ Removed ProductVariant model
 
 // --- 3. 订单与交易 ---
 

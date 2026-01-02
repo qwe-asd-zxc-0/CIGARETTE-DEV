@@ -121,8 +121,8 @@ export default function OrderCard({ order }: { order: any }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
             {/* 左侧：收货地址 */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
+            <div className="flex flex-col">
+              <div className="flex items-center justify-between mb-3 min-h-[20px]">
                 <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
                   <MapPin className="w-3 h-3" /> {t('shippingAddress')}
                 </h4>
@@ -139,7 +139,7 @@ export default function OrderCard({ order }: { order: any }) {
 
               {isEditingAddress ? (
                 // === 编辑模式表单 ===
-                <div className="bg-zinc-800/50 p-4 rounded-xl border border-blue-500/30 space-y-3">
+                <div className="flex-1 bg-zinc-800/50 p-4 rounded-xl border border-blue-500/30 space-y-3">
                   <div className="grid grid-cols-2 gap-2">
                     <input 
                       placeholder={t('namePlaceholder')}
@@ -202,7 +202,7 @@ export default function OrderCard({ order }: { order: any }) {
                 </div>
               ) : (
                 // === 展示模式 ===
-                <div className="text-sm text-zinc-300 bg-zinc-800/30 p-3 rounded-lg border border-white/5 space-y-1">
+                <div className="flex-1 text-sm text-zinc-300 bg-zinc-800/30 p-3 rounded-lg border border-white/5 space-y-1">
                   <p className="font-bold text-white">{order.shippingAddress?.fullName} <span className="text-zinc-500 font-normal">({order.shippingAddress?.phone})</span></p>
                   <p>{order.shippingAddress?.addressLine1}</p>
                   {order.shippingAddress?.addressLine2 && <p>{order.shippingAddress?.addressLine2}</p>}
@@ -212,12 +212,14 @@ export default function OrderCard({ order }: { order: any }) {
               )}
             </div>
 
-            {/* 右侧：状态变更时间 */}
-            <div className="space-y-3">
-              <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
-                <History className="w-3 h-3" /> {t('statusTracking')}
-              </h4>
-              <div className="bg-zinc-800/30 p-3 rounded-lg border border-white/5 space-y-3">
+            {/* 右侧：状态追踪与物流信息 */}
+            <div className="flex flex-col">
+              <div className="flex items-center justify-between mb-3 min-h-[20px]">
+                <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-2">
+                  <History className="w-3 h-3" /> {t('statusTracking')}
+                </h4>
+              </div>
+              <div className="flex-1 bg-zinc-800/30 p-3 rounded-lg border border-white/5 space-y-3">
                 <div className="flex items-start gap-3">
                   <div className="w-2 h-2 mt-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"></div>
                   <div>
@@ -229,14 +231,35 @@ export default function OrderCard({ order }: { order: any }) {
                     )}
                   </div>
                 </div>
-                {/* 运单号信息 */}
-                {order.trackingNumber && (
-                  <div className="flex items-start gap-3 pt-2 border-t border-white/5">
-                    <Truck className="w-4 h-4 text-zinc-400" />
-                    <div>
-                      <p className="text-xs text-zinc-400">{t('trackingNumber')}</p>
-                      <p className="text-sm font-mono text-white select-all">{order.trackingNumber}</p>
+                
+                {/* 物流信息 (集成在这里) */}
+                {(order.status === 'shipped' || order.status === 'completed') && order.trackingNumber && (
+                  <div className="pt-3 mt-1 border-t border-white/5 space-y-2">
+                    {/* 运单号 */}
+                    <div className="flex items-start gap-3">
+                      <Truck className="w-4 h-4 text-zinc-400 mt-0.5" />
+                      <div>
+                        <p className="text-xs text-zinc-400">{t('trackingNumber') || "运单号"}</p>
+                        <p className="text-sm font-mono text-white select-all">{order.trackingNumber}</p>
+                        {order.carrierName && (
+                           <span className="text-[10px] text-zinc-500 block mt-0.5">({order.carrierName})</span>
+                        )}
+                      </div>
                     </div>
+                    
+                    {/* 查询链接 */}
+                    {order.trackingUrl && (
+                      <div className="pl-7">
+                        <a 
+                          href={order.trackingUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-xs text-blue-400 hover:text-blue-300 underline flex items-center gap-1"
+                        >
+                          {t('trackOrder') || "点击查询物流"} <ChevronRight className="w-3 h-3" />
+                        </a>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

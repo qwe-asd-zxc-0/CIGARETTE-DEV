@@ -34,6 +34,8 @@ export async function getUsers(query?: string) {
   // 序列化 Decimal
   return users.map(user => ({
     ...user,
+    fullName: typeof user.fullName === 'object' ? JSON.stringify(user.fullName) : user.fullName,
+    email: typeof user.email === 'object' ? JSON.stringify(user.email) : user.email,
     balance: user.balance ? Number(user.balance) : 0
   }));
 }
@@ -231,7 +233,19 @@ export async function getUserDetails(userId: string) {
     // 序列化 Decimal
     const serializedUser = {
       ...user,
+      fullName: typeof user.fullName === 'object' ? JSON.stringify(user.fullName) : user.fullName,
+      email: typeof user.email === 'object' ? JSON.stringify(user.email) : user.email,
       balance: user.balance ? Number(user.balance) : 0,
+      addresses: user.addresses.map(addr => ({
+        ...addr,
+        country: typeof addr.country === 'object' ? (addr.country as any).en || JSON.stringify(addr.country) : addr.country,
+        city: typeof addr.city === 'object' ? JSON.stringify(addr.city) : addr.city,
+        state: typeof addr.state === 'object' ? JSON.stringify(addr.state) : addr.state,
+        addressLine1: typeof addr.addressLine1 === 'object' ? JSON.stringify(addr.addressLine1) : addr.addressLine1,
+        addressLine2: typeof addr.addressLine2 === 'object' ? JSON.stringify(addr.addressLine2) : addr.addressLine2,
+        firstName: typeof addr.firstName === 'object' ? JSON.stringify(addr.firstName) : addr.firstName,
+        lastName: typeof addr.lastName === 'object' ? JSON.stringify(addr.lastName) : addr.lastName,
+      })),
       orders: user.orders.map(order => ({
         ...order,
         subtotalAmount: Number(order.subtotalAmount),
@@ -240,8 +254,18 @@ export async function getUserDetails(userId: string) {
         items: order.items.map(item => ({
           ...item,
           unitPrice: Number(item.unitPrice),
-          product: item.product
+          product: item.product ? {
+            ...item.product,
+            title: typeof item.product.title === 'object' ? (item.product.title as any).en || JSON.stringify(item.product.title) : item.product.title
+          } : null
         }))
+      })),
+      reviews: user.reviews.map(review => ({
+        ...review,
+        product: review.product ? {
+          ...review.product,
+          title: typeof review.product.title === 'object' ? (review.product.title as any).en || JSON.stringify(review.product.title) : review.product.title
+        } : null
       }))
     };
 

@@ -55,7 +55,15 @@ export async function upsertProduct(formData: FormData, productId?: string) {
 
     const priceRaw = formData.get("price") as string;
     const origin = formData.get("origin") as string;
-    const category = formData.get("category") as string; // ✅ 新增：分类字段
+    const categoryRaw = formData.get("category") as string; // ✅ 新增：分类字段
+    
+    // 解析分类字段
+    let category = parseJsonField(categoryRaw, null);
+    // 如果解析失败（例如是普通字符串 "Disposable"），或者解析结果为空，则手动封装
+    if (!category && categoryRaw) {
+        category = { en: categoryRaw };
+    }
+
     const status = formData.get("status") as string;
     const brandIdRaw = formData.get("brandId");
     const brandId = brandIdRaw ? Number(brandIdRaw) : null;
@@ -69,6 +77,7 @@ export async function upsertProduct(formData: FormData, productId?: string) {
     const slugRaw = formData.get("slug") as string;
     const flavorRaw = formData.get("flavor") as string;
     const nicotineStrength = formData.get("nicotineStrength") as string;
+    const isFeatured = formData.get("isFeatured") === "true";
 
     let flavorObj = parseJsonField(flavorRaw, null);
     if (!flavorObj || typeof flavorObj === 'string') {
@@ -106,7 +115,8 @@ export async function upsertProduct(formData: FormData, productId?: string) {
       skuCode: skuCodeRaw || generateAutoSKU(mainTitle), 
       flavor: flavorObj,
       nicotineStrength: nicotineStrength || null,
-      slug: slugRaw || generateSlug(mainTitle)
+      slug: slugRaw || generateSlug(mainTitle),
+      isFeatured: isFeatured
     };
 
     // ✅ 处理品牌关联

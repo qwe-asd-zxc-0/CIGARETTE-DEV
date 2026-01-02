@@ -24,26 +24,38 @@ export function getTrans(
   if (typeof data === 'string') return data;
 
   // 尝试获取当前语言
-  if (data[locale]) {
-    return data[locale];
-  }
+  let val = data[locale];
 
   // 尝试获取主要语言代码 (e.g. 'zh-CN' -> 'zh')
-  const langPrefix = locale.split('-')[0];
-  if (data[langPrefix]) {
-    return data[langPrefix];
+  if (!val) {
+    const langPrefix = locale.split('-')[0];
+    val = data[langPrefix];
   }
 
   // 回退到默认语言
-  if (data[defaultLocale]) {
-    return data[defaultLocale];
+  if (!val) {
+    val = data[defaultLocale];
+  }
+
+  // --- 关键修复：验证获取到的值 val ---
+  if (typeof val === 'string') return val;
+
+  // 如果 val 是对象（嵌套错误），尝试从中提取
+  if (val && typeof val === 'object') {
+     if (typeof val[locale] === 'string') return val[locale];
+     if (typeof val['en'] === 'string') return val['en'];
+     // 找第一个字符串属性
+     const subVals = Object.values(val);
+     for (const v of subVals) {
+         if (typeof v === 'string') return v as string;
+     }
   }
 
   // 如果都没有，返回第一个可用的值
   if (typeof data === 'object') {
     const values = Object.values(data);
-    if (values.length > 0 && typeof values[0] === 'string') {
-      return values[0] as string;
+    for (const v of values) {
+      if (typeof v === 'string') return v;
     }
   }
 

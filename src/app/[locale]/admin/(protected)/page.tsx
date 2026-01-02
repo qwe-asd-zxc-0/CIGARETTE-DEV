@@ -4,6 +4,7 @@ import { Users, ShoppingBag, CreditCard, AlertTriangle, ArrowRight, Package } fr
 
 export const dynamic = 'force-dynamic';
 
+// Admin Dashboard Page
 export default async function AdminDashboard() {
   // 1. 并行获取核心指标数据
   const [

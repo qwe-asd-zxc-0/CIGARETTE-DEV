@@ -104,14 +104,20 @@ export default function UserTable({ users, onUserDeleted }: { users: any[], onUs
                         {user.avatarUrl ? (
                           <Image src={user.avatarUrl} alt="Avatar" fill className="object-cover" />
                         ) : (
-                          <span className="text-xs font-bold text-zinc-500">{(user.fullName || user.email || "U").substring(0, 2).toUpperCase()}</span>
+                          <span className="text-xs font-bold text-zinc-500">
+                            {(() => {
+                              const name = user.fullName || user.email || "U";
+                              const strName = typeof name === 'object' ? JSON.stringify(name) : String(name);
+                              return strName.substring(0, 2).toUpperCase();
+                            })()}
+                          </span>
                         )}
                       </div>
                       <div>
                         <p className="font-bold text-white group-hover:text-red-400 transition-colors">
-                          {user.fullName || "无名氏"}
+                          {typeof user.fullName === 'object' ? JSON.stringify(user.fullName) : (user.fullName || "无名氏")}
                         </p>
-                        <p className="text-xs text-zinc-500 font-mono">{user.email}</p>
+                        <p className="text-xs text-zinc-500 font-mono">{typeof user.email === 'object' ? JSON.stringify(user.email) : user.email}</p>
                       </div>
                     </div>
                   </td>
@@ -119,7 +125,23 @@ export default function UserTable({ users, onUserDeleted }: { users: any[], onUs
                   <td className="p-4">
                     <div className="flex items-center gap-2">
                       <MapPin className="w-4 h-4 text-zinc-600" />
-                      <span>{user.addresses?.[0] ? `${user.addresses[0].city || '-'}, ${user.addresses[0].country}` : <span className="text-zinc-600 italic">无地址</span>}</span>
+                      <span>
+                        {user.addresses?.[0] ? (
+                          <>
+                            {typeof user.addresses[0].city === 'object' ? JSON.stringify(user.addresses[0].city) : (user.addresses[0].city || '-')}
+                            ,{' '}
+                            {(() => {
+                              const country = user.addresses[0].country;
+                              if (typeof country === 'object' && country !== null) {
+                                return (country as any).en || JSON.stringify(country);
+                              }
+                              return country;
+                            })()}
+                          </>
+                        ) : (
+                          <span className="text-zinc-600 italic">无地址</span>
+                        )}
+                      </span>
                     </div>
                   </td>
 

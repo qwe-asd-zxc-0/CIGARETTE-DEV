@@ -80,7 +80,10 @@ export default function AuditLogs({ ageLogs, reviewLogs }: { ageLogs: any[], rev
                   >
                     <td className="p-3 pl-4">
                       <p className="text-white font-medium truncate max-w-[180px] group-hover:text-blue-400 transition-colors">
-                        {log.product?.title || "Unknown Product"}
+                        {/* 修复：处理多语言标题对象 */}
+                        {typeof log.product?.title === 'object' 
+                          ? (log.product?.title as any)?.en || 'Product' 
+                          : log.product?.title || "Unknown Product"}
                       </p>
                       <p className="text-xs text-zinc-500 truncate max-w-[180px]">
                         by {log.user?.email || "Anonymous"}

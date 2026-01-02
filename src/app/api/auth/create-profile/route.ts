@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { email, password, fullName } = body;
 
-    console.log(`[Register Attempt] Email: ${email}, FullName: ${fullName}, IP: ${ip}`);
+    console.log(`[Register Attempt] IP: ${ip}`);
 
     // 0. 分别检查 Email 和 FullName，避免逻辑混淆
     const existingEmail = await prisma.profile.findUnique({
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     });
 
     if (existingEmail) {
-      console.log(`[Register Fail] Email already exists: ${email}`);
+      console.log(`[Register Fail] Email already exists`);
       return NextResponse.json({ error: 'errorEmailExists' }, { status: 409 });
     }
 
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     });
 
     if (existingName) {
-      console.log(`[Register Fail] FullName already exists: ${fullName}`);
+      console.log(`[Register Fail] FullName already exists`);
       return NextResponse.json({ error: '该全名已被占用，请更换一个。' }, { status: 409 });
     }
 
@@ -89,7 +89,7 @@ export async function POST(request: Request) {
     }
 
     // 3. 将用户信息写入 Prisma 数据库
-    console.log(`正在写入数据库 Profile: ${userId}, ${email}`);
+    console.log(`正在写入数据库 Profile: ${userId}`);
     
     const profile = await prisma.profile.create({
       data: {

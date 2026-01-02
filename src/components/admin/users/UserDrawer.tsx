@@ -112,7 +112,7 @@ export default function UserDrawer({ user, onClose, onUpdate }: UserDrawerProps)
         <div className="sticky top-0 z-10 bg-zinc-900/95 border-b border-white/10 p-6 flex justify-between items-center backdrop-blur-md">
           <div>
             <h3 className="text-xl font-bold text-white">编辑用户</h3>
-            <p className="text-xs text-zinc-500 font-mono mt-1">{user.email}</p>
+            <p className="text-xs text-zinc-500 font-mono mt-1">{typeof user.email === 'object' ? JSON.stringify(user.email) : user.email}</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-colors">
             <X className="w-5 h-5" />
@@ -149,7 +149,7 @@ export default function UserDrawer({ user, onClose, onUpdate }: UserDrawerProps)
                 <div>
                   <label className="text-xs font-bold text-zinc-500 uppercase mb-1 block">Full Name</label>
                   <input 
-                    value={formData.fullName}
+                    value={typeof formData.fullName === 'object' ? JSON.stringify(formData.fullName) : formData.fullName}
                     onChange={(e) => setFormData({...formData, fullName: e.target.value})}
                     className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:border-blue-500 outline-none transition-colors"
                   />
@@ -214,11 +214,15 @@ export default function UserDrawer({ user, onClose, onUpdate }: UserDrawerProps)
                     {detailedUser.addresses.map((addr: any) => (
                       <div key={addr.id} className="bg-zinc-800/50 p-3 rounded-lg border border-white/5 text-sm">
                         <div className="flex justify-between mb-1">
-                          <span className="text-white font-bold">{addr.firstName} {addr.lastName}</span>
-                          <span className="text-zinc-500 text-xs">{addr.phone}</span>
+                          <span className="text-white font-bold">{typeof addr.firstName === 'object' ? JSON.stringify(addr.firstName) : addr.firstName} {typeof addr.lastName === 'object' ? JSON.stringify(addr.lastName) : addr.lastName}</span>
+                          <span className="text-zinc-500 text-xs">{typeof addr.phone === 'object' ? JSON.stringify(addr.phone) : addr.phone}</span>
                         </div>
                         <p className="text-zinc-400 text-xs leading-relaxed">
-                          {addr.addressLine1} {addr.addressLine2}, {addr.city}, {addr.state} {addr.zipCode}, {addr.country}
+                          {typeof addr.addressLine1 === 'object' ? JSON.stringify(addr.addressLine1) : addr.addressLine1} {typeof addr.addressLine2 === 'object' ? JSON.stringify(addr.addressLine2) : addr.addressLine2}, {typeof addr.city === 'object' ? JSON.stringify(addr.city) : addr.city}, {typeof addr.state === 'object' ? JSON.stringify(addr.state) : addr.state} {typeof addr.zipCode === 'object' ? JSON.stringify(addr.zipCode) : addr.zipCode}, {
+                            typeof addr.country === 'object' && addr.country !== null
+                              ? (addr.country as any).en || 'Unknown'
+                              : String(addr.country)
+                          }
                         </p>
                       </div>
                     ))}
@@ -252,27 +256,27 @@ export default function UserDrawer({ user, onClose, onUpdate }: UserDrawerProps)
                     {detailedUser.orders.map((order: any) => (
                       <div key={order.id} className="bg-zinc-800/50 p-3 rounded-lg border border-white/5">
                         <div className="flex justify-between items-center mb-2">
-                          <span className="text-xs font-mono text-zinc-500">#{order.id.slice(0, 8)}</span>
+                          <span className="text-xs font-mono text-zinc-500">#{typeof order.id === 'string' ? order.id.slice(0, 8) : order.id}</span>
                           <span className={`text-xs px-2 py-0.5 rounded-full ${
                             order.status === 'paid' ? 'bg-green-500/20 text-green-400' : 
                             order.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' : 
                             'bg-zinc-700 text-zinc-400'
                           }`}>
-                            {order.status}
+                            {typeof order.status === 'object' ? JSON.stringify(order.status) : order.status}
                           </span>
                         </div>
                         <div className="flex gap-2 overflow-x-auto pb-2">
                           {order.items.map((item: any, idx: number) => (
                             <div key={idx} className="flex-shrink-0 w-10 h-10 bg-black rounded border border-white/10 relative overflow-hidden">
-                              {item.productVariant?.product?.images?.[0] && (
-                                <Image src={item.productVariant.product.images[0]} alt="" fill className="object-cover" />
+                              {item.product?.images?.[0] && (
+                                <Image src={item.product.images[0]} alt="" fill className="object-cover" />
                               )}
                             </div>
                           ))}
                         </div>
                         <div className="flex justify-between items-center mt-2 text-xs">
                           <span className="text-zinc-500">{new Date(order.createdAt).toLocaleDateString()}</span>
-                          <span className="text-white font-mono">${Number(order.totalAmount).toFixed(2)}</span>
+                          <span className="text-white font-mono">${typeof order.totalAmount === 'number' ? order.totalAmount.toFixed(2) : Number(order.totalAmount).toFixed(2)}</span>
                         </div>
                       </div>
                     ))}
@@ -294,14 +298,25 @@ export default function UserDrawer({ user, onClose, onUpdate }: UserDrawerProps)
                     {detailedUser.reviews.map((review: any) => (
                       <div key={review.id} className="bg-zinc-800/50 p-3 rounded-lg border border-white/5">
                         <div className="flex justify-between items-start mb-1">
-                          <span className="text-xs text-blue-400 font-bold line-clamp-1">{review.product?.title}</span>
+                          <span className="text-xs text-blue-400 font-bold line-clamp-1">
+                            {(() => {
+                              const title = review.product?.title;
+                              if (typeof title === 'string') return title;
+                              if (typeof title === 'object' && title !== null) {
+                                const en = (title as any).en;
+                                if (typeof en === 'string') return en;
+                                return JSON.stringify(title); // Fallback for object
+                              }
+                              return 'Product';
+                            })()}
+                          </span>
                           <div className="flex text-yellow-500">
                             {[...Array(5)].map((_, i) => (
                               <Star key={i} className={`w-3 h-3 ${i < review.rating ? "fill-current" : "text-zinc-700"}`} />
                             ))}
                           </div>
                         </div>
-                        <p className="text-xs text-zinc-300 line-clamp-2">{review.content}</p>
+                        <p className="text-xs text-zinc-300 line-clamp-2">{typeof review.content === 'object' ? JSON.stringify(review.content) : review.content}</p>
                         <p className="text-[10px] text-zinc-600 mt-2 text-right">{new Date(review.createdAt).toLocaleDateString()}</p>
                       </div>
                     ))}

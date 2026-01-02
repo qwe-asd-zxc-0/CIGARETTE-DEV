@@ -29,16 +29,34 @@ export default async function Home({
   setRequestLocale(locale);
 
   const t = await getTranslations('HomePage'); // ✅ 获取 HomePage 命名空间的翻译
-  const products = await prisma.product.findMany({
-    where: { status: 'active' },
-    include: { 
-      brand: true,
-    },
-    orderBy: { createdAt: 'desc' },
-    take: 8, 
-  });
   
-  const serializedProducts = JSON.parse(JSON.stringify(products));
+  // 1. 获取轮播图商品 (优先获取 isFeatured=true)
+  const featuredProducts = await prisma.product.findMany({
+    where: { 
+      status: 'active',
+      isFeatured: true 
+    },
+    include: { brand: true },
+    orderBy: { createdAt: 'desc' },
+    take: 8,
+  });
+
+  // 如果推荐商品不足 4 个，则补充最新商品
+  let displayProducts = featuredProducts;
+  if (featuredProducts.length < 4) {
+    const moreProducts = await prisma.product.findMany({
+      where: { 
+        status: 'active',
+        id: { notIn: featuredProducts.map(p => p.id) } // 排除已获取的
+      },
+      include: { brand: true },
+      orderBy: { createdAt: 'desc' },
+      take: 8 - featuredProducts.length,
+    });
+    displayProducts = [...featuredProducts, ...moreProducts];
+  }
+  
+  const serializedProducts = JSON.parse(JSON.stringify(displayProducts));
 
   return (
     <main className="min-h-screen bg-black text-zinc-100 selection:bg-red-500/30 selection:text-white overflow-x-hidden">
@@ -129,7 +147,7 @@ export default async function Home({
             </Link>
           </div>
           
-          {products.length === 0 ? (
+          {serializedProducts.length === 0 ? (
             <div className="py-32 text-center border border-dashed border-white/10 rounded-2xl bg-white/5 backdrop-blur-sm">
               <p className="text-zinc-500 font-mono text-lg">暂无商品数据</p>
             </div>

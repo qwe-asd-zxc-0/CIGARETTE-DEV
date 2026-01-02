@@ -113,16 +113,16 @@ export default function CartDrawer() {
                   {/* 图片 */}
                   <div className="relative w-20 h-20 bg-zinc-800 rounded-md overflow-hidden flex-shrink-0 border border-zinc-700">
                     {item.image && (
-                      <Image src={item.image} alt={getTrans(item.titleJson, locale) || item.title} fill className="object-cover" />
+                      <Image src={item.image} alt={getTrans(item.titleJson || item.title, locale)} fill className="object-cover" />
                     )}
                   </div>
 
                   {/* 信息 */}
                   <div className="flex-1 flex flex-col justify-between">
                     <div>
-                      <h3 className="text-white font-medium line-clamp-1">{getTrans(item.titleJson, locale) || item.title}</h3>
+                      <h3 className="text-white font-medium line-clamp-1">{getTrans(item.titleJson || item.title, locale)}</h3>
                       <p className="text-sm text-zinc-400">
-                        {getTrans(item.flavorJson, locale) || item.flavor} <span className="mx-1">|</span> {item.strength}
+                        {getTrans(item.flavorJson || item.flavor, locale)} <span className="mx-1">|</span> {item.strength}
                       </p>
                     </div>
                     

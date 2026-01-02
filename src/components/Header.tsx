@@ -8,6 +8,7 @@ import { useCartDrawer } from "@/context/CartContext"; // ✅ 引入购物车 Co
 import { getHeaderProfile } from "@/app/actions";
 import LanguageSwitcher from "./LanguageSwitcher"; // ✅ 引入语言切换器
 import { useTranslations } from 'next-intl'; // ✅ 引入翻译钩子
+import { useSearchParams } from "next/navigation"; // ✅ 引入查询参数钩子
 
 export default function Header() {
   const t = useTranslations('Navigation'); // ✅ 获取 Navigation 命名空间的翻译
@@ -20,6 +21,9 @@ export default function Header() {
 
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams(); // ✅ 获取查询参数
+  const currentCategory = searchParams.get("category");
+  
   const { openCart } = useCartDrawer(); // ✅ 获取打开购物车的方法
 
   const supabase = createBrowserClient(
@@ -76,11 +80,24 @@ export default function Header() {
   );
 
   const navLinks = [
+    { name: t('home'), href: "/" },
+    { name: t('products'), href: "/product" },
     { name: t('traditional'), href: "/product?category=Traditional" },
     { name: t('disposable'), href: "/product?category=Disposable" },
     { name: t('eliquid'), href: "/product?category=E-Liquid" },
     { name: t('accessories'), href: "/product?category=Accessories" },
   ];
+
+  // ✅ 判断链接是否激活
+  const isActive = (href: string) => {
+    if (href === "/" && pathname === "/") return true;
+    if (href === "/product" && pathname === "/product" && !currentCategory) return true;
+    if (href.includes("?category=")) {
+      const category = href.split("?category=")[1];
+      return currentCategory === category;
+    }
+    return false;
+  };
 
   return (
     <>
@@ -109,18 +126,21 @@ export default function Header() {
           </Link>
 
           {/* === 3. 桌面端导航 (居中) === */}
-          <nav className="hidden lg:flex items-center gap-6 xl:gap-8 absolute left-1/2 -translate-x-1/2 w-max max-w-[50%] justify-center">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                href={link.href}
-                className={`text-xs xl:text-sm font-bold tracking-widest uppercase transition-colors whitespace-nowrap ${
-                  pathname === link.href ? "text-white" : "text-zinc-400 hover:text-white"
-                }`}
-              >
-                {link.name}
-              </Link>
-            ))}
+          <nav className="hidden lg:flex items-center gap-6 xl:gap-8 absolute left-1/2 -translate-x-1/2 w-max max-w-[60%] justify-center">
+            {navLinks.map((link) => {
+              const active = isActive(link.href);
+              return (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  className={`text-xs xl:text-sm font-bold tracking-widest uppercase transition-colors whitespace-nowrap ${
+                    active ? "text-white" : "text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  {link.name}
+                </Link>
+              );
+            })}
           </nav>
 
           {/* === 4. 右侧功能区 === */}
@@ -185,56 +205,74 @@ export default function Header() {
         </div>
       </header>
 
-      {/* === 📱 移动端全屏菜单 === */}
+      {/* === 📱 移动端菜单 (侧边抽屉 + 背景遮罩) === */}
+      {/* 背景遮罩 */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 z-[55] bg-black/60 backdrop-blur-sm lg:hidden animate-in fade-in duration-200"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* 侧边抽屉 */}
       <div 
-        className={`fixed inset-0 z-[60] bg-zinc-950 transition-transform duration-300 lg:hidden flex flex-col ${
+        className={`fixed inset-y-0 left-0 z-[60] w-[80%] max-w-sm bg-zinc-950 border-r border-white/10 shadow-2xl transition-transform duration-300 lg:hidden flex flex-col ${
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="flex items-center justify-between p-6 border-b border-white/10">
-          <span className="text-xl font-black text-white">{t('menu')}</span>
+          <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2">
+            <span className="text-xl font-black text-white tracking-tighter">
+              GLOBAL <span className="text-red-600">TOBACCO</span>
+            </span>
+          </Link>
           <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-zinc-400 hover:text-white">
-            <X className="w-8 h-8" />
+            <X className="w-6 h-6" />
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
           {/* 移动端语言切换 */}
-          <div className="mb-4">
+          <div className="mb-2">
             <LanguageSwitcher />
           </div>
 
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              href={link.href}
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="text-2xl font-bold text-white uppercase tracking-wider"
-            >
-              {link.name}
-            </Link>
-          ))}
+          {navLinks.map((link) => {
+            const active = isActive(link.href);
+            return (
+              <Link
+                key={link.name}
+                href={link.href}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={`text-lg font-bold uppercase tracking-wider ${
+                  active ? "text-white" : "text-zinc-500"
+                }`}
+              >
+                {link.name}
+              </Link>
+            );
+          })}
 
-          <hr className="border-white/10 my-4" />
+          <hr className="border-white/10 my-2" />
 
           {user ? (
             <>
-              <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)} className="text-lg text-zinc-300 flex items-center gap-3">
+              <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)} className="text-base text-zinc-300 flex items-center gap-3">
                 <UserCircle className="w-5 h-5" /> {tCommon('profile')}
               </Link>
-              <Link href="/profile/orders" onClick={() => setIsMobileMenuOpen(false)} className="text-lg text-zinc-300 flex items-center gap-3">
+              <Link href="/profile/orders" onClick={() => setIsMobileMenuOpen(false)} className="text-base text-zinc-300 flex items-center gap-3">
                 <Package className="w-5 h-5" /> {tCommon('orders')}
               </Link>
-              <button onClick={() => { handleSignOut(); setIsMobileMenuOpen(false); }} className="text-lg text-red-400 flex items-center gap-3 text-left">
+              <button onClick={() => { handleSignOut(); setIsMobileMenuOpen(false); }} className="text-base text-red-400 flex items-center gap-3 text-left">
                 <LogOut className="w-5 h-5" /> {tCommon('logout')}
               </button>
             </>
           ) : (
-            <div className="flex flex-col gap-4 mt-4">
-              <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="w-full py-4 text-center border border-white/20 rounded-lg text-white font-bold uppercase">
+            <div className="flex flex-col gap-3 mt-2">
+              <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="w-full py-3 text-center border border-white/20 rounded-lg text-white text-sm font-bold uppercase">
                 {tCommon('login')}
               </Link>
-              <Link href="/sign-up" onClick={() => setIsMobileMenuOpen(false)} className="w-full py-4 text-center bg-white text-black rounded-lg font-bold uppercase">
+              <Link href="/sign-up" onClick={() => setIsMobileMenuOpen(false)} className="w-full py-3 text-center bg-white text-black rounded-lg text-sm font-bold uppercase">
                 {tCommon('signup')}
               </Link>
             </div>

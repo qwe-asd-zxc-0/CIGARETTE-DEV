@@ -15,7 +15,10 @@ export default async function OrdersPage() {
       items: {
         include: {
           product: {
-            select: { coverImageUrl: true }
+            select: { 
+              coverImageUrl: true,
+              title: true // ✅ 获取最新标题以支持中文显示
+            }
           }
         }
       }

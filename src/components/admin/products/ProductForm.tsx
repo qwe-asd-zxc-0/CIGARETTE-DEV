@@ -11,10 +11,11 @@ import Link from "next/link";
 interface ProductFormProps {
   product?: any;
   isCreate: boolean;
-  brands: { id: number; name: any }[];
+  brands: { id: number; name: any }[]; // 注意：这里 name 可能是 string 也可能是 JSON 对象
 }
 
 export default function ProductForm({ product, isCreate, brands }: ProductFormProps) {
+  console.log("🔥 正在加载 ProductForm 组件...", product?.title);
   const router = useRouter();
 
   // === 1. 基础状态 ===
@@ -22,13 +23,14 @@ export default function ProductForm({ product, isCreate, brands }: ProductFormPr
   const [galleryImages, setGalleryImages] = useState<string[]>(product?.images || []);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // ✅ 多语言标题和描述状态
+  // ✅ 辅助函数：安全获取多语言值
   const getInitialLangVal = (val: any, lang: string) => {
     if (!val) return "";
     if (typeof val === 'string') return lang === 'en' ? val : ""; // 旧数据默认视为英文
     return val[lang] || "";
   };
 
+  // 多语言状态初始化
   const [titleEn, setTitleEn] = useState(getInitialLangVal(product?.title, 'en'));
   const [titleZh, setTitleZh] = useState(getInitialLangVal(product?.title, 'zh'));
   const [descEn, setDescEn] = useState(getInitialLangVal(product?.description, 'en'));
@@ -36,9 +38,10 @@ export default function ProductForm({ product, isCreate, brands }: ProductFormPr
   const [flavorEn, setFlavorEn] = useState(getInitialLangVal(product?.flavor, 'en'));
   const [flavorZh, setFlavorZh] = useState(getInitialLangVal(product?.flavor, 'zh'));
 
-  // ✅ 新增：库存状态 (优先读取 Product 表库存)
+  // ✅ 库存状态 (优先读取 Product 表库存)
   const initialStock = product?.stockQuantity || 0
   const [stock, setStock] = useState(initialStock);
+  const [isFeatured, setIsFeatured] = useState(product?.isFeatured || false);
 
   // === 2. 高级配置状态 ===
   const [specs, setSpecs] = useState<{ key: string; val: string }[]>(() => {
@@ -95,6 +98,15 @@ export default function ProductForm({ product, isCreate, brands }: ProductFormPr
     formData.set("description", JSON.stringify(descObj));
     formData.set("flavor", JSON.stringify(flavorObj));
 
+    // ✅ 注入分类 (构建 JSON)
+    const categoryRaw = formData.get("category") as string;
+    if (categoryRaw && !categoryRaw.startsWith("{")) {
+       formData.set("category", JSON.stringify({ en: categoryRaw }));
+    }
+
+    // ✅ 注入是否推荐
+    formData.set("isFeatured", isFeatured.toString());
+
     // 转换规格和阶梯价
     const specsObject = specs.reduce((acc, item) => {
       if (item.key.trim()) acc[item.key.trim()] = item.val.trim();
@@ -145,15 +157,23 @@ export default function ProductForm({ product, isCreate, brands }: ProductFormPr
           <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 space-y-6">
             <h2 className="text-lg font-bold text-white border-b border-white/5 pb-4">基本信息</h2>
             
+            {/* ✅ 品牌选择区域 (已修复显示问题) */}
             <div>
               <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">品牌 *</label>
               <select name="brandId" required defaultValue={product?.brandId || ""} className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none">
                 <option value="" disabled>Select Brand</option>
-                {brands.map((b: any) => (
-                  <option key={b.id} value={b.id}>
-                    {typeof b.name === 'object' ? b.name.en || b.name.zh : b.name}
-                  </option>
-                ))}
+                {brands.map((b) => {
+                  // 🛡️ 安全处理：防止品牌名称是对象时显示为 [object Object]
+                  const displayName = typeof b.name === 'object' 
+                    ? (b.name as any)?.en || (b.name as any)?.zh || "Unknown Brand"
+                    : b.name;
+                  
+                  return (
+                    <option key={b.id} value={b.id}>
+                      {displayName}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 
@@ -161,20 +181,20 @@ export default function ProductForm({ product, isCreate, brands }: ProductFormPr
                  <div>
                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">商品名称 (EN) *</label>
                    <input 
-                      value={titleEn}
-                      onChange={(e) => setTitleEn(e.target.value)}
-                      required 
-                      className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none" 
-                      placeholder="Product Name"
+                     value={titleEn}
+                     onChange={(e) => setTitleEn(e.target.value)}
+                     required 
+                     className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none" 
+                     placeholder="Product Name"
                    />
                  </div>
                  <div>
                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">商品名称 (中文)</label>
                    <input 
-                      value={titleZh}
-                      onChange={(e) => setTitleZh(e.target.value)}
-                      className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none" 
-                      placeholder="商品名称"
+                     value={titleZh}
+                     onChange={(e) => setTitleZh(e.target.value)}
+                     className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none" 
+                     placeholder="商品名称"
                    />
                  </div>
             </div>
@@ -196,19 +216,18 @@ export default function ProductForm({ product, isCreate, brands }: ProductFormPr
                  <input name="price" type="number" step="0.01" required defaultValue={product?.price || ""} className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none" />
                </div>
                
-               {/* ✅ 新增：库存输入框 */}
                <div>
                  <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">
-                    初始库存 {isCreate ? "*" : ""}
+                   初始库存 {isCreate ? "*" : ""}
                  </label>
                  <input 
-                    name="stock" 
-                    type="number" 
-                    min="0"
-                    value={stock}
-                    onChange={(e) => setStock(parseInt(e.target.value) || 0)}
-                    className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none" 
-                    placeholder="0"
+                   name="stock" 
+                   type="number" 
+                   min="0"
+                   value={stock}
+                   onChange={(e) => setStock(parseInt(e.target.value) || 0)}
+                   className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none" 
+                   placeholder="0"
                  />
                </div>
             </div>
@@ -217,19 +236,19 @@ export default function ProductForm({ product, isCreate, brands }: ProductFormPr
                  <div>
                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">口味 (EN)</label>
                    <input 
-                      value={flavorEn}
-                      onChange={(e) => setFlavorEn(e.target.value)}
-                      className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none" 
-                      placeholder="Mint, Grape..."
+                     value={flavorEn}
+                     onChange={(e) => setFlavorEn(e.target.value)}
+                     className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none" 
+                     placeholder="Mint, Grape..."
                    />
                  </div>
                  <div>
                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">口味 (中文)</label>
                    <input 
-                      value={flavorZh}
-                      onChange={(e) => setFlavorZh(e.target.value)}
-                      className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none" 
-                      placeholder="薄荷, 葡萄..."
+                     value={flavorZh}
+                     onChange={(e) => setFlavorZh(e.target.value)}
+                     className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none" 
+                     placeholder="薄荷, 葡萄..."
                    />
                  </div>
             </div>
@@ -245,25 +264,28 @@ export default function ProductForm({ product, isCreate, brands }: ProductFormPr
                </div>
             </div>
 
+            {/* ✅ 分类选择 (已优化默认值回显逻辑) */}
             <div>
                  <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">分类</label>
                  <select 
-                    name="category" 
-                    defaultValue={(() => {
-                      const c = product?.category;
-                      if (!c) return "";
-                      // 如果是对象 (旧数据或 Prisma Json 类型)
-                      if (typeof c === 'object' && c.en) return c.en;
-                      // 如果是字符串但包含 JSON 结构 (Prisma String 类型读取到了 JSON 字符串)
-                      if (typeof c === 'string' && c.startsWith('{')) {
-                        try {
-                           const parsed = JSON.parse(c);
-                           return parsed.en || c;
-                        } catch { return c; }
-                      }
-                      return c;
-                    })()} 
-                    className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none"
+                   name="category" 
+                   defaultValue={(() => {
+                     const c = product?.category;
+                     if (!c) return "";
+                     // 如果是对象 (旧数据或 Prisma Json 类型)
+                     if (typeof c === 'object') {
+                         return (c as any).en || (c as any).zh || "";
+                     }
+                     // 如果是字符串但包含 JSON 结构
+                     if (typeof c === 'string' && c.startsWith('{')) {
+                       try {
+                          const parsed = JSON.parse(c);
+                          return parsed.en || c;
+                       } catch { return c; }
+                     }
+                     return c;
+                   })()} 
+                   className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-red-600 outline-none"
                  >
                    <option value="">-- 请选择分类 --</option>
                    <option value="Disposable">一次性电子烟 (Disposable)</option>
@@ -294,15 +316,15 @@ export default function ProductForm({ product, isCreate, brands }: ProductFormPr
             </div>
           </div>
 
-          {/* 高级配置区域 (保持不变) */}
+          {/* 高级配置区域 */}
           <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 space-y-8">
             <div>
               <h2 className="text-lg font-bold text-white border-b border-white/5 pb-4 mb-2">高级配置</h2>
               <p className="text-sm text-zinc-400">
-                在此处配置商品的详细规格参数（如尺寸、重量、材质等）以及阶梯批发价格规则。阶梯价格将根据用户购买的数量自动应用优惠。
+                在此处配置商品的详细规格参数（如尺寸、重量、材质等）以及阶梯批发价格规则。
               </p>
             </div>
-            {/* 规格参数部分... */}
+            {/* 规格参数部分 */}
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <label className="block text-sm font-bold text-zinc-300">规格参数</label>
@@ -322,7 +344,7 @@ export default function ProductForm({ product, isCreate, brands }: ProductFormPr
 
             <div className="h-px bg-white/5" />
 
-            {/* 阶梯定价部分... */}
+            {/* 阶梯定价部分 */}
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <label className="block text-sm font-bold text-zinc-300">阶梯批发价</label>
@@ -355,7 +377,7 @@ export default function ProductForm({ product, isCreate, brands }: ProductFormPr
           )}
         </div>
 
-        {/* 右侧侧边栏 (保持不变) */}
+        {/* 右侧侧边栏 */}
         <div className="space-y-8">
           <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
             <h2 className="text-lg font-bold text-white mb-4">封面图片</h2>
@@ -387,6 +409,21 @@ export default function ProductForm({ product, isCreate, brands }: ProductFormPr
                 <option value="draft">🟡 草稿 (Draft)</option>
                 <option value="archived">🔴 归档 (Archived)</option>
              </select>
+
+             {/* ✅ 推荐商品开关 */}
+             <div className="flex items-center gap-3 p-3 bg-black/20 rounded-lg border border-white/5">
+                <input 
+                  type="checkbox" 
+                  id="isFeatured" 
+                  checked={isFeatured} 
+                  onChange={(e) => setIsFeatured(e.target.checked)}
+                  className="w-5 h-5 rounded border-white/20 bg-black/40 text-red-600 focus:ring-red-600 focus:ring-offset-0"
+                />
+                <label htmlFor="isFeatured" className="text-sm text-zinc-300 cursor-pointer select-none">
+                  设为推荐商品 (首页轮播)
+                </label>
+             </div>
+
              <button type="submit" disabled={isSubmitting} className="w-full bg-red-600 hover:bg-red-500 py-3 rounded-lg font-bold text-white transition-all flex justify-center items-center gap-2">
                {isSubmitting ? <><Loader2 className="w-4 h-4 animate-spin"/> 保存中...</> : <><Save className="w-4 h-4"/> 保存商品</>}
              </button>

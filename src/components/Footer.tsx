@@ -9,6 +9,7 @@ export default function Footer() {
   const pathname = usePathname();
   const t = useTranslations('Footer'); // ✅ 获取 Footer 翻译
   const tNav = useTranslations('Navigation'); // ✅ 获取 Navigation 翻译
+  const tCommon = useTranslations('Common'); // ✅ 获取 Common 翻译
 
   // 1. 定义不需要显示 Footer 的路径特征
   // - 所有以 /admin 开头的路径
@@ -52,7 +53,7 @@ export default function Footer() {
             <ul className="space-y-3 text-sm text-zinc-400">
               <li><Link href="/" className="hover:text-white transition-colors">{tNav('home')}</Link></li>
               <li><Link href="/product" className="hover:text-white transition-colors">{tNav('products')}</Link></li>
-              <li><Link href="/profile" className="hover:text-white transition-colors">{tNav('cart')}</Link></li>
+              <li><Link href="/profile" className="hover:text-white transition-colors">{tCommon('profile')}</Link></li>
               <li><Link href="/cart" className="hover:text-white transition-colors">{tNav('cart')}</Link></li>
             </ul>
           </div>

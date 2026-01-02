@@ -35,12 +35,21 @@ export default async function ProductPage({
     where.origin = origin;
   }
 
-  // ✅ 修复：针对 JSON 字段的精确匹配
+  // ✅ 修复：针对 JSON 字段的精确匹配 (支持多语言值映射)
   if (category) {
-    where.category = {
-      path: ['en'],     // 告诉 Prisma 去 JSON 的 "en" 键里找
-      equals: category  // 匹配的值
+    const categoryMapping: Record<string, string[]> = {
+      'Traditional': ['Traditional', 'Traditional Tobacco', '传统香烟'],
+      'Disposable': ['Disposable', 'Disposable Vape', '一次性电子烟'],
+      'E-Liquid': ['E-Liquid', 'E-Juice', '电子烟油'],
+      'Accessories': ['Accessories', '配件']
     };
+    
+    const targetValues = categoryMapping[category] || [category];
+    
+    where.OR = [
+      ...targetValues.map(val => ({ category: { path: ['en'], equals: val } })),
+      ...targetValues.map(val => ({ category: { path: ['zh'], equals: val } }))
+    ];
   }
 
   if (query) {
@@ -49,6 +58,9 @@ export default async function ProductPage({
       // 暂时仅支持英文标题搜索，或者回退到仅搜索产地和品牌
       { title: { path: ['en'], string_contains: query } }, 
       { title: { path: ['zh'], string_contains: query } }, // ✅ 增加中文标题搜索
+      { description: { path: ['en'], string_contains: query } }, // ✅ 新增：描述搜索 (英文)
+      { description: { path: ['zh'], string_contains: query } }, // ✅ 新增：描述搜索 (中文)
+      { skuCode: { contains: query, mode: 'insensitive' } }, // ✅ 新增：SKU 搜索
       { origin: { contains: query, mode: 'insensitive' } },
       { brand: { name: { path: ['en'], string_contains: query } } }, // ✅ 修复：JSON 字段搜索
       { brand: { name: { path: ['zh'], string_contains: query } } }  // ✅ 修复：JSON 字段搜索
@@ -56,8 +68,13 @@ export default async function ProductPage({
     
     if (category) {
       // 如果同时有分类和搜索，需要合并条件
+      // 此时 where.OR 已经被 category 占用，需要将其移入 AND
+      const categoryConditions = where.OR;
+      delete where.OR;
+
       where.AND = [
         ...(where.AND || []),
+        { OR: categoryConditions },
         { OR: searchConditions }
       ];
     } else {
@@ -65,16 +82,22 @@ export default async function ProductPage({
     }
   }
 
+  // 3. 库存过滤逻辑（移至数据库查询）
+  if (inStockParam !== undefined) {
+    const hasStock = inStockParam === 'true';
+    where.stockQuantity = hasStock ? { gt: 0 } : { lte: 0 };
+  }
+
   // 2. 并行查询
-  let [products, totalCount, origins] = await Promise.all([
+  const [products, totalCount, origins] = await Promise.all([
     prisma.product.findMany({
       where,
       orderBy: { createdAt: "desc" },
       include: { 
         brand: true,
       },
-      take: PAGE_SIZE * 10, // 先取更多，然后在内存中过滤
-      skip: 0,
+      take: PAGE_SIZE,
+      skip: (currentPage - 1) * PAGE_SIZE,
     }),
     prisma.product.count({ where }),
     prisma.product.groupBy({
@@ -84,18 +107,9 @@ export default async function ProductPage({
     })
   ]);
 
-  // 3. 库存过滤逻辑（在内存中执行）
-  if (inStockParam !== undefined) {
-    const hasStock = inStockParam === 'true';
-    products = products.filter((product) => {
-      const totalStock = product.stockQuantity || 0;
-      return hasStock ? totalStock > 0 : totalStock <= 0;
-    });
-  }
-
-  // 4. 应用分页
-  const filteredProducts = products.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-  const filteredTotalCount = products.length;
+  // 4. 应用分页 (变量名保持一致以兼容下方代码)
+  const filteredProducts = products;
+  const filteredTotalCount = totalCount;
   const totalPages = Math.ceil(filteredTotalCount / PAGE_SIZE);
 
   return (
@@ -310,14 +324,14 @@ export default async function ProductPage({
 
                           <div className="p-4 border-t border-white/5 bg-white/[0.02]">
                               <h3 className="text-zinc-100 font-bold text-sm truncate mb-1 group-hover:text-red-400 transition-colors">
-                                  {getTrans(product.title, locale)}
+                                  {String(getTrans(product.title, locale))}
                               </h3>
                               <div className="flex items-center justify-between">
                                 <p className="text-zinc-500 text-[10px] truncate max-w-[70%] tracking-wide uppercase flex items-center gap-1">
                                     {product.brand ? (
-                                      <span className="text-zinc-400 font-semibold">{getTrans(product.brand.name, locale)}</span>
+                                      <span className="text-zinc-400 font-semibold">{String(getTrans(product.brand.name, locale))}</span>
                                     ) : (
-                                      <span>{product.origin || t('internationalVersion')}</span>
+                                      <span>{String(product.origin || t('internationalVersion'))}</span>
                                     )}
                                 </p>
                                 <div className="flex gap-1">

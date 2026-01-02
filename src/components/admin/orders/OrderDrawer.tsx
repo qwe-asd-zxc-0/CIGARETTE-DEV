@@ -5,6 +5,7 @@ import { X, MapPin, Package, Truck, CreditCard, Save, User, Mail, Phone, Ban } f
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { updateOrderStatus, updateTrackingInfo, cancelOrder } from "@/app/[locale]/admin/(protected)/orders/actions";
+import { getTrans } from "@/lib/i18n-utils";
 
 interface OrderDrawerProps {
   order: any; // 包含 user, items 等关联数据
@@ -193,7 +194,8 @@ export default function OrderDrawer({ order, onClose }: OrderDrawerProps) {
                 {/* 复制按钮 (悬浮显示) */}
                 <button 
                   onClick={() => {
-                    const text = `${address.firstName} ${address.lastName}\n${address.phone || address.phoneNumber}\n${address.addressLine1} ${address.addressLine2 || ''}\n${address.city}, ${address.state} ${address.zipCode}\n${address.country}`;
+                    const name = address.fullName || `${address.firstName || ''} ${address.lastName || ''}`;
+                    const text = `${name}\n${address.phone || address.phoneNumber}\n${address.addressLine1} ${address.addressLine2 || ''}\n${address.city}, ${address.state} ${address.zipCode}\n${address.country}`;
                     navigator.clipboard.writeText(text);
                     alert("地址已复制到剪贴板！");
                   }}
@@ -206,7 +208,7 @@ export default function OrderDrawer({ order, onClose }: OrderDrawerProps) {
                   <div className="space-y-2">
                     <p className="font-bold text-white text-base flex items-center gap-2">
                       <User className="w-4 h-4 text-zinc-400" />
-                      {address.firstName} {address.lastName}
+                      {address.fullName || `${address.firstName || ''} ${address.lastName || ''}`}
                     </p>
                     
                     {/* 联系方式 */}
@@ -303,10 +305,15 @@ export default function OrderDrawer({ order, onClose }: OrderDrawerProps) {
                             {/* 文字信息 */}
                             <div>
                               <p className="text-white font-medium line-clamp-1 text-sm">
-                                {item.productTitleSnapshot}
+                                {item.product?.title 
+                                  ? getTrans(item.product.title, 'zh') 
+                                  : getTrans(item.productTitleSnapshot, 'zh')
+                                }
                               </p>
                               <p className="text-xs text-zinc-500">
-                                {item.flavorSnapshot}
+                                {typeof item.flavorSnapshot === 'object' && item.flavorSnapshot !== null
+                                  ? (item.flavorSnapshot['zh'] || item.flavorSnapshot['en'] || JSON.stringify(item.flavorSnapshot))
+                                  : item.flavorSnapshot}
                               </p>
                             </div>
                           </div>

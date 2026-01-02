@@ -83,12 +83,15 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
     }
   };
 
+  const description = getTrans(product.description, locale);
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
+    <div className="space-y-16">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
       
       {/* === 左侧：图片区域 === */}
       <div className="space-y-4">
-        <div className="aspect-[4/5] w-full bg-zinc-900 rounded-2xl overflow-hidden border border-white/5 relative group">
+        <div className="aspect-[3/4] w-full bg-zinc-900 rounded-2xl overflow-hidden border border-white/5 relative group">
            <img src={selectedImage} alt={getTrans(product.title, locale)} className="w-full h-full object-contain p-4" />
         </div>
         {allImages.length > 1 && (
@@ -188,6 +191,19 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
           </div>
         </div>
       </div>
+      </div>
+
+      {/* 商品详情 (底部) */}
+      {description && (
+        <div className="border-t border-white/5 pt-12">
+          <h3 className="text-2xl font-bold text-white mb-8">商品详情</h3>
+          <div className="text-zinc-300 text-base leading-relaxed space-y-4">
+            {description.split('\n').filter(p => p.trim()).map((paragraph, idx) => (
+              <p key={idx}>{paragraph}</p>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

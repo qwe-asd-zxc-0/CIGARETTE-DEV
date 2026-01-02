@@ -5,13 +5,15 @@ import { useState } from 'react';
 export default function ExcelUploader() {
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState('');
+  const [progress, setProgress] = useState(0);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setUploading(true);
-    setMessage('正在解析并入库，请稍候...');
+    setProgress(0);
+    setMessage('正在上传并解析...');
 
     try {
       const formData = new FormData();
@@ -22,17 +24,59 @@ export default function ExcelUploader() {
         body: formData,
       });
 
-      const data = await res.json();
-
-      if (res.ok) {
-        setMessage(`✅ ${data.message}`);
-      } else {
-        setMessage(`❌ 失败: ${data.error}`);
+      if (!res.ok) {
+        // 尝试解析错误 JSON
+        try {
+            const errorData = await res.json();
+            throw new Error(errorData.error || 'Upload failed');
+        } catch (e) {
+            throw new Error(`Upload failed: ${res.statusText}`);
+        }
       }
-    } catch {
-      setMessage('❌ 网络错误');
+
+      if (!res.body) throw new Error('No response body');
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        
+        // 保留最后一个可能不完整的片段
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const data = JSON.parse(line);
+            
+            if (data.type === 'start') {
+              setMessage(`开始处理 ${data.total} 条数据...`);
+            } else if (data.type === 'progress') {
+              const percent = Math.round((data.current / data.total) * 100);
+              setProgress(percent);
+              setMessage(`正在处理: ${data.current} / ${data.total} (成功: ${data.success})`);
+            } else if (data.type === 'complete') {
+              setProgress(100);
+              setMessage(`✅ 处理完成! 总计: ${data.total}, 成功: ${data.success}`);
+            }
+          } catch (e) {
+            console.error('Error parsing stream chunk', e);
+          }
+        }
+      }
+
+    } catch (err: any) {
+      setMessage(`❌ 失败: ${err.message}`);
     } finally {
       setUploading(false);
+      // 重置 input，允许重复上传同一文件
+      e.target.value = '';
     }
   };
 
@@ -76,12 +120,24 @@ export default function ExcelUploader() {
         </a>
       </div>
 
-      {/* 3. 状态提示信息 */}
+      {/* 3. 进度条 */}
+      {uploading && (
+        <div className="w-full bg-zinc-800 rounded-full h-2.5 overflow-hidden">
+          <div 
+            className="bg-green-600 h-2.5 rounded-full transition-all duration-300 ease-out" 
+            style={{ width: `${progress}%` }}
+          ></div>
+        </div>
+      )}
+
+      {/* 4. 状态提示信息 */}
       {message && (
         <div className={`p-3 rounded text-sm border ${
           message.startsWith('✅') 
             ? 'bg-green-900/30 text-green-400 border-green-800' 
-            : 'bg-red-900/30 text-red-400 border-red-800'
+            : message.startsWith('❌')
+              ? 'bg-red-900/30 text-red-400 border-red-800'
+              : 'bg-blue-900/30 text-blue-400 border-blue-800'
         }`}>
           {message}
         </div>

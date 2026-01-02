@@ -19,7 +19,11 @@ export default async function ProductsPage({
   if (q) {
     where.OR = [
       { title: { path: ['en'], string_contains: q } },
+      { title: { path: ['zh'], string_contains: q } }, // ✅ 支持中文标题搜索
       { slug: { contains: q, mode: 'insensitive' } },
+      { skuCode: { contains: q, mode: 'insensitive' } }, // ✅ 支持 SKU 搜索
+      { brand: { name: { path: ['en'], string_contains: q } } }, // ✅ 支持品牌搜索
+      { brand: { name: { path: ['zh'], string_contains: q } } },
     ];
   }
   if (stock === 'low') {
@@ -127,7 +131,7 @@ export default async function ProductsPage({
                         />
                       )}
                       <div>
-                        <p className="font-bold text-white">{getTrans(product.title, 'en')}</p>
+                        <p className="font-bold text-white">{getTrans(product.title, 'zh')}</p>
                         <p className="text-xs">{product.slug}</p>
                       </div>
                     </div>
