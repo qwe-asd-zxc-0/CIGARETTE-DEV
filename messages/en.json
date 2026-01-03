@@ -261,6 +261,7 @@
     "loginRequired": "Please login first",
     "ageVerificationRequired": "Your account is not age verified, cannot purchase.",
     "productInvalid": "Product invalid ID: {id}",
+    "productUnavailable": "{title} is currently unavailable",
     "stockInsufficient": "{title} insufficient stock",
     "userNotFound": "User not found",
     "balanceInsufficient": "Insufficient balance, need ${amount}, current balance ${balance}",
@@ -378,6 +379,18 @@
     "errorAddressAddFailed": "Failed to add address, please try again",
     "errorAddressUpdated": "Address updated",
     "errorAddressUpdateFailed": "Update failed, please try again"
+  },
+  "Payment": {
+    "title": "Crypto Payment",
+    "orderNo": "Order #",
+    "totalAmount": "Total Amount",
+    "remainingTime": "remaining to pay",
+    "addressLabel": "USDT (TRC20) Address",
+    "verifying": "Verifying Payment...",
+    "iHavePaid": "I Have Paid",
+    "warning": "Please ensure you are sending USDT (TRC20) only. Sending any other currency may result in permanent loss.",
+    "copySuccess": "Copied",
+    "verifyFailed": "Payment verification failed. Please try again or contact support."
   },
   "NotFound": {
     "title": "Page Not Found",

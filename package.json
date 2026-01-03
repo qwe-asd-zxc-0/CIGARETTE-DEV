@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "security-check": "npm audit --audit-level=high"
   },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
@@ -26,11 +27,11 @@
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-slick": "^0.31.0",
-    "resend": "^6.6.0",
-    "sanity": "^4.20.3",
-    "slick-carousel": "^1.8.1",
-    "uuid": "^13.0.0",
-    "xlsx": "^0.18.5"
+    "resend": "6.6.0",
+    "sanity": "4.20.3",
+    "slick-carousel": "1.8.1",
+    "uuid": "13.0.0",
+    "xlsx": "0.18.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

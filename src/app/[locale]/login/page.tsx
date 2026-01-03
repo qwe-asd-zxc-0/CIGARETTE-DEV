@@ -5,6 +5,7 @@ import { Link, useRouter } from "@/i18n/routing"; // ✅ 使用国际化路由
 import { createBrowserClient } from "@supabase/ssr";
 import { Loader2, ArrowRight, Mail, Lock, Send } from "lucide-react";
 import { useTranslations } from 'next-intl'; // ✅ 引入翻译钩子
+import { useSearchParams } from "next/navigation"; // ✅ 引入查询参数
 
 import { recordLoginSession } from "@/lib/session"; // 引入 Session 记录
 
@@ -16,6 +17,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [showForgot, setShowForgot] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams(); // 获取 URL 参数
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -47,7 +49,23 @@ export default function LoginPage() {
       }
       
       router.refresh();
-      router.push("/profile"); // 登录成功跳转到个人中心
+
+      // 🛡️ Open Redirect 防御
+      // 检查 next 参数，确保它是一个相对路径，防止跳转到外部钓鱼网站
+      const nextParam = searchParams.get("next");
+      let redirectUrl = "/profile";
+
+      if (nextParam) {
+        // 1. 必须以 / 开头 (相对路径)
+        // 2. 不能以 // 开头 (防止 //evil.com 被浏览器解析为协议相对 URL)
+        if (nextParam.startsWith("/") && !nextParam.startsWith("//")) {
+          redirectUrl = nextParam;
+        } else {
+          console.warn("⚠️ 检测到潜在的 Open Redirect 攻击，已拦截:", nextParam);
+        }
+      }
+
+      router.push(redirectUrl); 
     }
   };
 

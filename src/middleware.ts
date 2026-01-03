@@ -3,11 +3,46 @@ import { NextResponse, type NextRequest } from "next/server";
 import createMiddleware from 'next-intl/middleware';
 import { routing } from '@/i18n/routing';
 
+// 🛡️ 简单的内存限流器 (Rate Limiter)
+// 注意：在 Serverless/Edge 环境中，Map 可能不会跨请求持久化。
+// 生产环境建议使用 Redis (如 @upstash/ratelimit)。
+const rateLimit = new Map<string, { count: number; lastReset: number }>();
+
+function checkRateLimit(ip: string) {
+  const now = Date.now();
+  const windowMs = 60 * 1000; // 1 分钟窗口
+  const limit = 100; // 每分钟 100 次请求
+
+  const record = rateLimit.get(ip) || { count: 0, lastReset: now };
+
+  if (now - record.lastReset > windowMs) {
+    record.count = 0;
+    record.lastReset = now;
+  }
+
+  if (record.count >= limit) {
+    return false;
+  }
+
+  record.count++;
+  rateLimit.set(ip, record);
+  return true;
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 1. 处理 API 路由 (不进行国际化重定向，但保留鉴权)
   if (pathname.startsWith('/api')) {
+    // 🛡️ 1.1 应用限流
+    const ip = (request as any).ip || request.headers.get('x-forwarded-for') || 'unknown';
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json(
+        { error: "Too Many Requests" },
+        { status: 429, headers: { 'Retry-After': '60' } }
+      );
+    }
+
     // 初始化 Supabase
     let response = NextResponse.next({
       request: {

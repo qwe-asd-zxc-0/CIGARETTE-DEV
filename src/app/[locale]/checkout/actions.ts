@@ -96,59 +96,51 @@ export async function createOrder(formData: FormData) {
   };
 
   // 4. 计算金额 & 准备订单项
-  let orderItemsData = [];
-  let subtotal = 0;
+  // 我们将在事务中重新计算和校验，这里仅做预处理
+  const orderItemsData: {
+    productId: string;
+    quantity: number;
+    unitPrice: number;
+    productTitleSnapshot: any;
+    flavorSnapshot: any;
+  }[] = [];
+  let estimatedTotal = 0;
 
   for (const item of clientItems) {
-    // ✅ 扁平化：直接查询 Product 表
-    // 注意：前端传来的可能是 productVariantId (旧) 或 productId (新)
-    // 这里假设前端已经更新为传 productId，或者我们通过 ID 查找 Product
-    const product = await prisma.product.findUnique({
-      where: { id: item.productId || item.productVariantId }, // 兼容性处理
-    });
-
-    if (!product) return { success: false, message: t('productInvalid', { id: item.productId }) };
-    
-    // ✅ 检查库存
-    const currentStock = product.stockQuantity ?? 0;
-    if (currentStock < item.quantity) {
-        return { success: false, message: t('stockInsufficient', { title: getTrans(product.title, locale) }) };
+    // 🛡️ 安全检查: 强制验证数量为正整数
+    // 防止负数攻击 (导致余额增加) 或 0/小数攻击
+    if (!item.quantity || typeof item.quantity !== 'number' || item.quantity < 1 || !Number.isInteger(item.quantity)) {
+       return { success: false, message: "Invalid item quantity" };
     }
 
+    const product = await prisma.product.findUnique({
+      where: { id: item.productId || item.productVariantId },
+    });
+    if (!product) return { success: false, message: t('productInvalid', { id: item.productId }) };
+
+    // 🛡️ 检查商品状态和库存 (预检查)
+    if (product.status !== 'active') {
+       return { success: false, message: t('productUnavailable', { title: getTrans(product.title as any, locale) }) };
+    }
+    if (product.stockQuantity < item.quantity) {
+       return { success: false, message: t('stockInsufficient', { title: getTrans(product.title as any, locale) }) };
+    }
+    
     const unitPrice = Number(product.basePrice);
-    const lineTotal = unitPrice * item.quantity;
-    subtotal += lineTotal;
+    estimatedTotal += unitPrice * item.quantity;
 
     orderItemsData.push({
-      product: {
-        connect: { id: product.id }
-      },
+      productId: product.id, // 暂存 ID，事务中使用
       quantity: item.quantity,
       unitPrice: unitPrice,
-      productTitleSnapshot: product.title as any,
+      productTitleSnapshot: product.title,
       flavorSnapshot: product.flavor || "Default",
     });
   }
 
   const shippingCost = 0;
-  const totalAmount = subtotal + shippingCost;
 
   try {
-    // 4.5 检查用户余额
-    const userProfile = await prisma.profile.findUnique({
-      where: { id: user.id },
-      select: { balance: true }
-    });
-
-    if (!userProfile) {
-      return { success: false, message: t('userNotFound') };
-    }
-
-    const currentBalance = Number(userProfile.balance) || 0;
-    if (currentBalance < totalAmount) {
-      return { success: false, message: t('balanceInsufficient', { amount: totalAmount.toFixed(2), balance: currentBalance.toFixed(2) }) };
-    }
-
     // 5. 自动保存地址逻辑
     const addressCount = await prisma.userAddress.count({ where: { userId: user.id } });
     const existingAddress = await prisma.userAddress.findFirst({
@@ -166,66 +158,58 @@ export async function createOrder(formData: FormData) {
       shouldSaveAddress = true;
     }
 
-    // 6. 数据库事务执行
+    // 6. 数据库事务执行 (关键修复：并发安全)
     const order = await prisma.$transaction(async (tx) => {
-      // (1) 创建订单
-      const newOrder = await tx.order.create({
-        data: {
-          userId: user.id,
-          status: "pending_payment",
-          subtotalAmount: subtotal,
-          shippingCost: shippingCost,
-          totalAmount: totalAmount,
-          currency: "USD",
-          shippingAddress: shippingAddress as any,
-          items: {
-            create: orderItemsData 
-          }
-        }
-      });
+      let finalSubtotal = 0;
+      const finalOrderItems = [];
 
-      // (2) 扣减库存
-      for (const item of clientItems) {
-        // ✅ 扁平化：直接扣减 Product 库存
-        await tx.product.update({
-          where: { id: item.productId || item.productVariantId },
+      // (1) 扣减库存 & 计算最终金额
+      for (const item of orderItemsData) {
+        // 使用 update 原子操作扣减库存，防止并发超卖
+        // 注意：数据库层面最好有 CHECK (stockQuantity >= 0) 约束
+        // 如果没有约束，我们需要检查更新后的值
+        const updatedProduct = await tx.product.update({
+          where: { id: item.productId },
           data: {
             stockQuantity: { decrement: item.quantity }
           }
         });
+
+        if (updatedProduct.stockQuantity < 0) {
+          throw new Error(t('stockInsufficient', { title: getTrans(updatedProduct.title as any, locale) }));
+        }
+
+        const lineTotal = Number(updatedProduct.basePrice) * item.quantity;
+        finalSubtotal += lineTotal;
+
+        finalOrderItems.push({
+          product: { connect: { id: item.productId } },
+          quantity: item.quantity,
+          unitPrice: Number(updatedProduct.basePrice),
+          productTitleSnapshot: item.productTitleSnapshot as any,
+          flavorSnapshot: item.flavorSnapshot,
+        });
       }
 
-      // (3) 扣减用户余额
-      await tx.profile.update({
-        where: { id: user.id },
+      const finalTotalAmount = finalSubtotal + shippingCost;
+
+      // (2) 创建订单 (状态为 pending_payment)
+      const newOrder = await tx.order.create({
         data: {
-          balance: {
-            decrement: totalAmount
+          userId: user.id,
+          status: "pending_payment", // 等待支付
+          subtotalAmount: finalSubtotal,
+          shippingCost: shippingCost,
+          totalAmount: finalTotalAmount,
+          currency: "USD",
+          shippingAddress: shippingAddress as any,
+          items: {
+            create: finalOrderItems
           }
         }
       });
 
-      // (4) 余额扣除成功后，更新订单状态为已支付
-      await tx.order.update({
-        where: { id: newOrder.id },
-        data: {
-          status: "paid"
-        }
-      });
-
-      // (4.5) 🔥 关键修复：创建交易流水记录 (Transaction)
-      await tx.transaction.create({
-        data: {
-          userId: user.id,
-          type: "payment", // 交易类型：支付
-          amount: totalAmount, // 金额
-          status: "completed", // 状态：完成
-          description: `订单支付 #${newOrder.id.slice(0, 8)}`, // 描述
-          createdAt: new Date()
-        }
-      });
-
-      // (5) 保存地址
+      // (3) 保存地址
       if (shouldSaveAddress) {
         await tx.userAddress.create({
           data: {
@@ -272,6 +256,10 @@ export async function createOrder(formData: FormData) {
 
   } catch (error: any) {
     console.error("Create order error:", error);
-    return { success: false, message: t('orderFailed', { error: error.message }) };
+    // 🛡️ 安全修复: 生产环境隐藏详细错误信息
+    const errorMsg = process.env.NODE_ENV === 'production'
+      ? 'Internal Error'
+      : error.message;
+    return { success: false, message: t('orderFailed', { error: errorMsg }) };
   }
 }

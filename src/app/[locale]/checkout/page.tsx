@@ -186,7 +186,8 @@ export default function CheckoutPage() {
       if (clearCart) clearCart(); 
       else cartItems.forEach(item => removeFromCart(item.id)); 
 
-      router.push("/profile/orders");
+      // 跳转到收银台页面
+      router.push(`/checkout/payment/${result.orderId}`);
 
     } catch (error: any) {
       console.error("Order creation failed:", error);

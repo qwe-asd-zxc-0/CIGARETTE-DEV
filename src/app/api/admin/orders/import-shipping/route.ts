@@ -2,9 +2,42 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { sendShippingUpdateEmail } from "@/lib/email";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 export async function POST(req: Request) {
   try {
+    // --- 🛡️ 安全检查 Start ---
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+        },
+      }
+    );
+
+    // 1. 验证登录
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // 2. 验证管理员权限
+    const profile = await prisma.profile.findUnique({
+      where: { id: user.id },
+      select: { isAdmin: true }
+    });
+
+    if (!profile || !profile.isAdmin) {
+      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+    }
+    // --- 🛡️ 安全检查 End ---
+
     const formData = await req.formData();
     const file = formData.get("file") as File;
     

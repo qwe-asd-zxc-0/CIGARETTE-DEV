@@ -85,7 +85,10 @@ export async function deleteAddress(addressId: string) {
   if (!user) return;
 
   try {
-    await prisma.userAddress.delete({
+    // ✅ 修复 IDOR: 使用 deleteMany 确保只能删除属于当前用户的地址
+    // Prisma 的 delete() 方法要求 where 条件必须是唯一索引，而 [id, userId] 组合通常不是唯一索引
+    // 使用 deleteMany 可以绕过这个限制，并且如果没有匹配的记录（即地址不属于该用户），它只会返回 count: 0 而不会报错
+    await prisma.userAddress.deleteMany({
       where: { id: addressId, userId: user.id }
     });
     revalidatePath("/profile/addresses");
@@ -100,16 +103,30 @@ export async function setDefaultAddress(addressId: string) {
   if (!user) return;
 
   try {
-    await prisma.$transaction([
-      prisma.userAddress.updateMany({
+    await prisma.$transaction(async (tx) => {
+      // 1. 验证地址归属权 (防止 IDOR)
+      const address = await tx.userAddress.findFirst({
+        where: { id: addressId, userId: user.id }
+      });
+
+      if (!address) {
+        throw new Error("Address not found or unauthorized");
+      }
+
+      // 2. 重置所有默认地址
+      await tx.userAddress.updateMany({
         where: { userId: user.id },
         data: { isDefault: false }
-      }),
-      prisma.userAddress.update({
-        where: { id: addressId, userId: user.id },
+      });
+
+      // 3. 设置新的默认地址
+      // 此时我们已经验证了归属权，可以直接用 ID 更新，或者继续用 updateMany 保持一致性
+      await tx.userAddress.update({
+        where: { id: addressId },
         data: { isDefault: true }
-      })
-    ]);
+      });
+    });
+    
     revalidatePath("/profile/addresses");
   } catch (error) {
     console.error("Set default error:", error);

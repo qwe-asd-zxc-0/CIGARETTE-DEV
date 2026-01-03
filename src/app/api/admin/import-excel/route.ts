@@ -59,12 +59,36 @@ export async function POST(request: Request) {
     }
     // --- 🛡️ 安全检查 End ---
 
+    // 🛡️ 防御 DoS: 检查 Content-Length
+    const contentLength = parseInt(request.headers.get('content-length') || '0');
+    if (contentLength > 20 * 1024 * 1024) { // Excel 限制 20MB
+      return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
+    }
+
     const formData = await request.formData();
     const file = formData.get('file') as File;
 
     if (!file) return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
 
+    // 🛡️ 二次检查: 检查实际文件大小
+    if (file.size > 10 * 1024 * 1024) { // 限制 10MB
+      return NextResponse.json({ error: 'File too large (max 10MB)' }, { status: 400 });
+    }
+
     const buffer = Buffer.from(await file.arrayBuffer());
+
+    // 🛡️ 安全检查: 验证 Excel 文件头 (Magic Number)
+    const isExcel = (buf: Buffer) => {
+      const header = buf.toString('hex', 0, 4);
+      // XLSX (ZIP): 504b0304
+      // XLS (OLE): d0cf11e0
+      return header === '504b0304' || header === 'd0cf11e0';
+    };
+
+    if (!isExcel(buffer)) {
+      return NextResponse.json({ error: 'Invalid file type. Only Excel files (.xlsx, .xls) are allowed.' }, { status: 400 });
+    }
+
     const workbook = XLSX.read(buffer, { type: 'buffer' });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json<any>(sheet);
@@ -272,6 +296,10 @@ export async function POST(request: Request) {
 
   } catch (error: any) {
     console.error('Import Error:', error);
-    return NextResponse.json({ error: error.message || 'Import failed' }, { status: 500 });
+    // 🛡️ 安全修复: 生产环境隐藏详细错误信息
+    const message = process.env.NODE_ENV === 'production'
+      ? 'Import failed'
+      : (error.message || 'Import failed');
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

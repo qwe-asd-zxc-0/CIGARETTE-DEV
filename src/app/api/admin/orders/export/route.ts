@@ -1,9 +1,42 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 export async function POST(req: Request) {
   try {
+    // --- 🛡️ 安全检查 Start ---
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+        },
+      }
+    );
+
+    // 1. 验证登录
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // 2. 验证管理员权限
+    const profile = await prisma.profile.findUnique({
+      where: { id: user.id },
+      select: { isAdmin: true }
+    });
+
+    if (!profile || !profile.isAdmin) {
+      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+    }
+    // --- 🛡️ 安全检查 End ---
+
     const { orderIds } = await req.json();
 
     // 如果没有提供 ID，则导出所有订单（或者前端应该处理全选逻辑传所有ID？为了性能，如果全选，前端可能只传一个 flag）
@@ -41,7 +74,7 @@ export async function POST(req: Request) {
 
       return {
         "订单号 (Order ID)": order.id,
-        "下单日期 (Date)": new Date(order.createdAt).toISOString().split('T')[0],
+        "下单日期 (Date)": order.createdAt ? new Date(order.createdAt).toISOString().split('T')[0] : '',
         "状态 (Status)": order.status,
         "总金额 (Total Amount)": Number(order.totalAmount),
         "货币 (Currency)": order.currency,

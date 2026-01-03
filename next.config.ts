@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
   // 1. React Compiler 配置
   reactCompiler: true,
 
+  // 🛡️ 安全配置：生产环境禁用 Source Maps
+  productionBrowserSourceMaps: false,
+
   // ✅ 新增：把这段配置加到这里
   experimental: {
     serverActions: {

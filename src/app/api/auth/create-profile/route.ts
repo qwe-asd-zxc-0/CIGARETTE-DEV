@@ -143,8 +143,13 @@ export async function POST(request: Request) {
        }, { status: 500 });
     }
 
+    // 🛡️ 安全修复: 生产环境隐藏详细错误信息
+    const errorMessage = process.env.NODE_ENV === 'production' 
+      ? 'Internal Server Error' 
+      : (error.message || '服务器内部错误');
+
     return NextResponse.json(
-      { error: error.message || '服务器内部错误' },
+      { error: errorMessage },
       { status: 500 }
     );
   }

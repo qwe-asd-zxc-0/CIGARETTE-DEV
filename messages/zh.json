@@ -261,6 +261,7 @@
     "loginRequired": "请先登录",
     "ageVerificationRequired": "您的账户尚未通过年龄验证，无法购买商品。",
     "productInvalid": "商品失效 ID: {id}",
+    "productUnavailable": "{title} 暂时下架",
     "stockInsufficient": "{title} 库存不足",
     "userNotFound": "用户信息不存在",
     "balanceInsufficient": "余额不足，需要 ${amount}，当前余额 ${balance}",
@@ -378,6 +379,18 @@
     "errorAddressAddFailed": "添加失败，请重试",
     "errorAddressUpdated": "地址已更新",
     "errorAddressUpdateFailed": "更新失败，请重试"
+  },
+  "Payment": {
+    "title": "加密货币支付",
+    "orderNo": "订单号",
+    "totalAmount": "支付总额",
+    "remainingTime": "剩余支付时间",
+    "addressLabel": "USDT (TRC20) 收款地址",
+    "verifying": "正在验证支付...",
+    "iHavePaid": "我已完成支付",
+    "warning": "请务必仅发送 USDT (TRC20)。发送其他币种可能导致资金永久丢失。",
+    "copySuccess": "复制成功",
+    "verifyFailed": "支付验证失败，请重试或联系客服。"
   },
   "NotFound": {
     "title": "页面未找到",

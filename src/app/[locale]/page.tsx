@@ -79,23 +79,23 @@ export default async function Home({
         </div>
 
         {/* === 2. Hero 区域 (z-10) === */}
-        <section className="relative z-10 min-h-[80vh] flex flex-col items-center justify-center px-4 pt-28 pb-10">
+        <section className="relative z-10 min-h-[55vh] md:min-h-[80vh] flex flex-col items-center justify-center px-4 pt-28 pb-10">
           
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md mb-8 animate-fade-in-up shadow-2xl shadow-black/50">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md mb-6 md:mb-8 animate-fade-in-up shadow-2xl shadow-black/50">
             <Sparkles className="w-3.5 h-3.5 text-orange-500" />
             <span className="text-[10px] md:text-xs font-bold text-zinc-300 tracking-[0.2em] uppercase">
               {t('subtitle')}
             </span>
           </div>
 
-          <h1 className="text-5xl md:text-7xl lg:text-9xl font-bold mb-6 tracking-tighter text-white drop-shadow-2xl text-center">
+          <h1 className="text-5xl md:text-7xl lg:text-9xl font-bold mb-4 md:mb-6 tracking-tighter text-white drop-shadow-2xl text-center">
             GLOBAL <br className="md:hidden" />
             <span className="text-transparent bg-clip-text bg-linear-to-br from-red-500 via-orange-600 to-red-800">
               TOBACCO
             </span>
           </h1>
           
-          <p className="text-lg md:text-2xl text-zinc-300 max-w-2xl mx-auto font-light mb-10 leading-relaxed text-center opacity-90">
+          <p className="text-lg md:text-2xl text-zinc-300 max-w-2xl mx-auto font-light mb-8 md:mb-10 leading-relaxed text-center opacity-90">
             {t('description')}
             <span className="block text-zinc-500 text-sm mt-3 font-normal">
               {t('brandSlogan')}
@@ -122,12 +122,12 @@ export default async function Home({
         </section>
 
         {/* ✅ 3. 活动 Banner 区域 */}
-        <div className="relative z-20 px-4 sm:px-6 mb-10">
+        <div className="relative z-20 px-4 sm:px-6 mb-6 md:mb-10">
            <ActivityBanner />
         </div>
 
         {/* === 4. 产品轮播区域 (z-10) === */}
-        <section className="relative z-10 max-w-7xl mx-auto px-6 pb-32 pt-10">
+        <section className="relative z-10 max-w-7xl mx-auto px-6 pb-32 pt-6 md:pt-10">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4 border-b border-white/5 pb-6">
             <div>
               <h2 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
