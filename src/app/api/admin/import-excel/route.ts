@@ -4,12 +4,20 @@ import * as XLSX from 'xlsx';
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-// 辅助: 生成 URL Slug
+// 辅助: 生成 URL Slug (带随机数，用于商品)
 function generateSlug(text: string) {
   if (!text) return `prod-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
   return text.toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '') + `-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 1000)}`;
+}
+
+// 辅助: 生成稳定的 Brand Slug (不带随机数，用于品牌去重)
+function generateStableSlug(text: string) {
+  if (!text) return 'brand-unknown';
+  return text.toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 }
 
 // 🔥 核心: 自动生成 SKU
@@ -183,11 +191,19 @@ export async function POST(request: Request) {
             // --- 数据库操作 ---
 
             // A. 品牌
-            const brandSlug = generateSlug(brandName);
+            // 使用稳定 Slug，确保同名品牌只会创建一次
+            const brandSlug = generateStableSlug(brandName);
+            
+            // 构造符合多语言规范的名称对象
+            const brandNameObj = { en: brandName, zh: brandName };
+
             const brand = await prisma.brand.upsert({
               where: { slug: brandSlug },
-              update: {},
-              create: { name: brandName, slug: brandSlug }
+              update: {}, // 如果存在则不更新，直接返回
+              create: { 
+                name: brandNameObj, // 存为 JSON 对象
+                slug: brandSlug 
+              }
             });
 
             // B. 商品 (SPU/SKU) - 扁平化处理

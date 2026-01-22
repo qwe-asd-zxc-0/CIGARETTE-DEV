@@ -1,0 +1,25 @@
+name: Supabase Keep Alive
+
+on:
+  schedule:
+    # 每天 UTC 时间 00:00 运行一次 (北京时间早上 8:00)
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase URL
+        env:
+          # 警告：为了安全起见，建议将这些值存储在 GitHub Secrets 中
+          # 例如：${{ secrets.SUPABASE_URL }} 和 ${{ secrets.SUPABASE_KEY }}
+          # 从提供的 DATABASE_URL 中推断的项目 ID: ukfchupiviprnschjpyf
+          SUPABASE_URL: "https://ukfchupiviprnschjpyf.supabase.co"
+          # 用户提供的 Service Role Key (注意：此 Key 已在 .gitignore 中泄露，建议在 Supabase 后台重置)
+          SUPABASE_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVrZmNodXBpdmlwcm5zY2hqcHlmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NTExODkxMCwiZXhwIjoyMDgwNjk0OTEwfQ.LXL9G--0VHtP9PXJ9BorIA1WqDNl1_UJ8QGgelNMvi8"
+        run: |
+          echo "Pinging Supabase REST API at $SUPABASE_URL..."
+          curl -f -X GET "$SUPABASE_URL/rest/v1/" \
+          -H "apikey: $SUPABASE_KEY" \
+          -H "Authorization: Bearer $SUPABASE_KEY"

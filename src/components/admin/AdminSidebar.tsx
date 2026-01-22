@@ -39,7 +39,7 @@ export default function AdminSidebar() {
       {/* Logo 区域 */}
       <div className="p-6 border-b border-white/10 flex items-center justify-between">
         <h1 className="text-xl font-bold text-white tracking-wider">
-          GLOBAL <span className="text-red-600">ADMIN</span>
+          YANKEGOU <span className="text-red-600">ADMIN</span>
         </h1>
         <Link href="/" title="返回前台首页" className="text-zinc-500 hover:text-white transition-colors">
           <Home className="w-5 h-5" />

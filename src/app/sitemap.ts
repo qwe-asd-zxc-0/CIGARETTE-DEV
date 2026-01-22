@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 import { prisma } from '@/lib/prisma';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://www.globaltobacco.com'; // 替换为您的实际域名
+  const baseUrl = 'https://www.yankegou.com'; // 替换为您的实际域名
 
   // 1. 静态页面
   const staticRoutes = [

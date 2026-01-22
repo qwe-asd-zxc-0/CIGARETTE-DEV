@@ -26,7 +26,7 @@ export function getOrderConfirmationHtml(order: any) {
   return `
     <div style="${EMAIL_STYLES.container}">
       <div style="${EMAIL_STYLES.header}">
-        <h1 style="${EMAIL_STYLES.headerTitle}">GLOBAL TOBACCO</h1>
+        <h1 style="${EMAIL_STYLES.headerTitle}">YANKEGOU</h1>
       </div>
       
       <div style="${EMAIL_STYLES.body}">
@@ -53,7 +53,7 @@ export function getOrderConfirmationHtml(order: any) {
       </div>
 
       <div style="${EMAIL_STYLES.footer}">
-        <p>&copy; ${new Date().getFullYear()} Global Tobacco. 保留所有权利。</p>
+        <p>&copy; ${new Date().getFullYear()} Yankegou. 保留所有权利。</p>
         <p>如果您有任何问题，请直接回复此邮件。</p>
       </div>
     </div>
@@ -64,7 +64,7 @@ export function getShippingUpdateHtml(order: any) {
   return `
     <div style="${EMAIL_STYLES.container}">
       <div style="${EMAIL_STYLES.header}">
-        <h1 style="${EMAIL_STYLES.headerTitle}">GLOBAL TOBACCO</h1>
+        <h1 style="${EMAIL_STYLES.headerTitle}">YANKEGOU</h1>
       </div>
       
       <div style="${EMAIL_STYLES.body}">
@@ -87,7 +87,7 @@ export function getShippingUpdateHtml(order: any) {
       </div>
 
       <div style="${EMAIL_STYLES.footer}">
-        <p>&copy; ${new Date().getFullYear()} Global Tobacco. 保留所有权利。</p>
+        <p>&copy; ${new Date().getFullYear()} Yankegou. 保留所有权利。</p>
       </div>
     </div>
   `;
@@ -97,7 +97,7 @@ export function getOrderCancellationHtml(order: any, reason?: string) {
   return `
     <div style="${EMAIL_STYLES.container}">
       <div style="${EMAIL_STYLES.header}">
-        <h1 style="${EMAIL_STYLES.headerTitle}">GLOBAL TOBACCO</h1>
+        <h1 style="${EMAIL_STYLES.headerTitle}">YANKEGOU</h1>
       </div>
       
       <div style="${EMAIL_STYLES.body}">
@@ -116,7 +116,7 @@ export function getOrderCancellationHtml(order: any, reason?: string) {
       </div>
 
       <div style="${EMAIL_STYLES.footer}">
-        <p>&copy; ${new Date().getFullYear()} Global Tobacco. 保留所有权利。</p>
+        <p>&copy; ${new Date().getFullYear()} Yankegou. 保留所有权利。</p>
       </div>
     </div>
   `;

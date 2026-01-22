@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: ProductDetailProps) {
   }
 
   return {
-    title: `${getTrans(product.title, locale)} - Global Tobacco`,
+    title: `${getTrans(product.title, locale)} - Yankegou`,
     description: getTrans(product.description, locale) || t('globalSelection') 
   };
 }
@@ -73,9 +73,19 @@ export default async function ProductDetail({ params }: ProductDetailProps) {
   }));
 
   return (
-    <main className="min-h-screen bg-zinc-950 text-zinc-100 pb-20">
+    <main className="min-h-screen bg-black text-zinc-100 pb-20 relative overflow-hidden">
+      {/* Background Layer */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-neutral-950" />
+        <div 
+          className="absolute inset-0 opacity-20 bg-cover bg-center mix-blend-screen"
+          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1517154596051-c636f31f731e?q=80&w=2000&auto=format&fit=crop')" }}
+        />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-red-900/20 blur-[120px] rounded-full" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black/90" />
+      </div>
 
-      <div className="max-w-7xl mx-auto px-6 pt-28 pb-12">
+      <div className="max-w-7xl mx-auto px-6 pt-28 pb-12 relative z-10">
         
         {/* 传入序列化后的 product 数据 */}
         <ProductDetailClient product={product} />

@@ -15,11 +15,12 @@ export default async function ProductPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ origin?: string; q?: string; page?: string; category?: string; inStock?: string }>;
+  searchParams: Promise<{ origin?: string; q?: string; page?: string; category?: string; inStock?: string; brandId?: string }>;
 }) {
   const { locale } = await params;
   const searchParamsValue = await searchParams;
-  const origin = searchParamsValue?.origin;
+  const brandIdParam = searchParamsValue?.brandId;
+  const brandId = brandIdParam ? parseInt(brandIdParam) : undefined;
   const query = searchParamsValue?.q || "";
   const category = searchParamsValue?.category;
   const inStockParam = searchParamsValue?.inStock; // 保持原始字符串，用于判断是否未定义
@@ -31,8 +32,8 @@ export default async function ProductPage({
     status: "active" 
   };
 
-  if (origin) {
-    where.origin = origin;
+  if (brandId) {
+    where.brandId = brandId;
   }
 
   // ✅ 修复：针对 JSON 字段的精确匹配 (支持多语言值映射)
@@ -89,7 +90,7 @@ export default async function ProductPage({
   }
 
   // 2. 并行查询
-  const [products, totalCount, origins] = await Promise.all([
+  const [products, totalCount, brands] = await Promise.all([
     prisma.product.findMany({
       where,
       orderBy: { createdAt: "desc" },
@@ -100,10 +101,14 @@ export default async function ProductPage({
       skip: (currentPage - 1) * PAGE_SIZE,
     }),
     prisma.product.count({ where }),
-    prisma.product.groupBy({
-      by: ['origin'],
-      _count: true,
-      where: { status: "active", origin: { not: null } },
+    prisma.brand.findMany({
+      where: { products: { some: { status: 'active' } } },
+      include: {
+        _count: {
+          select: { products: { where: { status: 'active' } } }
+        }
+      },
+      orderBy: { id: 'asc' }
     })
   ]);
 
@@ -111,6 +116,21 @@ export default async function ProductPage({
   const filteredProducts = products;
   const filteredTotalCount = totalCount;
   const totalPages = Math.ceil(filteredTotalCount / PAGE_SIZE);
+
+  // ✅ 去重逻辑：根据英文名称去重，保留商品数量最多的那个
+  const uniqueBrandsMap = new Map();
+  brands.forEach(b => {
+    const name = getTrans(b.name, 'en'); 
+    if (!uniqueBrandsMap.has(name)) {
+      uniqueBrandsMap.set(name, b);
+    } else {
+      const existing = uniqueBrandsMap.get(name);
+      if (b._count.products > existing._count.products) {
+        uniqueBrandsMap.set(name, b);
+      }
+    }
+  });
+  const uniqueBrands = Array.from(uniqueBrandsMap.values()).sort((a: any, b: any) => b._count.products - a._count.products); // 按数量降序排列
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
@@ -149,73 +169,32 @@ export default async function ProductPage({
               <Link 
                 href="/product"
                 className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all border flex items-center gap-2 ${
-                  !origin 
+                  !brandId 
                     ? "bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.2)] scale-105" 
                     : "bg-zinc-900/50 text-zinc-400 border-white/10 hover:bg-white/10 hover:text-white hover:border-white/30 backdrop-blur-md"
                 }`}
               >
                 <Globe className="w-4 h-4" />
-                {t('allRegions')}
+                {t('allBrands') || "All Brands"}
               </Link>
 
-              {origins.map((o) => (
-                o.origin && (
-                  <Link
-                    key={o.origin}
-                    href={`/product?origin=${o.origin}${query ? `&q=${query}` : ''}${inStockParam ? `&inStock=${inStockParam}` : ''}`}
-                    className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all border flex items-center gap-2 ${
-                      origin === o.origin
-                        ? "bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.2)] scale-105"
-                        : "bg-zinc-900/50 text-zinc-400 border-white/10 hover:bg-white/10 hover:text-white hover:border-white/30 backdrop-blur-md"
-                    }`}
-                  >
-                    <MapPin className={`w-3.5 h-3.5 ${origin === o.origin ? "text-red-600" : "text-zinc-500"}`} />
-                    {o.origin}
-                    <span className={`ml-1 text-[10px] ${origin === o.origin ? "opacity-100 font-extrabold" : "opacity-50"}`}>
-                      {o._count}
-                    </span>
-                  </Link>
-                )
+              {uniqueBrands.map((b: any) => (
+                <Link
+                  key={b.id}
+                  href={`/product?brandId=${b.id}${query ? `&q=${query}` : ''}${inStockParam ? `&inStock=${inStockParam}` : ''}`}
+                  className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all border flex items-center gap-2 ${
+                    brandId === b.id
+                      ? "bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.2)] scale-105"
+                      : "bg-zinc-900/50 text-zinc-400 border-white/10 hover:bg-white/10 hover:text-white hover:border-white/30 backdrop-blur-md"
+                  }`}
+                >
+                  <Package className={`w-3.5 h-3.5 ${brandId === b.id ? "text-red-600" : "text-zinc-500"}`} />
+                  {getTrans(b.name, locale)}
+                  <span className={`ml-1 text-[10px] ${brandId === b.id ? "opacity-100 font-extrabold" : "opacity-50"}`}>
+                    {b._count.products}
+                  </span>
+                </Link>
               ))}
-
-              {/* 库存筛选按钮 */}
-              <div className="w-full flex justify-center gap-3 mt-4">
-                <Link 
-                  href={`/product${origin ? `?origin=${origin}` : ''}${query ? `${origin ? '&' : '?'}q=${query}` : ''}`}
-                  className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all border flex items-center gap-2 ${
-                    !inStockParam 
-                      ? "bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.2)] scale-105" 
-                      : "bg-zinc-900/50 text-zinc-400 border-white/10 hover:bg-white/10 hover:text-white hover:border-white/30 backdrop-blur-md"
-                  }`}
-                >
-                  <Package className="w-4 h-4" />
-                  {t('allStock')}
-                </Link>
-
-                <Link 
-                  href={`/product?inStock=true${origin ? `&origin=${origin}` : ''}${query ? `&q=${query}` : ''}`}
-                  className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all border flex items-center gap-2 ${
-                    inStockParam === 'true'
-                      ? "bg-green-600/90 text-white border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.3)] scale-105"
-                      : "bg-zinc-900/50 text-zinc-400 border-white/10 hover:bg-white/10 hover:text-white hover:border-white/30 backdrop-blur-md"
-                  }`}
-                >
-                  <div className={`w-2 h-2 rounded-full ${inStockParam === 'true' ? "bg-white animate-pulse" : "bg-green-500"}`} />
-                  {t('inStock')}
-                </Link>
-
-                <Link 
-                  href={`/product?inStock=false${origin ? `&origin=${origin}` : ''}${query ? `&q=${query}` : ''}`}
-                  className={`px-6 py-2.5 rounded-full text-xs font-bold transition-all border flex items-center gap-2 ${
-                    inStockParam === 'false'
-                      ? "bg-red-600/90 text-white border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.3)] scale-105"
-                      : "bg-zinc-900/50 text-zinc-400 border-white/10 hover:bg-white/10 hover:text-white hover:border-white/30 backdrop-blur-md"
-                  }`}
-                >
-                  <div className="w-2 h-2 rounded-full bg-red-500" />
-                  {t('outOfStock')}
-                </Link>
-              </div>
             </div>
           </div>
 
@@ -229,20 +208,20 @@ export default async function ProductPage({
                             <Search className="w-6 h-6 text-purple-500 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
                             "{query}" {t('searchResultsFor')}
                         </>
-                    ) : origin ? (
+                    ) : brandId ? (
                         <>
-                            <MapPin className="w-6 h-6 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" /> 
-                            {origin} {t('selectionSeriesSuffix')}
+                            <Package className="w-6 h-6 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" /> 
+                            {brands.find(b => b.id === brandId) ? getTrans(brands.find(b => b.id === brandId)!.name, locale) : ""} {t('selectionSeriesSuffix')}
                         </>
                     ) : (
                         <>
                             <Globe className="w-6 h-6 text-zinc-400" />
-                            {t('allRegionsTitle')}
+                            {t('allBrandsTitle') || "All Brands"}
                         </>
                     )}
                  </h2>
-                 {(origin && query) && (
-                   <span className="text-xs text-zinc-500 ml-8">{t('locatedIn')} {origin}</span>
+                 {(brandId && query) && (
+                   <span className="text-xs text-zinc-500 ml-8">{t('brand')} {brands.find(b => b.id === brandId) ? getTrans(brands.find(b => b.id === brandId)!.name, locale) : ""}</span>
                  )}
                </div>
 

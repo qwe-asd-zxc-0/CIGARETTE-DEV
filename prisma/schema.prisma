@@ -3,25 +3,25 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
+  provider     = "postgresql"
   // 仅操作 public schema，避免触碰 Supabase 内置 auth 表
-  schemas   = ["public"]
+  schemas      = ["public"]
   relationMode = "prisma" // 由 Prisma 维护关系，不改数据库 FK
 }
 
 // --- 1. 用户与画像 ---
 
 model Profile {
-  id               String   @id @db.Uuid // 对应 auth.users 的 ID
-  email            String?  @unique
-  fullName         String?  @unique @map("full_name")
-  avatarUrl        String?  @map("avatar_url")
-  isAgeVerified    Boolean? @default(false) @map("is_age_verified")
-  balance        Decimal?  @default(0.00) @db.Decimal(10, 2)
-  trafficSource    String?  @map("traffic_source")
-  assignedAgentId  String?  @db.Uuid @map("assigned_agent_id")
+  id               String    @id @db.Uuid // 对应 auth.users 的 ID
+  email            String?   @unique
+  fullName         String?   @unique @map("full_name")
+  avatarUrl        String?   @map("avatar_url")
+  isAgeVerified    Boolean?  @default(false) @map("is_age_verified")
+  balance          Decimal?  @default(0.00) @db.Decimal(10, 2)
+  trafficSource    String?   @map("traffic_source")
+  assignedAgentId  String?   @db.Uuid @map("assigned_agent_id")
   createdAt        DateTime? @default(now()) @db.Timestamptz(6) @map("created_at")
-  isAdmin          Boolean? @default(false) @map("is_admin")
+  isAdmin          Boolean?  @default(false) @map("is_admin")
   
   // 单点登录控制
   currentSessionToken String? @map("current_session_token")
@@ -106,13 +106,13 @@ model Product {
   brandId            Int?     @map("brand_id")
   title              Json
   origin             String?  
-  category           Json?  // 商品分类：Disposable, E-Liquid, Traditional 等
+  category           Json?    // 商品分类：Disposable, E-Liquid, Traditional 等
   description        Json?
   basePrice          Decimal  @map("base_price") @db.Decimal
   tieredPricingRules Json?    @default("[]") @map("tiered_pricing_rules")
   specifications     Json?    @default("{}")
   coverImageUrl      String?  @map("cover_image_url")
-  images             String[]  @default([])
+  images             String[] @default([])
   slug               String   @unique
   status             String?  @default("active") // active, draft, archived
   stockQuantity      Int      @default(0) @map("stock_quantity")
@@ -127,10 +127,10 @@ model Product {
   updatedAt          DateTime? @updatedAt @map("updated_at")
 
   // 关系
-  brand           Brand?           @relation(fields: [brandId], references: [id])
-  reviews         Review[]
-  orderItems      OrderItem[]
-  restockSubs     RestockSubscription[]
+  brand            Brand?            @relation(fields: [brandId], references: [id])
+  reviews          Review[]
+  orderItems       OrderItem[]
+  restockSubs      RestockSubscription[]
 
   @@map("products")
   @@schema("public")
@@ -140,8 +140,8 @@ model Product {
 
 model Order {
   id              String   @id @default(uuid()) @db.Uuid
-  userId          String?  @db.Uuid @map("user_id")
-  guestEmail      String?  @map("guest_email")
+  userId          String?  @db.Uuid @map("user_id") // 允许为空 (游客订单)
+  guestEmail      String?  @map("guest_email")      // 游客邮箱
   status          String?  @default("pending_payment")
   paymentMethod   String?  @map("payment_method")
   subtotalAmount  Decimal  @map("subtotal_amount") @db.Decimal
@@ -154,11 +154,20 @@ model Order {
   trackingUrl     String?  @map("tracking_url")
   cancelReason    String?  @map("cancel_reason")
   createdAt       DateTime? @default(now()) @db.Timestamptz(6) @map("created_at")
-  updatedAt DateTime? @updatedAt @map("updated_at")
+  updatedAt       DateTime? @updatedAt @map("updated_at")
+
+  // 新增字段: Trocador 支付信息
+  paymentId        String?  @map("payment_id")        // Trocador 的 trade_id
+  paymentUrl       String?  @map("payment_url")       // 支付页面 URL
+  paymentCrypto    String?  @map("payment_crypto")    // 用户选的币种 (如 usdt_trc20)
+  paymentAddress   String?  @map("payment_address")   // Trocador 给出的充值地址
+  
+  // 超时未付自动取消
+  expiresAt        DateTime? @map("expires_at")
 
   // 关系
-  user            Profile?    @relation(fields: [userId], references: [id])
-  items           OrderItem[]
+  user             Profile?  @relation(fields: [userId], references: [id])
+  items            OrderItem[]
 
   @@map("orders")
   @@schema("public")
@@ -167,9 +176,9 @@ model Order {
 model OrderItem {
   id                   String   @id @default(uuid()) @db.Uuid
   orderId              String?  @db.Uuid @map("order_id")
-  productId            String?  @db.Uuid @map("product_id") // ✅ Changed from productVariantId
-  productTitleSnapshot Json?  @map("product_title_snapshot")
-  flavorSnapshot       Json?  @map("flavor_snapshot")
+  productId            String?  @db.Uuid @map("product_id")
+  productTitleSnapshot Json?    @map("product_title_snapshot")
+  flavorSnapshot       Json?    @map("flavor_snapshot")
   quantity             Int
   unitPrice            Decimal  @map("unit_price") @db.Decimal
 
@@ -202,7 +211,7 @@ model Review {
   id         String   @id @default(uuid()) @db.Uuid
   userId     String?  @db.Uuid @map("user_id")
   productId  String?  @db.Uuid @map("product_id")
-  rating     Int // 1-5
+  rating     Int      // 1-5
   title      String?
   content    String?
   images     String[] // PostgreSQL 数组
@@ -230,18 +239,19 @@ model Faq {
 }
 
 model RestockSubscription {
-  id               String   @id @default(uuid()) @db.Uuid
-  email            String
-  productId        String?  @db.Uuid @map("product_id") // ✅ Changed from productVariantId
-  isNotified       Boolean? @default(false) @map("is_notified")
-  createdAt        DateTime? @default(now()) @db.Timestamptz(6) @map("created_at")
+  id         String    @id @default(uuid()) @db.Uuid
+  email      String
+  productId  String?   @db.Uuid @map("product_id")
+  isNotified Boolean?  @default(false) @map("is_notified")
+  createdAt  DateTime? @default(now()) @db.Timestamptz(6) @map("created_at")
 
   // 关系
-  product          Product? @relation(fields: [productId], references: [id])
+  product    Product?  @relation(fields: [productId], references: [id])
 
   @@map("restock_subscriptions")
   @@schema("public")
 }
+
 // --- 5. 系统配置 ---
 
 model SystemSetting {
@@ -253,7 +263,9 @@ model SystemSetting {
   @@map("system_settings")
   @@schema("public")
 }
-// --- 6. 营销活动历史 (新增) ---
+
+// --- 6. 营销活动历史 ---
+
 model MarketingCampaign {
   id          String   @id @default(uuid()) @db.Uuid
   title       String
@@ -267,7 +279,8 @@ model MarketingCampaign {
   @@schema("public")
 }
 
-// --- 7. 安全限制 (新增) ---
+// --- 7. 安全限制 ---
+
 model RateLimit {
   id        String   @id @default(uuid()) @db.Uuid
   ip        String
@@ -276,5 +289,19 @@ model RateLimit {
 
   @@index([ip, action, createdAt])
   @@map("rate_limits")
+  @@schema("public")
+}
+
+// --- 8. 游客验证码 (用于无密码登录/查单) ---
+
+model VerificationCode {
+  id        String   @id @default(cuid()) // ✅ 增加主键，方便管理
+  email     String   // ✅ 改回 email，更直观
+  code      String   // ✅ 改回 code，对应 6 位数字
+  expiresAt DateTime @map("expires_at") // ✅ 改为 expiresAt，配合代码逻辑
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([email]) // 加上索引，查询更快
+  @@map("verification_codes") // 表名
   @@schema("public")
 }

@@ -37,25 +37,49 @@ export default function CartPage() {
 
   if (cartItems.length === 0) {
     return (
-      <div className="min-h-screen bg-black text-white pt-32 pb-20 px-6 flex flex-col items-center justify-center">
-        <div className="w-24 h-24 bg-zinc-900 rounded-full flex items-center justify-center mb-6">
-          <ShoppingBag className="w-10 h-10 text-zinc-500" />
+      <div className="min-h-screen bg-black text-white pt-32 pb-20 px-6 flex flex-col items-center justify-center relative overflow-hidden">
+        {/* Background Layer */}
+        <div className="fixed inset-0 z-0 pointer-events-none">
+          <div className="absolute inset-0 bg-neutral-950" />
+          <div 
+            className="absolute inset-0 opacity-20 bg-cover bg-center mix-blend-screen"
+            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1517154596051-c636f31f731e?q=80&w=2000&auto=format&fit=crop')" }}
+          />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-red-900/20 blur-[120px] rounded-full" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black/90" />
         </div>
-        <h1 className="text-2xl font-bold mb-4">{t('emptyTitle')}</h1>
-        <p className="text-zinc-400 mb-8">{t('emptyDesc')}</p>
-        <Link 
-          href="/product" 
-          className="px-8 py-3 bg-red-600 hover:bg-red-700 text-white rounded-full font-bold transition flex items-center gap-2"
-        >
-          {t('goShopping')} <ArrowRight className="w-4 h-4" />
-        </Link>
+
+        <div className="relative z-10 flex flex-col items-center">
+          <div className="w-24 h-24 bg-zinc-900/80 backdrop-blur-md rounded-full flex items-center justify-center mb-6 border border-white/10 shadow-[0_0_30px_rgba(255,255,255,0.05)]">
+            <ShoppingBag className="w-10 h-10 text-zinc-500" />
+          </div>
+          <h1 className="text-2xl font-bold mb-4 text-white">{t('emptyTitle')}</h1>
+          <p className="text-zinc-400 mb-8">{t('emptyDesc')}</p>
+          <Link 
+            href="/product" 
+            className="px-8 py-3 bg-red-600 hover:bg-red-700 text-white rounded-full font-bold transition flex items-center gap-2 shadow-[0_0_20px_rgba(220,38,38,0.4)] hover:shadow-[0_0_30px_rgba(220,38,38,0.6)]"
+          >
+            {t('goShopping')} <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black text-white pt-32 pb-20 px-4 md:px-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-black text-white pt-32 pb-20 px-4 md:px-8 relative overflow-hidden">
+      {/* Background Layer */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-neutral-950" />
+        <div 
+          className="absolute inset-0 opacity-20 bg-cover bg-center mix-blend-screen"
+          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1517154596051-c636f31f731e?q=80&w=2000&auto=format&fit=crop')" }}
+        />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-red-900/20 blur-[120px] rounded-full" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black/90" />
+      </div>
+
+      <div className="max-w-7xl mx-auto relative z-10">
         <h1 className="text-3xl font-bold mb-10 border-b border-zinc-800 pb-4">{t('title')}</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">

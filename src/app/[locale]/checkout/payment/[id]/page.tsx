@@ -30,5 +30,14 @@ export default async function PaymentPage({ params }: PageProps) {
     redirect("/profile/orders");
   }
 
-  return <PaymentClient order={order as any} />;
+  // 序列化 Decimal 类型，防止传递给 Client Component 报错
+  const serializedOrder = {
+    ...order,
+    totalAmount: Number(order.totalAmount),
+    shippingCost: Number(order.shippingCost),
+    subtotalAmount: Number(order.subtotalAmount),
+    paymentAmount: order.paymentAmount ? Number(order.paymentAmount) : null,
+  };
+
+  return <PaymentClient order={serializedOrder as any} />;
 }

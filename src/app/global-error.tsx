@@ -41,7 +41,7 @@ export default function GlobalError({
           </div>
           
           <div className="absolute bottom-8 text-zinc-600 text-xs">
-            Global Tobacco System Protection
+            Yankegou System Protection
           </div>
         </div>
       </body>

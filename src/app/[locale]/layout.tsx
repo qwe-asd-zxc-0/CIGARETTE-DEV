@@ -3,6 +3,7 @@ import {getMessages, setRequestLocale} from 'next-intl/server';
 import {notFound} from 'next/navigation';
 import {routing} from '@/i18n/routing';
 import { Inter } from "next/font/google";
+import { Metadata } from "next";
 import "../globals.css";
 
 // ✅ 引入所有全局组件
@@ -16,6 +17,16 @@ import { checkSessionValidity } from "@/lib/session"; // ✅ 引入 Session 检�
 import SessionGuard from "@/components/SessionGuard"; // ✅ 引入客户端处理组件
 
 const inter = Inter({ subsets: ["latin"] });
+
+export const metadata: Metadata = {
+  title: {
+    template: '%s - Yankegou',
+    default: 'Yankegou',
+  },
+  icons: {
+    icon: '/favicon.ico',
+  },
+};
 
 export default async function LocaleLayout({
   children,
